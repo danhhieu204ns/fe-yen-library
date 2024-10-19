@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --primary: #f37423;
+    --black: #000;
+    --white: #fff;
+    --text-color: #161823;
+}
+
+.d-flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ant-checkbox-inner {
+    width: 20px !important;
+    height: 20px !important;
+}
