@@ -8,9 +8,9 @@ import { useUserApi } from 'src/services/userService';
 import { useAdminApi } from 'src/services/adminService';
 
 function EditBorrow({ openModal, closeModal, handleReload, data }) {
-    const [bookgroupId, setBookgroupId] = useState('');
-    const [userId, setUserId] = useState('');
-    const [staffId, setStaffId] = useState('');
+    const [bookgroupName, setBookgroupName] = useState('');
+    const [userName, setUserName] = useState('');
+    const [staffName, setStaffName] = useState('');
     const [duration, setDuration] = useState('');
     const [status, setStatus] = useState('');
     const [errorMessages, setErrorMessages] = useState('');
@@ -28,16 +28,6 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
     const { allBookgroups } = useManageBookgroupApi();
     const { getAllUser } = useUserApi();
     const { getAllAdmin } = useAdminApi();
-
-    useEffect(() => {
-        if (data) {
-            setBookgroupId(data?.bookgroup_id || '');
-            setUserId(data?.user_id || '');
-            setStaffId(data?.staff_id || '');
-            setDuration(data?.duration || '');
-            setStatus(data?.status || '');
-        }
-    }, [data, openModal]);
 
     useEffect(() => {
         // Tải danh sách sách, người dùng và nhân viên khi component được render
@@ -59,19 +49,29 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
         loadData();
     }, []);
 
+    useEffect(() => {
+        if (data) {
+            setBookgroupName(data?.bookgroup?.name || '');
+            setUserName(data?.user?.name || '');
+            setStaffName(data?.staff?.name || '');
+            setDuration(data?.duration || '');
+            setStatus(data?.status || '');
+        }
+    }, [data]);
+
     const handleEditBorrow = async () => {
-        if (!bookgroupId || bookgroupId.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập mã sách');
+        if (!bookgroupName || bookgroupName.trim().length === 0) {
+            setErrorMessages('Vui lòng nhập tên sách');
             return;
         }
 
-        if (!userId || userId.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập mã người dùng');
+        if (!userName || userName.trim().length === 0) {
+            setErrorMessages('Vui lòng nhập tên người dùng');
             return;
         }
 
-        if (!staffId || staffId.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập mã nhân viên');
+        if (!staffName || staffName.trim().length === 0) {
+            setErrorMessages('Vui lòng nhập tên nhân viên');
             return;
         }
 
@@ -81,9 +81,9 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
         }
 
         const updatedData = {
-            bookgroup_id: bookgroupId.trim(),
-            user_id: userId.trim(),
-            staff_id: staffId.trim(),
+            bookgroup_id: bookGroups.find(book => book.name === bookgroupName)?.id,
+            user_id: users.find(user => user.name === userName)?.id,
+            staff_id: staffs.find(staff => staff.name === staffName)?.id,
             duration: Number(duration),
             status: status.trim(),
         };
@@ -101,9 +101,9 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
         }
 
         if (result?.data) {
-            setBookgroupId('');
-            setUserId('');
-            setStaffId('');
+            setBookgroupName('');
+            setUserName('');
+            setStaffName('');
             setDuration('');
             setStatus('');
             setErrorMessages('');
@@ -131,9 +131,9 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
             title="Sửa thông tin mượn sách"
             open={openModal}
             onCancel={() => {
-                setBookgroupId('');
-                setUserId('');
-                setStaffId('');
+                setBookgroupName('');
+                setUserName('');
+                setStaffName('');
                 setDuration('');
                 setStatus('');
                 setErrorMessages('');
@@ -148,17 +148,17 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
                     <Select
                         showSearch
                         placeholder="Chọn tên sách"
-                        value={bookgroupId}
+                        value={bookgroupName}
                         style={{ width: '100%' }}  // Điều chỉnh độ rộng
                         onSearch={(value) => {
                             const filtered = filterBookGroups(value);
                             setFilteredBookGroups(filtered);
                         }}
-                        onChange={(value) => setBookgroupId(value)}
+                        onChange={(value) => setBookgroupName(value)}
                         options={filteredBookGroups.map((book) => ({
                             label: book.name,
-                            value: book.id,  // Sử dụng ID để tránh trùng key
-                            key: book.id,    // Key là ID
+                            value: book.name,  // Sử dụng tên để tránh trùng key
+                            key: book.id,      // Key là ID
                         }))}
                     />
                 </Col>
@@ -167,17 +167,17 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
                     <Select
                         showSearch
                         placeholder="Chọn tên người dùng"
-                        value={userId}
+                        value={userName}
                         style={{ width: '100%' }}  // Điều chỉnh độ rộng
                         onSearch={(value) => {
                             const filtered = filterUsers(value);
                             setFilteredUsers(filtered);
                         }}
-                        onChange={(value) => setUserId(value)}
+                        onChange={(value) => setUserName(value)}
                         options={filteredUsers.map((user) => ({
                             label: user.name,
-                            value: user.id,  // Sử dụng ID để tránh trùng key
-                            key: user.id,    // Key là ID
+                            value: user.name,  // Sử dụng tên để tránh trùng key
+                            key: user.id,      // Key là ID
                         }))}
                     />
                 </Col>
@@ -186,17 +186,17 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
                     <Select
                         showSearch
                         placeholder="Chọn tên nhân viên"
-                        value={staffId}
+                        value={staffName}
                         style={{ width: '100%' }}  // Điều chỉnh độ rộng
                         onSearch={(value) => {
                             const filtered = filterStaffs(value);
                             setFilteredStaffs(filtered);
                         }}
-                        onChange={(value) => setStaffId(value)}
+                        onChange={(value) => setStaffName(value)}
                         options={filteredStaffs.map((staff) => ({
                             label: staff.name,
-                            value: staff.id,  // Sử dụng ID để tránh trùng key
-                            key: staff.id,    // Key là ID
+                            value: staff.name,  // Sử dụng tên để tránh trùng key
+                            key: staff.id,      // Key là ID
                         }))}
                     />
                 </Col>
@@ -226,7 +226,6 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
             </Row>
         </Modal>
     );
-    
 }
 
 export default memo(EditBorrow);

@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { login } from 'src/services/authService';
-import { Input, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import logo from 'src/assets/images/logo_new.jpg';
 import { useDispatch } from 'react-redux';
-import { setCredentials } from 'src/redux/auth/authSlice';
 import { toast } from 'react-toastify';
-import { setCookie } from "../utils/cookie";
-
+import { Input, Button } from 'antd';
+import { setCredentials } from 'src/redux/auth/authSlice';
+import { login } from 'src/services/authService';
+import logo from 'src/assets/images/logo-yen.png';
 import loginBackground from '../assets/images/login.png'
+
 
 function Login() {
     const [formData, setFormData] = useState({

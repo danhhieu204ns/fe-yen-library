@@ -2,7 +2,7 @@ import { UserOutlined, LogoutOutlined, LockOutlined, MenuOutlined } from '@ant-d
 import { Layout, Avatar, Dropdown, Menu, Button } from 'antd';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
-import { menuItems } from './itemsHeader';
+import MenuItems from './itemsHeader';
 import { useDispatch, useSelector } from 'react-redux';
 import { logOut } from 'src/redux/auth/authSlice';
 import { selectedCurrentUser } from 'src/redux/auth/authSlice';
@@ -11,6 +11,7 @@ import logo from 'src/assets/images/logo_new.jpg';
 const { Header, Content } = Layout;
 
 function DefaultLayout() {
+    const menuItems = MenuItems(); // Lấy menu items
     const location = useLocation();
     const navigate = useNavigate();
     const currentPath = location.pathname;
@@ -30,15 +31,6 @@ function DefaultLayout() {
         if (path.includes('publisher')) return 'publisher';
         if (path.includes('bookgroup')) return 'bookgroup';
         if (path.includes('borrow')) return 'borrow';
-
-        if (path.includes('manage-student')) return 'manage-student';
-        if (path.includes('manage-absent')) return 'manage-absent';
-        if (path.includes('manage-fee')) return 'manage-fee';
-        if (path.includes('school-year')) return 'manage-school-year';
-        if (path.includes('semester')) return 'manage-semester';
-        if (path.includes('grade')) return 'manage-grade';
-        if (path.includes('manage/class')) return 'manage-class';
-        if (path.includes('manage/subject')) return 'manage-subject';
         
         if (path.includes('manage-user')) return 'manage-user';
         return 'dashboard';
