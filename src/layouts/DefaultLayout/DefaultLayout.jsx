@@ -3,10 +3,10 @@ import { Layout, Avatar, Dropdown, Menu, Button } from 'antd';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { menuItems } from './itemsHeader';
-import logo from 'src/assets/images/logo_new.jpg';
 import { useDispatch, useSelector } from 'react-redux';
 import { logOut } from 'src/redux/auth/authSlice';
 import { selectedCurrentUser } from 'src/redux/auth/authSlice';
+import logo from 'src/assets/images/logo_new.jpg';
 
 const { Header, Content } = Layout;
 
@@ -20,9 +20,17 @@ function DefaultLayout() {
     const findKeyByPath = (path) => {
         if (path.includes('login')) return 'login';
         if (path.includes('register')) return 'register';
+
         if (path.includes('by-name')) return 'by-name';
         if (path.includes('by-author')) return 'by-author';
         if (path.includes('by-genre')) return 'by-genre';
+
+        if (path.includes('author')) return 'author';
+        if (path.includes('genre')) return 'genre';
+        if (path.includes('publisher')) return 'publisher';
+        if (path.includes('bookgroup')) return 'bookgroup';
+        if (path.includes('borrow')) return 'borrow';
+
         if (path.includes('manage-student')) return 'manage-student';
         if (path.includes('manage-absent')) return 'manage-absent';
         if (path.includes('manage-fee')) return 'manage-fee';
@@ -31,9 +39,7 @@ function DefaultLayout() {
         if (path.includes('grade')) return 'manage-grade';
         if (path.includes('manage/class')) return 'manage-class';
         if (path.includes('manage/subject')) return 'manage-subject';
-        if (path.includes('author')) return 'author';
-        if (path.includes('genre')) return 'genre';
-        if (path.includes('publisher')) return 'publisher';
+        
         if (path.includes('manage-user')) return 'manage-user';
         return 'dashboard';
     };
