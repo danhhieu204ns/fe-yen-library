@@ -26,7 +26,7 @@ export const menuItems = [
         ],
     },
     {
-        key: 'manage_infor',
+        key: 'thiennguyen',
         label: (
             <div className="flex items-center space-x-2">
                 <span>Thiện nguyện</span>
@@ -36,17 +36,13 @@ export const menuItems = [
         children: [
             {
                 key: 'manage-school-years',
-                label: <Link to="manage/school-year">Quản lý năm học</Link>,
+                label: <Link to="manage/school-year">Null</Link>,
             },
            
         ],
     },
-    // {
-    //     key: 'manage-student',
-    //     label: <Link to="/manage-student">Quản lý sinh viên</Link>,
-    // },
     {
-        key: 'manage-absent',
+        key: 'lichmocua',
         label: (
             <div className="flex items-center space-x-2">
                 <span>Lịch mở cửa</span>
@@ -56,24 +52,24 @@ export const menuItems = [
         children: [
             {
                 key: 'manage-absent-by-student',
-                label: <Link to="manage-absent/student">Theo sinh viên</Link>,
+                label: <Link to="manage-absent/student">Null</Link>,
             },
             {
                 key: 'manage-absent-by-class',
-                label: <Link to="manage-absent/class">Theo lớp</Link>,
+                label: <Link to="manage-absent/class">Null</Link>,
             },
             {
                 key: 'manage-absent-by-subject',
-                label: <Link to="manage-absent/subject">Theo môn học</Link>,
+                label: <Link to="manage-absent/subject">Null</Link>,
             },
             {
                 key: 'manage-absent-by-subject-crawl',
-                label: <Link to="manage-absent/subject-crawl">Theo môn học (Crawl)</Link>,
+                label: <Link to="manage-absent/subject-crawl">Null</Link>,
             },
         ],
     },
     {
-        key: 'manage-fee',
+        key: 'event',
         label: (
             <div className="flex items-center space-x-2">
                 <span>Sự kiện</span>
@@ -83,11 +79,11 @@ export const menuItems = [
         children: [
             {
                 key: 'manage-fee-by-student',
-                label: <Link to="manage-fee/student">Theo sinh viên</Link>,
+                label: <Link to="manage-fee/student">Null</Link>,
             },
             {
                 key: 'manage-fee-by-class',
-                label: <Link to="manage-fee/class">Theo lớp</Link>,
+                label: <Link to="manage-fee/class">Null</Link>,
             },
         ],
     },
@@ -120,6 +116,11 @@ export const menuItems = [
                 key: 'book',
                 label: <Link to="manage/book">Quản lý Sách</Link>,
             },
+            {
+                key: 'borrow',
+                label: <Link to="manage/borrow">Quản lý Mượn sách</Link>,
+            },
+            
         ],
     },
     // {

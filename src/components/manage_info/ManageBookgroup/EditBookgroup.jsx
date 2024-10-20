@@ -1,94 +1,93 @@
-import { memo, useState } from 'react';
-import { Input, Typography, Col, Row, Modal, Select } from 'antd';
-import useManageInfoApi from 'src/services/manageBookgroupService'; // Cập nhật service tương ứng
+import { useState, useEffect, memo } from 'react';
+import { Input, Typography, Col, Row, Modal, DatePicker } from 'antd';
+import moment from 'moment';
+import useManageBookgroupApi from 'src/services/manageBookgroupService'; // Giả sử bạn có service này
 import { toast } from 'react-toastify';
 import ErrorMessage from 'src/utils/error/errorMessage';
 
-const { Option } = Select;
-
-function CreateBookGroup({ openModal, closeModal, handleReload }) {
-    const [bookGroupInfo, setBookGroupInfo] = useState({
-        name: '',
-        status: '',
-        content: '',
-        author_id: null,
-        publisher_id: null,
-        genre_id: null,
-    });
+function EditBookgroup({ openModal, closeModal, handleReload, data }) {
+    const [name, setName] = useState('');
+    const [status, setStatus] = useState('');
+    const [content, setContent] = useState('');
+    const [createdAt, setCreatedAt] = useState(null); // Ngày tạo
+    const [author, setAuthor] = useState('');
+    const [publisher, setPublisher] = useState('');
+    const [genre, setGenre] = useState('');
     const [errorMessages, setErrorMessages] = useState('');
 
-    const { createBookGroup } = useManageInfoApi();
+    const { editBookGroup } = useManageBookgroupApi(); // Giả sử bạn có hàm này để gọi API
 
-    const handleCreateBookGroup = async () => {
-        const { name, status, content, author_id, publisher_id, genre_id } = bookGroupInfo;
+    useEffect(() => {
+        if (data) {
+            setName(data?.name || '');
+            setStatus(data?.status || '');
+            setContent(data?.content || '');
+            setCreatedAt(data?.created_at ? moment(data.created_at) : null);
+            setAuthor(data?.author?.name || '');
+            setPublisher(data?.publisher?.name || '');
+            setGenre(data?.genre?.name || '');
+        }
+    }, [data]);
 
+    const handleEditBookGroup = async () => {
         if (!name || name.trim().length === 0) {
             setErrorMessages('Vui lòng nhập tên nhóm sách');
             return;
         }
 
-        // Kiểm tra các trường bắt buộc khác
-        if (!status || !content || author_id === null || publisher_id === null || genre_id === null) {
-            setErrorMessages('Vui lòng điền đầy đủ thông tin');
-            return;
-        }
-
-        // Gửi request tạo nhóm sách
-        const result = await createBookGroup({
+        const updatedData = {
             name: name.trim(),
             status: status.trim(),
             content: content.trim(),
-            author_id,
-            publisher_id,
-            genre_id,
-        });
+            created_at: createdAt ? createdAt.format('YYYY-MM-DD') : null,
+            author: author.trim(),
+            publisher: publisher.trim(),
+            genre: genre.trim(),
+        };
+
+        const result = await editBookGroup(data.id, updatedData);
+
+        if (result?.name === 'AxiosError' && result?.response?.status === 409) {
+            setErrorMessages('Nhóm sách đã tồn tại');
+            return;
+        }
 
         if (result?.name === 'AxiosError') {
-            toast.error('Tạo nhóm sách thất bại. Vui lòng thử lại!');
+            toast.error('Cập nhật nhóm sách thất bại. Vui lòng thử lại!');
             return;
         }
 
         if (result?.data) {
-            setBookGroupInfo({
-                name: '',
-                status: '',
-                content: '',
-                author_id: null,
-                publisher_id: null,
-                genre_id: null,
-            });
+            setName('');
+            setStatus('');
+            setContent('');
+            setCreatedAt(null);
+            setAuthor('');
+            setPublisher('');
+            setGenre('');
             setErrorMessages('');
             closeModal();
             handleReload();
-            toast.success('Tạo nhóm sách thành công');
+            toast.success('Cập nhật nhóm sách thành công');
         }
-    };
-
-    const handleChange = (key, value) => {
-        setBookGroupInfo({
-            ...bookGroupInfo,
-            [key]: value,
-        });
-        setErrorMessages('');
     };
 
     return (
         <Modal
-            title="Tạo nhóm sách"
+            title="Sửa thông tin nhóm sách"
             open={openModal}
             onCancel={() => {
-                setBookGroupInfo({
-                    name: '',
-                    status: '',
-                    content: '',
-                    author_id: null,
-                    publisher_id: null,
-                    genre_id: null,
-                });
+                setName('');
+                setStatus('');
+                setContent('');
+                setCreatedAt(null);
+                setAuthor('');
+                setPublisher('');
+                setGenre('');
                 setErrorMessages('');
                 closeModal();
             }}
-            onOk={handleCreateBookGroup}
+            onOk={handleEditBookGroup}
             maskClosable={false}
         >
             <Row gutter={[12, 12]}>
@@ -96,71 +95,52 @@ function CreateBookGroup({ openModal, closeModal, handleReload }) {
                     <Typography>Tên nhóm sách</Typography>
                     <Input
                         placeholder="Nhập tên nhóm sách"
-                        value={bookGroupInfo.name}
-                        onChange={(e) => handleChange('name', e.target.value)}
+                        value={name}
+                        onChange={(e) => {
+                            setName(e.target.value);
+                            setErrorMessages('');
+                        }}
                     />
                 </Col>
                 <Col span={24}>
                     <Typography>Trạng thái</Typography>
-                    <Select
-                        placeholder="Chọn trạng thái"
-                        value={bookGroupInfo.status}
-                        onChange={(value) => handleChange('status', value)}
-                        style={{ width: '100%' }}
-                    >
-                        <Option value="active">Hoạt động</Option>
-                        <Option value="inactive">Ngưng hoạt động</Option>
-                    </Select>
+                    <Input
+                        placeholder="Nhập trạng thái"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                    />
                 </Col>
                 <Col span={24}>
                     <Typography>Nội dung</Typography>
                     <Input.TextArea
                         placeholder="Nhập nội dung"
-                        value={bookGroupInfo.content}
-                        onChange={(e) => handleChange('content', e.target.value)}
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
                     />
                 </Col>
                 <Col span={24}>
                     <Typography>Tác giả</Typography>
-                    <Select
-                        placeholder="Chọn tác giả"
-                        value={bookGroupInfo.author_id}
-                        onChange={(value) => handleChange('author_id', value)}
-                        style={{ width: '100%' }}
-                    >
-                        {/* Thêm danh sách tác giả ở đây */}
-                        <Option value={1}>Tác giả 1</Option>
-                        <Option value={2}>Tác giả 2</Option>
-                        {/* ... */}
-                    </Select>
+                    <Input
+                        placeholder="Nhập tên tác giả"
+                        value={author}
+                        onChange={(e) => setAuthor(e.target.value)}
+                    />
                 </Col>
                 <Col span={24}>
                     <Typography>Nhà xuất bản</Typography>
-                    <Select
-                        placeholder="Chọn nhà xuất bản"
-                        value={bookGroupInfo.publisher_id}
-                        onChange={(value) => handleChange('publisher_id', value)}
-                        style={{ width: '100%' }}
-                    >
-                        {/* Thêm danh sách nhà xuất bản ở đây */}
-                        <Option value={1}>Nhà xuất bản 1</Option>
-                        <Option value={2}>Nhà xuất bản 2</Option>
-                        {/* ... */}
-                    </Select>
+                    <Input
+                        placeholder="Nhập tên nhà xuất bản"
+                        value={publisher}
+                        onChange={(e) => setPublisher(e.target.value)}
+                    />
                 </Col>
                 <Col span={24}>
                     <Typography>Thể loại</Typography>
-                    <Select
-                        placeholder="Chọn thể loại"
-                        value={bookGroupInfo.genre_id}
-                        onChange={(value) => handleChange('genre_id', value)}
-                        style={{ width: '100%' }}
-                    >
-                        {/* Thêm danh sách thể loại ở đây */}
-                        <Option value={1}>Thể loại 1</Option>
-                        <Option value={2}>Thể loại 2</Option>
-                        {/* ... */}
-                    </Select>
+                    <Input
+                        placeholder="Nhập thể loại"
+                        value={genre}
+                        onChange={(e) => setGenre(e.target.value)}
+                    />
                 </Col>
                 <ErrorMessage message={errorMessages} />
             </Row>
@@ -168,4 +148,4 @@ function CreateBookGroup({ openModal, closeModal, handleReload }) {
     );
 }
 
-export default memo(CreateBookGroup);
+export default memo(EditBookgroup);

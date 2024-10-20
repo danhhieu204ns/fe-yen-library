@@ -1,50 +1,49 @@
 import useHttpPrivate from 'src/hooks/useHttpPrivate';
 
-export const useUserApi = () => {
+export const useAdminApi = () => {
     const httpPrivate = useHttpPrivate();
 
-
-    const getUser = async (id) => {
+    const getAdmin = async (id) => {
         try {
-            const res = await httpPrivate.get(`'/user/${id}'`);
+            const res = await httpPrivate.get(`/admin/${id}`);
             return res.data;
         } catch (error) {
             console.log(error);
         }
     };
 
-    const getAllUser = async () => {
+    const getAllAdmin = async () => {
         try {
-            const res = await httpPrivate.get('/user/all/');
+            const res = await httpPrivate.get('/admin/all/');
             return res.data;
         } catch (error) {
             console.log(error);
         }
     };
 
-    const getAllUserByPage = async (page, pageSize) => {
+    const getAllAdminByPage = async (page, pageSize) => {
         try {
-            const res = await httpPrivate.get(`/user/pageable/?page=${page}&page_size=${pageSize}`);
+            const res = await httpPrivate.get(`/admin/pageable/?page=${page}&page_size=${pageSize}`);
             return res.data;
         } catch (error) {
             console.log(error);
         }
     };
 
-    const searchUser = async (body, page, pageSize) => {
+    const searchAdmin = async (body, page, pageSize) => {
         try {
-            const res = await httpPrivate.post(`/user/search/multikey?page=${page}&page_size=${pageSize}`, body);
+            const res = await httpPrivate.post(`/admin/search/multikey?page=${page}&page_size=${pageSize}`, body);
             return res.data;
         } catch (error) {
             console.log(error);
         }
     };
 
-    const updateUserById = async (id, body) => {
+    const updateAdminById = async (id, body) => {
         try {
             console.log(id);
-            const res = await httpPrivate.put(`/user/edit/${id}`, body);
-            if (res.status != 200){
+            const res = await httpPrivate.put(`/admin/edit/${id}`, body);
+            if (res.status !== 200){
                 throw(res.data);
             }
             return true;
@@ -52,35 +51,22 @@ export const useUserApi = () => {
             console.log(error);
             return false;
         }
-    }
+    };
 
-    const createUser = async (body) => {
+    const createAdmin = async (body) => {
         try {
-            const res = await httpPrivate.post(`/user/register`, body);
+            const res = await httpPrivate.post(`/admin/register`, body);
             return res.data;
         } catch (error) {
             console.log(error);
         }
-    }
+    };
 
-    const deleteUser = async (id) => {
+    const deleteAdmin = async (id) => {
         try {
             console.log(id);
-            const res = await httpPrivate.delete(`/user/delete/${id}`);
-            if (res.status != 200){
-                throw(res.data);
-            }
-            return true;
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
-    }
-
-    const patchDeleteUser = async (body) => {
-        try {
-            const res = await httpPrivate.post('/user/delete-many', body);
-            if (res.status != 200){
+            const res = await httpPrivate.delete(`/admin/delete/${id}`);
+            if (res.status !== 200){
                 throw(res.data);
             }
             return true;
@@ -90,10 +76,10 @@ export const useUserApi = () => {
         }
     };
 
-    const activateUser = async (body) => {
+    const patchDeleteAdmin = async (body) => {
         try {
-            const res = await httpPrivate.post('user/kich-hoat-tai-khoan', body);
-            if (res.status != 200){
+            const res = await httpPrivate.post('/admin/delete-many', body);
+            if (res.status !== 200){
                 throw(res.data);
             }
             return true;
@@ -103,10 +89,23 @@ export const useUserApi = () => {
         }
     };
 
-    const deactivateUser = async (body) => {
+    const activateAdmin = async (body) => {
         try {
-            const res = await httpPrivate.post('/user/khoa-tai-khoan', body);
-            if (res.status != 200){
+            const res = await httpPrivate.post('/admin/kich-hoat-tai-khoan', body);
+            if (res.status !== 200){
+                throw(res.data);
+            }
+            return true;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    const deactivateAdmin = async (body) => {
+        try {
+            const res = await httpPrivate.post('/admin/khoa-tai-khoan', body);
+            if (res.status !== 200){
                 throw(res.data);
             }
             return true;
@@ -118,8 +117,8 @@ export const useUserApi = () => {
 
     const resetPassword = async (body) => {
         try {
-            const res = await httpPrivate.post('/user/reset-mat-khau', body);
-            if (res.status != 200){
+            const res = await httpPrivate.post('/admin/reset-mat-khau', body);
+            if (res.status !== 200){
                 throw(res.data);
             }
             return true;
@@ -129,23 +128,19 @@ export const useUserApi = () => {
         }
     };
 
-    let userService = {
-        getUser,
-        getAllUser,
-        getAllUserByPage,
-        createUser,
-        updateUserById,
-        deleteUser,
-        patchDeleteUser,
+    let adminService = {
+        getAdmin,
+        getAllAdmin,
+        getAllAdminByPage,
+        createAdmin,
+        updateAdminById,
+        deleteAdmin,
+        patchDeleteAdmin,
         resetPassword,
-        activateUser,
-        deactivateUser,
-        searchUser
-    }
+        activateAdmin,
+        deactivateAdmin,
+        searchAdmin
+    };
 
-    return userService;
+    return adminService;
 }
-
-
-
-

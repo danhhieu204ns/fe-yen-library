@@ -103,19 +103,22 @@ function ManageBookGroup() {
             ),
         },
         {
-            title: 'Mã tác giả',
-            dataIndex: 'author_id',
-            key: 'author_id',
+            title: 'Tác giả',
+            dataIndex: 'author', // Chú ý bạn cần thay 'author_id' thành 'author' nếu bạn đã load đầy đủ thông tin tác giả
+            key: 'author',
+            render: (author) => author?.name || 'Không có tác giả', // Hiển thị tên tác giả
         },
         {
-            title: 'Mã nhà xuất bản',
-            dataIndex: 'publisher_id',
-            key: 'publisher_id',
+            title: 'Nhà xuất bản',
+            dataIndex: 'publisher', // Thay 'publisher_id' thành 'publisher' nếu đã load thông tin nhà xuất bản
+            key: 'publisher',
+            render: (publisher) => publisher?.name || 'Không có nhà xuất bản', // Hiển thị tên nhà xuất bản
         },
         {
-            title: 'Mã thể loại',
-            dataIndex: 'genre_id',
-            key: 'genre_id',
+            title: 'Thể loại',
+            dataIndex: 'genre', // Thay 'genre_id' thành 'genre' nếu đã load thông tin thể loại
+            key: 'genre',
+            render: (genre) => genre?.name || 'Không có thể loại', // Hiển thị tên thể loại
         },
         {
             title: 'Thao tác',
