@@ -1,11 +1,11 @@
-import { useUserApi } from "../services/userService";
+import 'react-toastify/dist/ReactToastify.css';
 import { ImSpinner } from "react-icons/im";
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../utils/loginAction";
+import { useUserApi } from "../services/userService";
 
 
 function Register() {
@@ -26,7 +26,6 @@ function Register() {
         setLoading(true)
         const response = await createUser({username, password, name, birthdate, address, phone_number})
         setLoading(false)
-        console.log(response)
         if(response?.id){
             dispatch(checkLogin(true))
             setTimeout(() => {
