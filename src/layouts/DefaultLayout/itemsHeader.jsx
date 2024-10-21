@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentRole } from '../../redux/auth/authSlice';
 
+
 const MenuItems = () => {
     const role = useSelector(selectCurrentRole); // Lấy vai trò từ Redux store
 
@@ -11,58 +12,39 @@ const MenuItems = () => {
         {
             key: 'search',
             label: (
-                <div className="flex items-center space-x-2">
-                    <span>Tra cứu sách</span>
-                    <DownOutlined />
-                </div>
+                <Link to={'/search'} className="flex items-center space-x-2">
+                    Tra cứu sách
+                </Link>
             ),
-            children: [
-                {
-                    label: <Link to="/search/by-name">Tra cứu theo tên sách</Link>,
-                    key: 'by-name',
-                },
-                {
-                    label: <Link to="/search/by-author">Tra cứu theo tên tác giả</Link>,
-                    key: 'by-author',
-                },
-                {
-                    label: <Link to="/search/by-genre">Tra cứu theo tên thể loại</Link>,
-                    key: 'by-genre',
-                },
-            ],
         },
         {
-            key: 'thiennguyen',
+            key: 'volunteer',
             label: (
-                <div className="flex items-center space-x-2">
-                    <span>Thiện nguyện</span>
-                    <DownOutlined />
-                </div>
+                <Link to={'/volunteer'} className="flex items-center space-x-2">
+                    Thiện nguyện
+                </Link>
             ),
-            children: [],
         },
         {
-            key: 'lichmocua',
+            key: 'schedule',
             label: (
-                <div className="flex items-center space-x-2">
-                    <span>Lịch mở cửa</span>
-                    <DownOutlined />
-                </div>
+                <Link to={'/schedule'} className="flex items-center space-x-2">
+                    Lịch mở cửa
+                </Link>
             ),
-            children: [],
         },
         {
             key: 'event',
             label: (
-                <div className="flex items-center space-x-2">
-                    <span>Sự kiện</span>
-                    <DownOutlined />
-                </div>
+                <Link to={'/event'} className="flex items-center space-x-2">
+                    Sự kiện
+                </Link>
             ),
-            children: [],
         },
+
         // Chỉ thêm 'manage_library' nếu vai trò là 'admin'
-        ...(role === 'admin' ? [{
+        ...(role === 'admin' ? [
+        {
             key: 'manage_library',
             label: (
                 <div className="flex items-center space-x-2">
@@ -96,7 +78,44 @@ const MenuItems = () => {
                     label: <Link to="/manage/borrow">Quản lý Mượn sách</Link>,
                 },
             ],
-        }] : []), // Nếu không phải admin, trả về mảng rỗng
+        },
+        {
+            key: 'analize_library',
+            label: (
+                <div className="flex items-center space-x-2">
+                    <span>Thống kê</span>
+                    <DownOutlined />
+                </div>
+            ),
+            children: [
+                {
+                    key: '1',
+                    label: <Link to="/k/1">Quản lý Tác giả</Link>,
+                },
+                {
+                    key: '2',
+                    label: <Link to="/k/2">Quản lý Nhà xuất bản</Link>,
+                },
+                {
+                    key: '3',
+                    label: <Link to="/k/3">Quản lý Thể loại sách</Link>,
+                },
+                {
+                    key: '4',
+                    label: <Link to="/k/4">Quản lý Nhóm sách</Link>,
+                },
+                {
+                    key: '5',
+                    label: <Link to="/k/5">Quản lý Sách</Link>,
+                },
+                {
+                    key: '6',
+                    label: <Link to="/k/5">Quản lý Mượn sách</Link>,
+                },
+            ],
+        },
+
+        ] : []), // Nếu không phải admin, trả về mảng rỗng
     ];
 
     return menuItems;

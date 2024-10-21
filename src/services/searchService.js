@@ -1,6 +1,6 @@
 import useHttpPrivate from 'src/hooks/useHttpPrivate';
 
-const useDashboardApi = () => {
+const useSearchBookApi = () => {
     const httpPrivate = useHttpPrivate();
 
     // sach theo
@@ -82,4 +82,4 @@ const useDashboardApi = () => {
     };
 };
 
-export default useDashboardApi;
+export default useSearchBookApi;

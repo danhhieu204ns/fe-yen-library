@@ -10,7 +10,7 @@ import ManageUser from './components/manage_user/ManageUser';
 
 import HomeComponent from './components/Home';
 
-import SearchContainer from './components/search/Search'
+import SearchBook from './components/search/Search'
 import SearchBookComponentByName from './components/search/bytensach';
 import SearchBookComponentByAuthor from './components/search/bytentacgia';
 import SearchBookComponentByGenre from './components/search/bytheloai';
@@ -43,10 +43,7 @@ export default function App() {
                         <Route path="/" element={<HomeComponent/>} />
 
                         {/* Search */}
-                        <Route path="/search" element={<SearchContainer />}>
-                            <Route path="/search/by-name" element={<SearchBookComponentByName />} />
-                            <Route path="/search/by-author" element={<SearchBookComponentByAuthor />} />
-                            <Route path="/search/by-genre" element={<SearchBookComponentByGenre />} />
+                        <Route path="/search" element={<SearchBook />}>
                         </Route>
 
                         {/* manage_library */}
