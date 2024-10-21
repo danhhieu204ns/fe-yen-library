@@ -2,10 +2,10 @@ import { UserOutlined, LogoutOutlined, LockOutlined, MenuOutlined } from '@ant-d
 import { Layout, Avatar, Dropdown, Menu, Button } from 'antd';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
-import MenuItems from './itemsHeader';
 import { useDispatch, useSelector } from 'react-redux';
 import { logOut } from 'src/redux/auth/authSlice';
 import { selectedCurrentUser } from 'src/redux/auth/authSlice';
+import MenuItems from './itemsHeader';
 import logo from 'src/assets/images/logo_new.jpg';
 
 const { Header, Content } = Layout;
@@ -22,10 +22,12 @@ function DefaultLayout() {
         if (path.includes('login')) return 'login';
         if (path.includes('register')) return 'register';
 
-        if (path.includes('by-name')) return 'by-name';
-        if (path.includes('by-author')) return 'by-author';
-        if (path.includes('by-genre')) return 'by-genre';
-
+        if (path.includes('search')) return 'search';
+        if (path.includes('volunteer')) return 'volunteer';
+        if (path.includes('schedule')) return 'schedule';
+        if (path.includes('event')) return 'event';
+        
+        if (path.includes('manage-library')) return 'manage-library';
         if (path.includes('author')) return 'author';
         if (path.includes('genre')) return 'genre';
         if (path.includes('publisher')) return 'publisher';
