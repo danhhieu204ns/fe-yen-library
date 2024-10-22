@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Input, Button } from 'antd';
-import { setCredentials } from 'src/redux/auth/authSlice';
 import { login } from 'src/services/authService';
-import logo from 'src/assets/images/logo-yen.png';
-import loginBackground from '../assets/images/login.png'
+import { setCredentials } from 'src/redux/auth/authSlice';
+import logo from 'src/assets/images/background-login.png';
 
 
-function Login() {
+function Login({ closeModal }) {
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -34,69 +33,67 @@ function Login() {
         setLoading(true);
         const result = await login(formData);
         setLoading(false);
-        if (result.user) {
+        if (result.status === 401) {
+            setError('Tên đăng nhập hoặc mật khẩu không chính xác.');
+        } else if (result?.user) {
             dispatch(setCredentials(result));
             setFormData({ username: '', password: '' });
+            closeModal(); // Đóng modal sau khi đăng nhập thành công
             navigate('/');
-        }
-        else if (result.detail) {
-            setError('Tên đăng nhập hoặc mật khẩu không chính xác.');
         } else {
             toast.error('Đăng nhập thất bại. Vui lòng thử lại sau.');
         }
     };
 
     return (
-        <div style={{backgroundImage: `url(${loginBackground})`}} className="flex items-center justify-center min-h-screen w-full bg-cover">
-            <div className="w-full max-w-md p-10 space-y-8 bg-white rounded-lg shadow-lg">
-                <div className="text-center">
-                    <img src={logo} alt="Đại Nam University Logo" className="w-28 mx-auto" />
-                    <h2 className="mt-6 text-xl font-bold text-gray-900">Đăng nhập tài khoản</h2>
+        <div className="h-[80vh] space-y-8 bg-[#232627] rounded-2xl shadow-lg  ">
+            <div className="flex h-full flex-row-reverse items-center justify-around" >
+                <div className="text-center w-1/2 h-full">
+                    <img className='object-fill w-full h-full' src={logo} alt="Logo"/>
                 </div>
+                <div className='w-1/2 h-full flex flex-col justify-center items-center gap-y-2 p-10'>
+                    <h2 className="text-2xl font-bold text-white">Chào mừng đến với YÊN!</h2>
+                    <h2 className="text-xl font-bold text-white">Đăng nhập</h2>
+                    <form className="space-y-5" onSubmit={handleLogin}>
+                        <div className="flex items-center mb-4">
+                            <label htmlFor="username" className="text-white mr-2 w-1/4">Tên đăng nhập</label>
+                            <Input
+                                id="username"
+                                placeholder="Tên đăng nhập"
+                                size="large"
+                                className="w-3/4 mt-2"
+                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                            />
+                        </div>
 
-                <form className="space-y-5" onSubmit={handleLogin}>
-                    <div>
-                        <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                            Tên đăng nhập
-                        </label>
-                        <Input
-                            id="username"
-                            placeholder="Tên đăng nhập"
-                            size="large"
-                            className="mt-2"
-                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                        />
-                    </div>
+                        <div className="flex items-center mb-4">
+                            <label htmlFor="password" className="text-white mr-2 w-1/4">Mật khẩu</label>
+                            <Input.Password
+                                id="password"
+                                placeholder="Mật khẩu"
+                                size="large"
+                                className="w-3/4 mt-2"
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            />
+                        </div>
+                        {error && <div className="text-red-500">{error}</div>}
 
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                            Mật khẩu
-                        </label>
-                        <Input.Password
-                            id="password"
-                            placeholder="Mật khẩu"
-                            size="large"
-                            className="mt-2"
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        />
-                    </div>
-
-                    {error && <div className="text-red-500">{error}</div>}
-
-                    <Button
-                        type="primary"
-                        htmlType="submit"
-                        className="w-full py-2 mt-4 text-lg font-semibold"
-                        style={{
-                            backgroundColor: '#FF7A00',
-                            borderColor: '#FF7A00',
-                            height: '45px',
-                        }}
-                        loading={loading}
-                    >
-                        Đăng nhập
-                    </Button>
-                </form>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            className="w-full text-black py-2 mt-4 rounded-lg text-lg font-semibold"
+                            style={{
+                                backgroundColor: '#fadf03',
+                                borderColor: '#fadf03',
+                                height: '45px',
+                                borderRadius: '20px', // Bo góc
+                            }}
+                            loading={loading}
+                        >
+                            Đăng nhập
+                        </Button>
+                    </form>
+                </div>
             </div>
         </div>
     );
