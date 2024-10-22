@@ -1,91 +1,159 @@
-import 'react-toastify/dist/ReactToastify.css';
-import { ImSpinner } from "react-icons/im";
-import { ToastContainer, toast } from 'react-toastify';
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { checkLogin } from "../utils/loginAction";
-import { useUserApi } from "../services/userService";
-
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { Input, Button } from 'antd';
+import { useUserApi } from 'src/services/userService'; // Giả sử bạn có một hàm đăng ký
+import { setCredentials } from 'src/redux/auth/authSlice';
+import logo from 'src/assets/images/background-login.png';
 
 function Register() {
-    const [loading,setLoading] = useState(false)
+    const [formData, setFormData] = useState({
+        username: '',
+        password: '',
+        name: '',
+        birthdate: '',
+        address: '',
+        phone_number: '',
+    });
     const navigate = useNavigate();
-    const dispatch=useDispatch();
+    const dispatch = useDispatch();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const { createUser } = useUserApi();
 
-    const { createUser } = useUserApi()
+    const validateForm = () => {
+        const { username, password, name, birthdate, address, phone_number } = formData;
+        if (!username || !password || !name || !birthdate || !address || !phone_number) {
+            setError('Tất cả các trường đều phải được điền.');
+            return false;
+        }
+        setError(null);
+        return true;
+    };
 
-    const handleSubmit= async(e)=>{
+    const handleRegister = async (e) => {
         e.preventDefault();
-        const username = e.target[0].value
-        const password = e.target[1].value
-        const name = e.target[2].value
-        const birthdate = e.target[3].value
-        const address = e.target[4].value
-        const phone_number = e.target[5].value
-        setLoading(true)
-        const response = await createUser({username, password, name, birthdate, address, phone_number})
-        setLoading(false)
-        if(response?.id){
-            dispatch(checkLogin(true))
-            setTimeout(() => {
-                toast.success("Đăng kí thành công")
+        if (!validateForm()) return;
+        setLoading(true);
+        const result = await createUser(formData); // Giả sử bạn đã định nghĩa hàm đăng ký
+        setLoading(false);
+        if (result?.detail === 400) {
+            setError(`Đăng ký không thành công. ${result?.detail}`);
+        } else if (result?.user) {
+            dispatch(setCredentials(result)); // Nếu bạn cần lưu thông tin đăng ký
+            setFormData({
+                username: '',
+                password: '',
+                name: '',
+                birthdate: '',
+                address: '',
+                phone_number: '',
             });
-            navigate('/login')
+            navigate('/'); // Chuyển hướng đến trang chính sau khi đăng ký thành công
+        } else {
+            toast.error(`Đăng ký thất bại.  ${result?.detail}`);
         }
-        else{
-            toast.error(response.detail)
-        }
-    }
-    return ( 
-        <div className="w-full h-full flex justify-center items-center mt-12">
-            <div>
-            <ToastContainer />
-            <form onSubmit={handleSubmit} className="w-[450px] h-[420px] shadow-md flex flex-col bg-slate-50 rounded overflow-hidden gap-3">
-                <div className="w-full flex justify-center items-center text-2xl font-bold bg-cyan-900 text-slate-200 h-16">
-                    Register
+    };
+
+    return (
+        <div className="h-[80vh] space-y-8 bg-[#232627] rounded-2xl shadow-lg">
+            <div className="flex h-full flex-row-reverse items-center justify-around">
+                <div className="text-center w-1/2 h-full">
+                    <img className='object-fill w-full h-full' src={logo} alt="Logo" />
                 </div>
-                <div className="flex flex-col p-4 gap-3">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <div className="text-base text-slate-700 font-semibold">Username</div>
-                            <input className="w-full p-2 rounded focus:outline-slate-200 bg-slate-200" required placeholder="Username" />
+                <div className='w-1/2 h-full flex flex-col justify-center items-center gap-y-2 p-10'>
+                    <h2 className="text-2xl font-bold text-white">Chào mừng đến với YÊN!</h2>
+                    <h2 className="text-xl font-bold text-white">Đăng ký</h2>
+                    <form className="space-y-5" onSubmit={handleRegister}>
+                        <div className="flex items-center mb-4">
+                            <label className="text-white mr-2 w-1/4">Tên đăng nhập</label>
+                            <Input
+                                id="username"
+                                placeholder="Tên đăng nhập"
+                                size="large"
+                                className="w-3/4 mt-2"
+                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                            />
                         </div>
-                        <div>
-                            <div className="text-base text-slate-700 font-semibold">Password</div>
-                            <input className="w-full p-2 rounded focus:outline-slate-200 bg-slate-200" required placeholder="Password" type="password" />
+
+                        <div className="flex items-center mb-4">
+                            <label className="text-white mr-2 w-1/4">Mật khẩu</label>
+                            <Input.Password
+                                id="password"
+                                placeholder="Mật khẩu"
+                                size="large"
+                                className="w-3/4 mt-2"
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            />
                         </div>
-                        <div>
-                            <div className="text-base text-slate-700 font-semibold">Full Name</div>
-                            <input className="w-full p-2 rounded focus:outline-slate-200 bg-slate-200" required placeholder="Full Name" />
+
+                        <div className="flex items-center mb-4">
+                            <label className="text-white mr-2 w-1/4">Họ và tên</label>
+                            <Input
+                                id="name"
+                                placeholder="Họ và tên"
+                                size="large"
+                                className="w-3/4 mt-2"
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            />
                         </div>
-                        <div>
-                            <div className="text-base text-slate-700 font-semibold">Birthdate</div>
-                            <input className="w-full p-2 rounded focus:outline-slate-200 bg-slate-200" required placeholder="Birthdate" type="date" />
+
+                        <div className="flex items-center mb-4">
+                            <label className="text-white mr-2 w-1/4">Ngày sinh</label>
+                            <Input
+                                id="birthdate"
+                                type="date" // Hoặc type="date" nếu bạn muốn
+                                placeholder="Ngày sinh (YYYY-MM-DD)"
+                                size="large"
+                                className="w-3/4 mt-2"
+                                onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
+                            />
                         </div>
-                        <div>
-                            <div className="text-base text-slate-700 font-semibold">Address</div>
-                            <input className="w-full p-2 rounded focus:outline-slate-200 bg-slate-200" required placeholder="Address" />
+
+                        <div className="flex items-center mb-4">
+                            <label className="text-white mr-2 w-1/4">Địa chỉ</label>
+                            <Input
+                                id="address"
+                                placeholder="Địa chỉ"
+                                size="large"
+                                className="w-3/4 mt-2"
+                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                            />
                         </div>
-                        <div>
-                            <div className="text-base text-slate-700 font-semibold">Phone Number</div>
-                            <input className="w-full p-2 rounded focus:outline-slate-200 bg-slate-200" required placeholder="Phone Number" />
+
+                        <div className="flex items-center mb-4">
+                            <label className="text-white mr-2 w-1/4">Số điện thoại</label>
+                            <Input
+                                id="phone_number"
+                                placeholder="Số điện thoại"
+                                size="large"
+                                className="w-3/4 mt-2"
+                                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                            />
                         </div>
-                    </div>
-                    <div className="w-full h-12">
-                        <button 
-                            type="submit" 
-                            disabled={loading}
-                            className={`w-full h-full flex justify-center items-center mt-4 p-3 bg-cyan-900
-                                        text-slate-200 hover:bg-cyan-700 active:scale-[.98] ${loading && "disabled:bg-slate-500 cursor-not-allowed"}`}>
-                            {loading && <ImSpinner className="animate-spin" />} &nbsp; Đăng ký 
-                        </button>
-                    </div>
+
+                        {error && <div className="text-red-500">{error}</div>}
+
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            className="w-full text-black py-2 mt-4 text-lg font-semibold"
+                            style={{
+                                backgroundColor: '#fadf03',
+                                borderColor: '#fadf03',
+                                height: '45px',
+                                borderRadius: '20px', // Bo góc
+                            }}
+                            loading={loading}
+                        >
+                            Đăng ký
+                        </Button>
+                    </form>
                 </div>
-            </form>
             </div>
         </div>
-     );
+    );
 }
 
 export default Register;

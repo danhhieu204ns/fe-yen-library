@@ -53,7 +53,13 @@ function SearchBook() {
     }, [searchTerm, filterOption, allBooks]);
 
     return (
-        <div style={{ padding: '20px' }}>
+        <div 
+            className="mt-[60px]"
+            style={{ padding: '20px' }}
+        >
+            <div className="flex justify-center">
+                <h1 className="text-2xl mt-[8px] mb-[10px]">Tra cứu sách</h1>
+            </div>
             <h2>Tìm kiếm sách</h2>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
                 <Input

@@ -10,12 +10,12 @@ import App from './App';
 
 createRoot(document.getElementById('root')).render(
     // <StrictMode>
-    <ConfigProvider theme={{ token: { colorPrimary: '#f37423' } }}>
-        <Provider store={store}>
-            <PersistGate loading={null} persistor={persistor}>
-                <App />
-            </PersistGate>
-        </Provider>
-    </ConfigProvider>
+        <ConfigProvider theme={{ token: { colorPrimary: '#f37423' } }}>
+            <Provider store={store}>
+                <PersistGate loading={null} persistor={persistor}>
+                    <App />
+                </PersistGate>
+            </Provider>
+        </ConfigProvider>
     // </StrictMode>
 );
