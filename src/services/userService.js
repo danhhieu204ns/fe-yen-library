@@ -54,9 +54,9 @@ export const useUserApi = () => {
         }
     }
 
-    const createUser = async (body) => {
+    const createUser = async (formData) => {
         try {
-            const res = await httpPrivate.post(`/user/register`, body);
+            const res = await httpPrivate.post(`/user/register`, formData);
             return res.data;
         } catch (error) {
             console.log(error);
