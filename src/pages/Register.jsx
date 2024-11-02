@@ -69,7 +69,6 @@ function Register({ closeModal }) {
         if (result?.detail === 400) {
             setError(`Đăng ký không thành công. ${result?.detail}`);
         } else if (result?.user) {
-            dispatch(setCredentials(result));
             setFormData({
                 username: '',
                 password: '',

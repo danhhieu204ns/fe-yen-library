@@ -3,13 +3,13 @@ import { Input, Typography, Col, Row, Modal, Select } from 'antd';
 import { toast } from 'react-toastify';
 import ErrorMessage from 'src/utils/error/errorMessage';
 import useManageBorrowApi from 'src/services/manageBorrowService';
-import useManageBookgroupApi from 'src/services/manageBookgroupService';
+import useManageBookApi from 'src/services/manageBookService';
 import { useUserApi } from 'src/services/userService';
 import { useAdminApi } from 'src/services/adminService';
 
 function CreateBorrow({ openModal, closeModal, handleReload }) {
     const [borrowInfo, setBorrowInfo] = useState({
-        bookgroup_id: '',
+        book_id: '',
         user_id: '',
         staff_id: '',
         duration: '',
@@ -24,13 +24,13 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
     const [errorMessages, setErrorMessages] = useState('');
 
     const { createBorrow } = useManageBorrowApi();
-    const { allBookgroups } = useManageBookgroupApi();
+    const { getAllBooks } = useManageBookApi();
     const { getAllUser } = useUserApi();
     const { getAllAdmin } = useAdminApi();
 
     useEffect(() => {
         // Fetch all data once on component mount
-        allBookgroups().then((books) => {
+        getAllBooks().then((books) => {
             setAllBooks(books);
             setFilteredBooks(books);
         });
@@ -51,7 +51,7 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             book.name.toLowerCase().includes(value.toLowerCase())
         );
         setFilteredBooks(filtered);
-        handleChange('bookgroup_id', value); // Allow keyboard input
+        handleChange('book_id', value); // Allow keyboard input
     };
 
     const handleSearchUsers = (value) => {
@@ -71,15 +71,15 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
     };
 
     const handleCreateBorrow = async () => {
-        const { bookgroup_id, user_id, staff_id, duration } = borrowInfo;
+        const { book_id, user_id, staff_id, duration } = borrowInfo;
 
-        if (!bookgroup_id || !user_id || !staff_id || !duration) {
+        if (!book_id || !user_id || !staff_id || !duration) {
             setErrorMessages('Vui lòng nhập đầy đủ thông tin');
             return;
         }
 
         const result = await createBorrow({
-            bookgroup_id,
+            book_id,
             user_id,
             staff_id,
             duration: Number(duration),
@@ -92,7 +92,7 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
 
         if (result?.data) {
             setBorrowInfo({
-                bookgroup_id: '',
+                book_id: '',
                 user_id: '',
                 staff_id: '',
                 duration: '',
@@ -118,7 +118,7 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             open={openModal}
             onCancel={() => {
                 setBorrowInfo({
-                    bookgroup_id: '',
+                    book_id: '',
                     user_id: '',
                     staff_id: '',
                     duration: '',
@@ -136,9 +136,9 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
                         showSearch
                         style={{ width: '100%' }} // Đặt độ rộng tối đa
                         placeholder="Nhập tên sách hoặc chọn"
-                        value={borrowInfo.bookgroup_id}
+                        value={borrowInfo.book_id}
                         onSearch={handleSearchBooks}
-                        onChange={(value) => handleChange('bookgroup_id', value)}
+                        onChange={(value) => handleChange('book_id', value)}
                         filterOption={false}
                         options={filteredBooks.map((book) => ({ label: book.name, value: book.id }))}
                     />

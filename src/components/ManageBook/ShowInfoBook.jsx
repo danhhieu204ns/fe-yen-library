@@ -1,14 +1,14 @@
 import { memo } from 'react';
 import { Input, Typography, Col, Row, Modal } from 'antd';
 
-function ShowInfoBookgroup({ openModal, closeModal, data }) {
+function ShowInfoBook({ openModal, closeModal, data }) {
     return (
-        <Modal title="Thông tin nhóm sách" open={openModal} onCancel={closeModal} onOk={closeModal} maskClosable={false}>
+        <Modal title="Thông tin sách" open={openModal} onCancel={closeModal} onOk={closeModal} maskClosable={false}>
             <Row gutter={[12, 12]}>
                 <Col span={24}>
-                    <Typography>Tên nhóm sách</Typography>
+                    <Typography>Tên sách</Typography>
                     <Input
-                        placeholder="Tên nhóm sách"
+                        placeholder="Tên sách"
                         disabled
                         value={data?.name}
                         className="disabled:bg-white disabled:text-black"
@@ -74,4 +74,4 @@ function ShowInfoBookgroup({ openModal, closeModal, data }) {
     );
 }
 
-export default memo(ShowInfoBookgroup);
+export default memo(ShowInfoBook);

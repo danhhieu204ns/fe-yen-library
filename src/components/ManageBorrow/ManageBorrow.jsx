@@ -7,7 +7,6 @@ import CreateBorrow from './CreateBorrow';
 import EditBorrow from './EditBorrow';
 import ShowInfoBorrow from './ShowInfoBorrow';
 
-
 function ManageBorrow() {
     const [borrowList, setBorrowList] = useState([]);
     const [listBorrowToDelete, setListBorrowToDelete] = useState([]);
@@ -61,7 +60,6 @@ function ManageBorrow() {
             toast.error('Xóa thất bại');
             return;
         }
-
         toast.success('Xóa thành công');
         handleReload();
     };
@@ -72,7 +70,6 @@ function ManageBorrow() {
             toast.error('Xóa thất bại');
             return;
         }
-
         toast.success('Xóa thành công');
         setListBorrowToDelete([]);
         handleReload();
@@ -84,11 +81,10 @@ function ManageBorrow() {
                 setFilteredBorrowrs(borrowList);
                 return;
             }
-
             const lowercasedTerm = searchTerm.toLowerCase();
             const filtered = borrowList.filter((borrow) => {
                 if (filterOption === 'name') {
-                    return borrow.bookgroup.name.toLowerCase().includes(lowercasedTerm);
+                    return borrow.book.name.toLowerCase().includes(lowercasedTerm);
                 } else if (filterOption === 'user') {
                     return borrow.user.name.toLowerCase().includes(lowercasedTerm);
                 } else if (filterOption === 'staff') {
@@ -102,16 +98,15 @@ function ManageBorrow() {
             });
             setFilteredBorrowrs(filtered);
         };
-
         filterBorrows();
     }, [searchTerm, filterOption, borrowList]);
 
     const columns = [
         {
             title: 'Tên sách',
-            dataIndex: 'bookgroup',
-            key: 'bookgroup',
-            render: (bookgroup) => bookgroup?.name || 'Không có tên sách',
+            dataIndex: 'book',
+            key: 'book',
+            render: (book) => book?.name || 'Không có tên sách',
         },
         {
             title: 'Người dùng',
@@ -179,6 +174,37 @@ function ManageBorrow() {
         },
     ];
 
+    const getStatusClass = (status) => {
+        switch (status) {
+          case 'Đang chờ xác nhận':
+            return 'bg-yellow-400 text-white px-2 py-1 rounded';
+          case 'Đang mượn':
+            return 'bg-blue-400 text-white px-2 py-1 rounded';
+          case 'Đã trả':
+            return 'bg-green-400 text-white px-2 py-1 rounded';
+          case 'Đã quá hạn':
+            return 'bg-red-400 text-white px-2 py-1 rounded';
+          case 'Đã hủy':
+            return 'bg-gray-400 text-white px-2 py-1 rounded';
+          default:
+            return '';
+        }
+    };
+    
+    const enhancedColumns = columns.map((col) => { // Cấu hình lại cột cho bảng
+        if (col.dataIndex === 'status') {  // Kiểm tra cột 'status'
+            return {
+            ...col,
+            render: (status) => (
+                <span className={getStatusClass(status)}>
+                {status}
+                </span>
+            ),
+            };
+        }
+    return col;
+    });
+
     return (
         <>
             <div style={{ padding: '20px' }}>
@@ -235,7 +261,7 @@ function ManageBorrow() {
                 </Space>
                 <div>
                     <Table
-                        columns={columns}
+                        columns={enhancedColumns} // Đảm bảo sử dụng `enhancedColumns` thay vì `columns`
                         dataSource={filteredBorrows}
                         rowSelection={{
                             type: 'checkbox',
@@ -262,26 +288,22 @@ function ManageBorrow() {
                         })}
                     />
                 </div>
-
                 <CreateBorrow
                     openModal={createModalOpen}
                     closeModal={handleCloseCreateModal}
                     handleReload={handleReload}
                 />
-
                 <EditBorrow
                     data={borrowInfo}
                     openModal={editModalOpen}
                     closeModal={handleCloseEditModal}
                     handleReload={handleReload}
                 />
-
                 <ShowInfoBorrow
                     data={borrowInfo}
                     openModal={showInfoModal}
                     closeModal={handleCloseShowInfoModal}
                 />
-
                 {contextHolder}
             </div>
         </>

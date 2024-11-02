@@ -1,12 +1,12 @@
 import { memo, useEffect, useState } from 'react';
 import { Modal, Select, Typography, Col, Row, Card, Alert, Input } from 'antd';
 import { toast } from 'react-toastify';
-import useBookgroupApi from 'src/services/manageBookgroupService';
+import useBookApi from 'src/services/manageBookService';
 import useAuthorApi from 'src/services/manageAuthorService';
 import usePublisherApi from 'src/services/managePublisherService';
 import useGenreApi from 'src/services/manageGenreService';
 
-function CreateBookgroup({ openModal, closeModal, handleReload }) {
+function CreateBook({ openModal, closeModal, handleReload }) {
     const [formData, setFormData] = useState({
         name: '',
         status: '',
@@ -23,7 +23,7 @@ function CreateBookgroup({ openModal, closeModal, handleReload }) {
     const [filteredPublishers, setFilteredPublishers] = useState([]);
     const [filteredGenres, setFilteredGenres] = useState([]);
 
-    const { createBookgroup, getAllBookgroups } = useBookgroupApi();
+    const { createBook } = useBookApi();
     const { allAuthors } = useAuthorApi();
     const { allPublishers } = usePublisherApi();
     const { allGenres } = useGenreApi();
@@ -48,7 +48,7 @@ function CreateBookgroup({ openModal, closeModal, handleReload }) {
         fetchData();
     }, []);
 
-    const handleCreateBookGroup = async () => {
+    const handleCreateBook = async () => {
         const { name, status, content, author_id, publisher_id, genre_id } = formData;
 
         if (!name || name.trim().length === 0) {
@@ -76,13 +76,12 @@ function CreateBookgroup({ openModal, closeModal, handleReload }) {
             return;
         }
 
-        const result = await createBookgroup(formData);
+        const result = await createBook(formData);
 
         if (result?.status === 409) {
-            setErrorMessages('Nhóm sách đã tồn tại');
+            setErrorMessages('Sách đã tồn tại');
             return;
         }
-
         if (result?.data) {
             setFormData({
                 name: '',
@@ -92,8 +91,11 @@ function CreateBookgroup({ openModal, closeModal, handleReload }) {
                 publisher_id: '',
                 genre_id: ''
             });
+            setFilteredAuthors(authors)
+            setFilteredGenres(genres)
+            setFilteredPublishers(publishers)
             setErrorMessages('');
-            toast.success('Tạo nhóm sách thành công');
+            toast.success('Tạo sách thành công');
             handleReload();
             closeModal();
         }
@@ -123,10 +125,10 @@ function CreateBookgroup({ openModal, closeModal, handleReload }) {
 
     return (
         <Modal
-            title="Tạo nhóm sách"
+            title="Tạo sách"
             open={openModal}
             onCancel={closeModal}
-            onOk={handleCreateBookGroup}
+            onOk={handleCreateBook}
             maskClosable={false}
         >
             <div className="mx-6">
@@ -244,4 +246,4 @@ function CreateBookgroup({ openModal, closeModal, handleReload }) {
     );
 }
 
-export default memo(CreateBookgroup);
+export default memo(CreateBook);

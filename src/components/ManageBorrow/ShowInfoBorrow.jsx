@@ -10,7 +10,7 @@ function ShowInfoBorrow({ openModal, closeModal, data }) {
                     <Input
                         placeholder="Tên sách"
                         disabled
-                        value={data?.bookgroup?.name}
+                        value={data?.book?.name}
                         className="disabled:bg-white disabled:text-black"
                     />
                 </Col>

@@ -1,17 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Button, Table, Tooltip, Modal, Space, Input, Select } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined } from '@ant-design/icons';
-import useManageBookGroupApi from 'src/services/manageBookgroupService'; // Giả sử bạn có service cho nhóm sách
+import useManageBookApi from 'src/services/manageBookService'; // Giả sử bạn có service cho nhóm sách
 import { toast } from 'react-toastify';
-import CreateBookgroup from './CreateBookgroup'; // Component tạo mới nhóm sách
-import EditBookgroup from './EditBookgroup'; // Component sửa thông tin nhóm sách
-import ShowInfoBookgroup from './ShowInfoBookgroup'; // Component hiển thị thông tin nhóm sách
+import CreateBook from './CreateBook'; // Component tạo mới nhóm sách
+import EditBook from './EditBook'; // Component sửa thông tin nhóm sách
+import ShowInfoBook from './ShowInfoBook'; // Component hiển thị thông tin nhóm sách
 
 
-function ManageBookGroup() {
-    const [bookGroupList, setBookGroupList] = useState([]);
-    const [listBookGroupToDelete, setListBookGroupToDelete] = useState([]);
-    const [bookGroupInfo, setBookGroupInfo] = useState({});
+function ManageBook() {
+    const [bookList, setBookList] = useState([]);
+    const [listBookToDelete, setListBookToDelete] = useState([]);
+    const [bookInfo, setBookInfo] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
     const [totalData, setTotalData] = useState(0);
@@ -22,16 +22,16 @@ function ManageBookGroup() {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [modalDelete, contextHolder] = Modal.useModal();
 
-    const [filteredBookgroups, setFilteredBookgroups] = useState([]); // Dữ liệu sau khi lọc
+    const [filteredBooks, setFilteredBooks] = useState([]); // Dữ liệu sau khi lọc
     const [searchTerm, setSearchTerm] = useState('');
     const [filterOption, setFilterOption] = useState('name'); // Mặc định lọc theo tên nhom sach
 
-    const { bookgroupData, deleteBookgroup, deleteListBookgroups } = useManageBookGroupApi(); // Giả sử bạn có service cho nhóm sách
+    const { bookData, deleteBook, deleteListBooks } = useManageBookApi(); // Giả sử bạn có service cho nhóm sách
 
     useEffect(() => {
         const fetchData = async () => {
-            const results = await bookgroupData(page, pageSize);
-            setBookGroupList(results?.bookgroups);
+            const results = await bookData(page, pageSize);
+            setBookList(results?.books);
             setTotalData(results?.total_pages * pageSize);
         };
         fetchData();
@@ -47,16 +47,16 @@ function ManageBookGroup() {
 
     const handleCloseEditModal = useCallback(() => {
         setEditModalOpen(false);
-        setBookGroupInfo({});
+        setBookInfo({});
     }, []);
 
     const handleCloseShowInfoModal = useCallback(() => {
         setShowInfoModal(false);
-        setBookGroupInfo({});
+        setBookInfo({});
     }, []);
 
     const handleDelete = async (id) => {
-        const result = await deleteBookgroup(id);
+        const result = await deleteBook(id);
         if (result?.status) {
             toast.error('Xóa thất bại');
             return;
@@ -66,51 +66,51 @@ function ManageBookGroup() {
         handleReload();
     };
 
-    const handleDeleteListBookGroup = async () => {
-        const result = await deleteListBookgroups(listBookGroupToDelete);
+    const handleDeleteListBook = async () => {
+        const result = await deleteListBooks(listBookToDelete);
         if (result?.status) {
             toast.error('Xóa thất bại');
             return;
         }
 
         toast.success('Xóa thành công');
-        setListBookGroupToDelete([]);
+        setListBookToDelete([]);
         handleReload();
     };
 
     useEffect(() => {
-        const filterBookgroups = () => {
+        const filterBooks = () => {
             if (!searchTerm) {
-                setFilteredBookgroups(bookGroupList);
+                setFilteredBooks(bookList);
                 return;
             }
 
             const lowercasedTerm = searchTerm.toLowerCase();
-            const filtered = bookGroupList.filter((bookGroup) => {
+            const filtered = bookList.filter((book) => {
                 if (filterOption === 'name') {
-                    return bookGroup.name.toLowerCase().includes(lowercasedTerm);
+                    return book.name.toLowerCase().includes(lowercasedTerm);
                 } else if (filterOption === 'status') {
-                    return bookGroup.status?.toLowerCase().includes(lowercasedTerm);
+                    return book.status?.toLowerCase().includes(lowercasedTerm);
                 } else if (filterOption === 'content') {
-                    return bookGroup.content?.toLowerCase().includes(lowercasedTerm);
+                    return book.content?.toLowerCase().includes(lowercasedTerm);
                 } else if (filterOption === 'author') {
-                    return bookGroup.author?.toLowerCase().includes(lowercasedTerm);
+                    return book.author?.toLowerCase().includes(lowercasedTerm);
                 } else if (filterOption === 'publisher') {
-                    return bookGroup.publisher?.toLowerCase().includes(lowercasedTerm);
+                    return book.publisher?.toLowerCase().includes(lowercasedTerm);
                 } else if (filterOption === 'genre') {
-                    return bookGroup.genre?.toLowerCase().includes(lowercasedTerm);
+                    return book.genre?.toLowerCase().includes(lowercasedTerm);
                 }
                 return false;
             });
-            setFilteredBookgroups(filtered);
+            setFilteredBooks(filtered);
         };
 
-        filterBookgroups();
-    }, [searchTerm, filterOption, bookGroupList]);
+        filterBooks();
+    }, [searchTerm, filterOption, bookList]);
 
     const columns = [
         {
-            title: 'Tên nhóm sách',
+            title: 'Tên sách',
             dataIndex: 'name',
             key: 'name',
         },
@@ -168,7 +168,7 @@ function ManageBookGroup() {
                             icon={<EditOutlined className="text-slate-900 font-[300]" />}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setBookGroupInfo(record);
+                                setBookInfo(record);
                                 setEditModalOpen(true);
                             }}
                         />
@@ -184,7 +184,7 @@ function ManageBookGroup() {
                                 modalDelete.confirm({
                                     title: 'Xác nhận xoá',
                                     icon: <ExclamationCircleFilled />,
-                                    content: `Bạn có chắc chắn muốn xóa nhóm sách: ${record.name}`,
+                                    content: `Bạn có chắc chắn muốn xóa sách: ${record.name}`,
                                     onOk() {
                                         handleDelete(record.id);
                                     },
@@ -201,9 +201,9 @@ function ManageBookGroup() {
     return (
         <div style={{ padding: '20px' }}>
             <div className="flex justify-center">
-                <h1 className="text-2xl mt-[60px] mb-[10px]">Quản lý Nhóm sách</h1>
+                <h1 className="text-2xl mt-[60px] mb-[10px]">Quản lý Sách</h1>
             </div>
-            <h2>Tìm kiếm Nhóm sách</h2>
+            <h2>Tìm kiếm Sách</h2>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
                 <Input
                     placeholder="Nhập từ khóa tìm kiếm..."
@@ -219,7 +219,7 @@ function ManageBookGroup() {
                     onChange={(value) => setFilterOption(value)}
                     style={{ width: '200px' }}
                 >
-                    <Option value="name">Tên Nhóm sách</Option>
+                    <Option value="name">Tên sách</Option>
                     <Option value="status">Tình trạng</Option>
                     <Option value="content">Nội dung</Option>
                     <Option value="author">Tác giả</Option>
@@ -235,32 +235,32 @@ function ManageBookGroup() {
                 <Button
                     type="primary"
                     className="bg-red-500"
-                    disabled={listBookGroupToDelete.length === 0}
+                    disabled={listBookToDelete.length === 0}
                     onClick={() => {
                         modalDelete.confirm({
                             title: 'Xác nhận xoá',
                             icon: <ExclamationCircleFilled />,
-                            content: `Bạn có chắc muốn xóa ${listBookGroupToDelete.length} nhóm sách đã chọn?`,
+                            content: `Bạn có chắc muốn xóa ${listBookToDelete.length} sách đã chọn?`,
                             onOk() {
-                                handleDeleteListBookGroup();
+                                handleDeleteListBook();
                             },
                             onCancel() {},
                         });
                     }}
                 >
                     <DeleteOutlined />
-                    Xóa {listBookGroupToDelete.length !== 0 ? listBookGroupToDelete.length + ' nhóm sách' : ''}
+                    Xóa {listBookToDelete.length !== 0 ? listBookToDelete.length + ' sách' : ''}
                 </Button>
             </Space>
             <div>
                 <Table
                     columns={columns}
-                    dataSource={filteredBookgroups}
+                    dataSource={filteredBooks}
                     rowSelection={{
                         type: 'checkbox',
-                        selectedRowKeys: listBookGroupToDelete,
+                        selectedRowKeys: listBookToDelete,
                         onChange: (selectedRowKeys) => {
-                            setListBookGroupToDelete(selectedRowKeys);
+                            setListBookToDelete(selectedRowKeys);
                         },
                     }}
                     rowKey={(record) => record.id}
@@ -275,28 +275,28 @@ function ManageBookGroup() {
                     }}
                     onRow={(record) => ({
                         onClick: () => {
-                            setBookGroupInfo(record);
+                            setBookInfo(record);
                             setShowInfoModal(true);
                         },
                     })}
                 />
             </div>
 
-            <CreateBookgroup
+            <CreateBook
                 openModal={createModalOpen}
                 closeModal={handleCloseCreateModal}
                 handleReload={handleReload}
             />
 
-            <EditBookgroup
-                data={bookGroupInfo}
+            <EditBook
+                data={bookInfo}
                 openModal={editModalOpen}
                 closeModal={handleCloseEditModal}
                 handleReload={handleReload}
             />
 
-            <ShowInfoBookgroup
-                data={bookGroupInfo}
+            <ShowInfoBook
+                data={bookInfo}
                 openModal={showInfoModal}
                 closeModal={handleCloseShowInfoModal}
             />
@@ -306,4 +306,4 @@ function ManageBookGroup() {
     );
 }
 
-export default ManageBookGroup;
+export default ManageBook;

@@ -1,6 +1,6 @@
 import useHttpPrivate from 'src/hooks/useHttpPrivate';
 
-const useBookGroupApi = () => {
+const useBookApi = () => {
     const httpPrivate = useHttpPrivate();
 
     // Sách
@@ -13,7 +13,7 @@ const useBookGroupApi = () => {
         }
     };
 
-    const allBooks = async () => {
+    const getAllBooks = async () => {
         try {
             const res = await httpPrivate.get('/book/all');
             return res?.data;
@@ -79,7 +79,7 @@ const useBookGroupApi = () => {
 
     return {
         oneBook,
-        allBooks,
+        getAllBooks,
         bookData,
         createBook,
         editBook,
@@ -88,4 +88,4 @@ const useBookGroupApi = () => {
     };
 };
 
-export default useBookGroupApi;
+export default useBookApi;

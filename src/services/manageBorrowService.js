@@ -13,6 +13,16 @@ const useBorrowApi = () => {
         }
     };
 
+    const getBorrowsByUser = async () => {
+        try {
+            const res = await httpPrivate.get(`/borrow/by-user`);
+            return res?.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+
     const allBorrows = async () => {
         try {
             const res = await httpPrivate.get('/borrow/all');
@@ -31,9 +41,22 @@ const useBorrowApi = () => {
         }
     };
 
+    const createBorrowByUser = async (borrowInfo) => {
+        try {
+            const res = await httpPrivate.post('/borrow/create/by_user', {
+                ...borrowInfo,
+            });
+            return res;
+        } catch (error) {
+            console.log(error);
+            return error;
+        }
+    };
+
+
     const createBorrow = async (borrowInfo) => {
         try {
-            const res = await httpPrivate.post('/borrow/create', {
+            const res = await httpPrivate.post('/borrow/create/by_admin', {
                 ...borrowInfo,
             });
             return res;
@@ -48,6 +71,16 @@ const useBorrowApi = () => {
             const res = await httpPrivate.put(`/borrow/update/${id}`, {
                 ...borrowInfo,
             });
+            return res;
+        } catch (error) {
+            console.log(error);
+            return error;
+        }
+    };
+
+    const cancelBorrow = async (id) => {
+        try {
+            const res = await httpPrivate.put(`/borrow/cancel/${id}`);
             return res;
         } catch (error) {
             console.log(error);
@@ -80,9 +113,12 @@ const useBorrowApi = () => {
     return {
         oneBorrow,
         allBorrows,
+        getBorrowsByUser,
         borrowData,
+        createBorrowByUser, 
         createBorrow,
         editBorrow,
+        cancelBorrow,
         deleteBorrow,
         deleteListBorrow,
     };
