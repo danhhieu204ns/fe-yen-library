@@ -43,7 +43,7 @@ export const useUserApi = () => {
     const updateUserById = async (id, body) => {
         try {
             console.log(id);
-            const res = await httpPrivate.put(`/user/edit/${id}`, body);
+            const res = await httpPrivate.put(`/user/update/${id}`, body);
             if (res.status != 200){
                 throw(res.data);
             }
@@ -128,6 +128,14 @@ export const useUserApi = () => {
             return false;
         }
     };
+    const checkUser = async (formData) => {
+        try {
+            const res = await httpPrivate.post(`/user/check`, formData);
+            return res.data;
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     let userService = {
         getUser,
@@ -140,7 +148,8 @@ export const useUserApi = () => {
         resetPassword,
         activateUser,
         deactivateUser,
-        searchUser
+        searchUser,
+        checkUser
     }
 
     return userService;

@@ -88,17 +88,20 @@ function SearchBook() {
     };
 
     const handleConfirmBorrow = async () => {
-        try {
-            await createBorrowByUser({ // Gọi API để tạo yêu cầu mượn sách với thông tin cần thiết
-                user_id: user.id, 
-                book_id: selectedBook.id, // ID sách
-                duration: borrowDays // Số ngày mượn
-            });
+        const result = await createBorrowByUser({ // Gọi API để tạo yêu cầu mượn sách với thông tin cần thiết
+            user_id: user.id, 
+            book_id: selectedBook.id, // ID sách
+            duration: borrowDays // Số ngày mượn
+        });
+        console.log(result)
+        if (result?.detail) {
+            toast.error(result.detail);
+            return;
+        }
+        else {
             toast.success('Đăng ký mượn sách thành công');
             setIsBorrowModalVisible(false);
             setBorrowDays(1); // Đặt lại số ngày mượn về mặc định
-        } catch (error) {
-            toast.error('Đăng ký mượn sách thất bại');
         }
     };
 

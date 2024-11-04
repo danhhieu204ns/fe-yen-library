@@ -5,7 +5,6 @@ import ErrorMessage from 'src/utils/error/errorMessage';
 import useManageBorrowApi from 'src/services/manageBorrowService';
 import useManageBookApi from 'src/services/manageBookService';
 import { useUserApi } from 'src/services/userService';
-import { useAdminApi } from 'src/services/adminService';
 import { useSelector } from 'react-redux';
 import { selectedCurrentUser } from 'src/redux/auth/authSlice';
 
@@ -21,33 +20,27 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
     // Dữ liệu gốc và dữ liệu lọc
     const [books, setBooks] = useState([]);
     const [users, setUsers] = useState([]);
-    const [staffs, setStaffs] = useState([]);
     
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
-    const [filteredStaffs, setFilteredStaffs] = useState([]);
 
     const { editBorrow } = useManageBorrowApi();
     const { getAllBooks } = useManageBookApi();
     const { getAllUser } = useUserApi();
-    const { getAllAdmin } = useAdminApi();
 
     useEffect(() => {
-        // Tải danh sách sách, người dùng và nhân viên khi component được render
+        // Tải danh sách sách, người dùng khi component được render
         const loadData = async () => {
             const books = await getAllBooks();
             const users = await getAllUser();
-            const staffs = await getAllAdmin();
             
             // Lưu trữ toàn bộ dữ liệu gốc
             setBooks(books);
             setUsers(users);
-            setStaffs(staffs);
 
             // Hiển thị toàn bộ danh sách ban đầu
             setFilteredBooks(books);
             setFilteredUsers(users);
-            setFilteredStaffs(staffs);
         };
         loadData();
     }, []);

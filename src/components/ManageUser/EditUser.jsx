@@ -5,12 +5,11 @@ import { useUserApi } from 'src/services/userService';
 
 function EditUser({
     open,
-    onCancel,
+    onClose,
     reload,
     record,
 }) {
     const [disabled, setDisabled] = useState(true);
-
     const [username, setUsername] = useState(null);
     const [userFullName, setUserFullName] = useState(null);
     const [role, setRole] = useState(null);
@@ -36,7 +35,6 @@ function EditUser({
         setActive(record?.active_user);
 
         userRecordId.current = record?.id;
-        console.log(userRecordId.current);
     }, [open]);
 
     const updateUserInfo = async (cancel) => {
@@ -86,8 +84,8 @@ function EditUser({
         <Modal
             title="Chỉnh sửa thông tin"
             open={open}
-            onCancel={onCancel}
-            onOk={() => updateUserInfo(onCancel)}
+            onCancel={onClose}
+            onOk={() => updateUserInfo(onClose)}
         >   
             <Checkbox className="my-2" onChange={(e) => setDisabled(!e.target.checked)} checked={!disabled}>
                 Sửa

@@ -1,11 +1,12 @@
-import { memo, useState, useEffect } from 'react';
-import { Input, Typography, Col, Row, Modal, Select } from 'antd';
+import React, { memo, useState, useEffect } from 'react';
+import Webcam from 'react-webcam';
 import { toast } from 'react-toastify';
-import ErrorMessage from 'src/utils/error/errorMessage';
+import { Input, Typography, Col, Row, Modal, Select, Button } from 'antd';
+import { useSelector } from 'react-redux';
+import { selectedCurrentUser } from 'src/redux/auth/authSlice';
+import { useUserApi } from 'src/services/userService';
 import useManageBorrowApi from 'src/services/manageBorrowService';
 import useManageBookApi from 'src/services/manageBookService';
-import { useUserApi } from 'src/services/userService';
-import { useAdminApi } from 'src/services/adminService';
 
 function CreateBorrow({ openModal, closeModal, handleReload }) {
     const [borrowInfo, setBorrowInfo] = useState({
@@ -16,33 +17,24 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
     });
     const [allBooks, setAllBooks] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
-    const [allStaffs, setAllStaffs] = useState([]);
-
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
-    const [filteredStaffs, setFilteredStaffs] = useState([]);
-    const [errorMessages, setErrorMessages] = useState('');
+    const [isCapturingBook, setIsCapturingBook] = useState(false);
+    const [isCapturingUser, setIsCapturingUser] = useState(false);
+    const staff = useSelector(selectedCurrentUser);
 
     const { createBorrow } = useManageBorrowApi();
-    const { getAllBooks } = useManageBookApi();
-    const { getAllUser } = useUserApi();
-    const { getAllAdmin } = useAdminApi();
+    const { getAllBooks, checkBook } = useManageBookApi();
+    const { getAllUser, checkUser } = useUserApi();
 
     useEffect(() => {
-        // Fetch all data once on component mount
         getAllBooks().then((books) => {
             setAllBooks(books);
             setFilteredBooks(books);
         });
-
         getAllUser().then((users) => {
             setAllUsers(users);
             setFilteredUsers(users);
-        });
-
-        getAllAdmin().then((staffs) => {
-            setAllStaffs(staffs);
-            setFilteredStaffs(staffs);
         });
     }, []);
 
@@ -51,7 +43,7 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             book.name.toLowerCase().includes(value.toLowerCase())
         );
         setFilteredBooks(filtered);
-        handleChange('book_id', value); // Allow keyboard input
+        handleChange('book_id', value);
     };
 
     const handleSearchUsers = (value) => {
@@ -59,45 +51,33 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             user.name.toLowerCase().includes(value.toLowerCase())
         );
         setFilteredUsers(filtered);
-        handleChange('user_id', value); // Allow keyboard input
-    };
-
-    const handleSearchStaffs = (value) => {
-        const filtered = allStaffs.filter((staff) =>
-            staff.name.toLowerCase().includes(value.toLowerCase())
-        );
-        setFilteredStaffs(filtered);
-        handleChange('staff_id', value); // Allow keyboard input
+        handleChange('user_id', value);
     };
 
     const handleCreateBorrow = async () => {
-        const { book_id, user_id, staff_id, duration } = borrowInfo;
-
-        if (!book_id || !user_id || !staff_id || !duration) {
-            setErrorMessages('Vui lòng nhập đầy đủ thông tin');
+        const { book_id, user_id, duration } = borrowInfo;
+        if (!book_id || !user_id || !duration) {
+            toast.error('Vui lòng nhập đầy đủ thông tin');
             return;
         }
-
         const result = await createBorrow({
             book_id,
             user_id,
-            staff_id,
+            staff_id: staff.id,
             duration: Number(duration),
         });
-
-        if (result?.name === 'AxiosError') {
-            toast.error('Tạo thông tin mượn sách thất bại. Vui lòng thử lại!');
+        console.log(result)
+        if (result?.detail) {
+            toast.error(result.detail);
             return;
         }
-
-        if (result?.data) {
+        else {
             setBorrowInfo({
                 book_id: '',
                 user_id: '',
                 staff_id: '',
                 duration: '',
             });
-            setErrorMessages('');
             closeModal();
             handleReload();
             toast.success('Tạo thông tin mượn sách thành công');
@@ -109,7 +89,39 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             ...borrowInfo,
             [key]: value
         });
-        setErrorMessages('');
+    };
+
+    const webcamRefBook = React.useRef(null);
+    const webcamRefUser = React.useRef(null);
+
+    const captureBook = async () => {
+        const imageSrc = webcamRefBook.current.getScreenshot();
+        setIsCapturingBook(false);
+        const formDataToSend = new FormData();
+            if (imageSrc) {
+                formDataToSend.append('book_img', imageSrc);
+            }
+        const result = await checkBook(formDataToSend);
+        if (result?.id) {
+            handleChange('book_id', result.id);
+        } else {
+            toast.error('Không tìm thấy thông tin bìa sách, hãy thử lại!');
+        }
+    };
+
+    const captureUser = async () => {
+        const imageSrc = webcamRefUser.current.getScreenshot();
+        setIsCapturingUser(false);
+        const formDataToSend = new FormData();
+        if (imageSrc) {
+            formDataToSend.append('user_img', imageSrc);
+        }
+        const result = await checkUser(formDataToSend);
+        if (result?.id) {
+            handleChange('user_id', result.id);
+        } else {
+            toast.error('Không tìm thấy thông tin người dùng, hãy thử lại!');
+        }
     };
 
     return (
@@ -123,18 +135,17 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
                     staff_id: '',
                     duration: '',
                 });
-                setErrorMessages('');
                 closeModal();
             }}
             onOk={handleCreateBorrow}
             maskClosable={false}
         >
-            <Row gutter={[12, 12]}>
+            <Row gutter={[12, 12]} className="p-4">
                 <Col span={24}>
-                    <Typography>Tên sách</Typography>
+                    <Typography.Text className="font-semibold">Tên sách</Typography.Text>
                     <Select
                         showSearch
-                        style={{ width: '100%' }} // Đặt độ rộng tối đa
+                        className="w-full"
                         placeholder="Nhập tên sách hoặc chọn"
                         value={borrowInfo.book_id}
                         onSearch={handleSearchBooks}
@@ -142,12 +153,38 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
                         filterOption={false}
                         options={filteredBooks.map((book) => ({ label: book.name, value: book.id }))}
                     />
+                    <Button
+                        onClick={() => {
+                            setIsCapturingBook(true);
+                        }}
+                        className="mt-2"
+                        type="primary"
+                    >
+                        Chụp ảnh bìa sách
+                    </Button>
+                    {isCapturingBook && (
+                        <div className="mt-2">
+                            <Webcam
+                                audio={false}
+                                ref={webcamRefBook} // Tham chiếu cho bìa sách
+                                screenshotFormat="image/jpeg"
+                                className="w-full h-60"
+                            />
+                            <Button
+                                onClick={captureBook} // Gọi hàm captureBook khi ấn nút chụp ảnh
+                                type="primary"
+                                className="mt-2"
+                            >
+                                Chụp ảnh
+                            </Button>
+                        </div>
+                    )}
                 </Col>
                 <Col span={24}>
-                    <Typography>Tên người dùng</Typography>
+                    <Typography.Text className="font-semibold">Tên người dùng</Typography.Text>
                     <Select
                         showSearch
-                        style={{ width: '100%' }} // Đặt độ rộng tối đa
+                        className="w-full"
                         placeholder="Nhập tên người dùng hoặc chọn"
                         value={borrowInfo.user_id}
                         onSearch={handleSearchUsers}
@@ -155,30 +192,52 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
                         filterOption={false}
                         options={filteredUsers.map((user) => ({ label: user.name, value: user.id }))}
                     />
+                    <Button
+                        onClick={() => {
+                            setIsCapturingUser(true);
+                        }}
+                        className="mt-2"
+                        type="primary"
+                    >
+                        Chụp ảnh khuôn mặt
+                    </Button>
+                    {isCapturingUser && (
+                        <div className="mt-2">
+                            <Webcam
+                                audio={false}
+                                ref={webcamRefUser} // Tham chiếu cho khuôn mặt
+                                screenshotFormat="image/jpeg"
+                                className="w-full h-60"
+                            />
+                            <Button
+                                onClick={captureUser} // Gọi hàm captureUser khi ấn nút chụp ảnh
+                                type="primary"
+                                className="mt-2"
+                            >
+                                Chụp ảnh
+                            </Button>
+                        </div>
+                    )}
                 </Col>
                 <Col span={24}>
                     <Typography>Tên nhân viên</Typography>
-                    <Select
-                        showSearch
-                        style={{ width: '100%' }} // Đặt độ rộng tối đa
-                        placeholder="Nhập tên nhân viên hoặc chọn"
-                        value={borrowInfo.staff_id}
-                        onSearch={handleSearchStaffs}
-                        onChange={(value) => handleChange('staff_id', value)}
-                        filterOption={false}
-                        options={filteredStaffs.map((staff) => ({ label: staff.name, value: staff.id }))}
-                    />
+                    <div style={{ 
+                        border: '1px solid #d9d9d9', // Viền mỏng
+                        padding: '8px',             // Khoảng cách bên trong
+                        borderRadius: '4px'         // Bo góc
+                    }}>
+                        <Typography.Text>{staff.name}</Typography.Text> {/* Hiển thị tên nhân viên */}
+                    </div>
                 </Col>
                 <Col span={24}>
-                    <Typography>Thời hạn (ngày)</Typography>
+                    <Typography.Text className="font-semibold">Thời hạn (ngày)</Typography.Text>
                     <Input
-                        style={{ width: '100%' }} // Đặt độ rộng tối đa
+                        className="w-full"
                         placeholder="Nhập thời hạn"
                         value={borrowInfo.duration}
                         onChange={(e) => handleChange('duration', e.target.value)}
                     />
                 </Col>
-                <ErrorMessage message={errorMessages} />
             </Row>
         </Modal>
     );

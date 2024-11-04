@@ -87,7 +87,7 @@ const MenuItems = () => {
             ],
         },
         {
-            key: 'analize_library',
+            key: 'analize',
             label: (
                 <div className="flex items-center space-x-2">
                     <span>Thống kê số liệu</span>
@@ -116,6 +116,14 @@ const MenuItems = () => {
                     label: <Link to="/k/5">Thống kê</Link>,
                 },
             ],
+        },
+        {
+            key: 'manage_user',
+            label: (
+                <Link to={'/manage/user'} className="flex items-center space-x-2">
+                    Quản lý người dùng
+                </Link>
+            ),
         },
 
         ] : []), 

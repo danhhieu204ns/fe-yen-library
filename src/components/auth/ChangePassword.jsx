@@ -50,7 +50,7 @@ function ChangePassword() {
     };
 
     return (
-        <div className="flex items-center justify-center bg-gray-100 w-full mt-14">
+        <div className="flex items-center justify-center bg-gray-100 w-full mt-14 pt-12">
             <div className="w-full max-w-md p-10 space-y-8 bg-white rounded-lg shadow-lg">
                 <div className="text-center">
                     <h2 className="mt-6 text-xl font-bold text-gray-900">Đổi mật khẩu</h2>

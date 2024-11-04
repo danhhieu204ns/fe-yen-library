@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import CreateBorrow from './CreateBorrow';
 import EditBorrow from './EditBorrow';
 import ShowInfoBorrow from './ShowInfoBorrow';
+import ReturnBook from './ReturnBook'; // Import component ReturnBook
+
 
 function ManageBorrow() {
     const [borrowList, setBorrowList] = useState([]);
@@ -20,6 +22,7 @@ function ManageBorrow() {
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [modalDelete, contextHolder] = Modal.useModal();
+    const [returnModalOpen, setReturnModalOpen] = useState(false);
 
     const [filteredBorrows, setFilteredBorrowrs] = useState([]); // Dữ liệu sau khi lọc
     const [searchTerm, setSearchTerm] = useState('');
@@ -212,28 +215,28 @@ function ManageBorrow() {
                     <h1 className="text-2xl mt-[60px] mb-[10px]">Quản lý Mượn sách</h1>
                 </div>
                 <h2>Tìm kiếm Mượn sách</h2>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                <Input
-                    placeholder="Nhập từ khóa tìm kiếm..."
-                    allowClear
-                    size="large"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ width: '400px', marginRight: '10px' }}
-                />
-                <label style={{ marginRight: '10px' }}>Lọc theo:</label>
-                <Select
-                    value={filterOption}
-                    onChange={(value) => setFilterOption(value)}
-                    style={{ width: '200px' }}
-                >
-                    <Option value="name">Tên Sách</Option>
-                    <Option value="user">Tên Người dùng</Option>
-                    <Option value="staff">Tên Nhân viên</Option>
-                    <Option value="duration">Thời hạn</Option>
-                    <Option value="status">Trạng thái</Option>
-                </Select>
-            </div>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+                    <Input
+                        placeholder="Nhập từ khóa tìm kiếm..."
+                        allowClear
+                        size="large"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ width: '400px', marginRight: '10px' }}
+                    />
+                    <label style={{ marginRight: '10px' }}>Lọc theo:</label>
+                    <Select
+                        value={filterOption}
+                        onChange={(value) => setFilterOption(value)}
+                        style={{ width: '200px' }}
+                    >
+                        <Option value="name">Tên Sách</Option>
+                        <Option value="user">Tên Người dùng</Option>
+                        <Option value="staff">Tên Nhân viên</Option>
+                        <Option value="duration">Thời hạn</Option>
+                        <Option value="status">Trạng thái</Option>
+                    </Select>
+                </div>
                 <Space className="mb-2">
                     <Button type="primary" onClick={() => setCreateModalOpen(true)}>
                         <PlusCircleOutlined />
@@ -257,6 +260,10 @@ function ManageBorrow() {
                     >
                         <DeleteOutlined />
                         Xóa {listBorrowToDelete.length !== 0 ? listBorrowToDelete.length + ' thông tin' : ''}
+                    </Button>
+                    <Button type="primary" onClick={() => setReturnModalOpen(true)}>
+                        <PlusCircleOutlined />
+                        Trả sách
                     </Button>
                 </Space>
                 <div>
@@ -303,6 +310,11 @@ function ManageBorrow() {
                     data={borrowInfo}
                     openModal={showInfoModal}
                     closeModal={handleCloseShowInfoModal}
+                />
+                <ReturnBook
+                    openModal={returnModalOpen}
+                    closeModal={() => setReturnModalOpen(false)}
+                    handleReload={handleReload} // Giả sử ReturnBook cũng cần reload danh sách sau khi trả sách thành công
                 />
                 {contextHolder}
             </div>

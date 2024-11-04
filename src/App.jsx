@@ -1,20 +1,26 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 import DefaultLayout from './layouts/DefaultLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ChangePassword from './components/auth/ChangePassword';
+
 import ManageUser from './components/ManageUser/ManageUser';
 
 import HomeComponent from './components/Home';
 import SearchBook from './components/Search/Search'
+import Volunteer from './components/Volunteer/Volunteer'
+import Schedule from './components/Schedule/Schedule'
+import Event from './components/Event/Event'
 import MyBookCart from './components/MyBookCart/MyBookCart';
 
-import ManageAuthor from './components/ManageAuthor/ManageAuthor';
-import ManagePublisher from './components/ManagePublisher/ManagePublisher';
-import ManageBook from './components/ManageBook/ManageBook';
-import ManageGenre from './components/ManageGenre/ManageGenre';
+import ManageAuthor from './components/InputAuthor/ManageAuthor';
+import ManagePublisher from './components/InputPublisher/ManagePublisher';
+import ManageBook from './components/InputBook/ManageBook';
+import ManageGenre from './components/InputGenre/ManageGenre';
+
 import ManageBorrow from './components/ManageBorrow/ManageBorrow';
 
 
@@ -35,11 +41,12 @@ export default function App() {
             <BrowserRouter>
                 <Routes>
                     <Route element={<DefaultLayout />}>
-                        {/* Home */}
+                        {/* Default */}
                         <Route path="/" element={<HomeComponent/>} />
-
-                        {/* Search */}
                         <Route path="/search" element={<SearchBook />} />
+                        <Route path="/volunteer" element={<Volunteer/>} />
+                        <Route path="/schedule" element={<Schedule/>} />
+                        <Route path="/event" element={<Event/>} />
 
                         {/* input */}
                         <Route path="/input/author" element={<ManageAuthor />} />
@@ -49,9 +56,7 @@ export default function App() {
 
                         {/* manage_library */}
                         <Route path="/manage/borrow" element={<ManageBorrow />} />
-
-                        {/* manage-user */}
-                        <Route path="/manage-user" element={<ManageUser />} />
+                        <Route path="/manage/user" element={<ManageUser />} />
 
                         {/* me */}
                         <Route path="/change-password" element={<ChangePassword />} />

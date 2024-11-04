@@ -51,7 +51,7 @@ function Login({ closeModal }) {
             if (base64Image) {
                 formDataToSend.append('image', base64Image);
             }
-            const result = await loginFace  (formDataToSend);
+            const result = await loginFace(formDataToSend);
             setLoading(false);
             if (result?.user) {
                 dispatch(setCredentials(result));

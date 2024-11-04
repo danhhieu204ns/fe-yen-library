@@ -1,12 +1,11 @@
 import { Table, Space, Button, Modal, Tooltip } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PoweroffOutlined, KeyOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-
 import { useUserApi } from 'src/services/userService';
+import { getColumnSearchProps } from 'src/utils/searchByApi';
+import { useIsFirstRender } from 'src/hooks/useIsFirstRender';
 import EditUser from './EditUser';
 import ShowInfo from './ShowInfo';
-import { getColumnSearchProps} from 'src/utils/searchByApi';
-import { useIsFirstRender } from 'src/hooks/useIsFirstRender';
 
 function UserTable({
     selectedRowKeyCallback,
@@ -15,345 +14,318 @@ function UserTable({
     reload
 }) {
     const [userList, setUserList] = useState([]);
-    const [reloadToggle, setReloadToggle] = useState(false); // Toggle this variable to reload
-
+    const [reloadToggle, setReloadToggle] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(20);
     const [totalPages, setTotalPages] = useState();
-
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editModalRecord, setEditModalRecord] = useState(null);
     const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [infoModalRecord, setInfoModalRecord] = useState(null);
-
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-
     const [currentFilters, setCurrentFilters] = useState();
     const [filterRequestBody, setFilterRequestBody] = useState();
-
     const [searchMode, setSearchMode] = useState(false);
-
     const [modal, contextHolder] = Modal.useModal();
-
-    const userService = useUserApi();
-
+    const { getAllUserByPage } = useUserApi();
     const isFirstRender = useIsFirstRender();
 
     useEffect(() => {
-        if (!isFirstRender){
-            console.log("Reload triggered");
+        if (!isFirstRender) {
             triggerReload();    
         }  
     }, [reload]);
 
     useEffect(() => {
         const fetchUserData = async () => {
-            console.log("Fetching data by page!")
-            const result = await userService.getAllUserByPage(currentPage, pageSize);
-            setUserList(result?.data?.data);
-            setTotalPages(result?.data?.total_pages);
-            setTotalEntry(result?.data?.total_data);
+            const result = await getAllUserByPage(currentPage, pageSize);
+            setUserList(result?.users);
+
+            setTotalPages(result?.total_pages);
+            setTotalEntry(result?.total_data);
         }
 
         if (!searchMode) fetchUserData();
 
-    }, [reloadToggle, currentPage, pageSize, searchMode])
-
+    }, [reloadToggle, currentPage, pageSize, searchMode]);
+    console.log(userList)
     useEffect(() => {
         const fetchFilteredUserData = async () => {
-            console.log("Fetching data by filter")
-            console.log(filterRequestBody);
-            let res = await userService.searchUser(filterRequestBody, currentPage, pageSize);
-            setUserList(res?.data?.data);
+            const res = await userService.searchUser(filterRequestBody, currentPage, pageSize);
+            setUserList(res?.data);
             setTotalEntry(res?.data?.total_data);
             setTotalPages(res?.data?.total_pages);
         }
 
-        if (searchMode) fetchFilteredUserData(); // Chỉ chạy khi trong search mode
-    }, [reloadToggle, currentPage, pageSize, searchMode, filterRequestBody])
+        if (searchMode) fetchFilteredUserData();
+    }, [reloadToggle, currentPage, pageSize, searchMode, filterRequestBody]);
 
-    // If filter change => Search using those params
     useEffect(() => {
         const searchUsingFilter = async () => {
-            console.log("Filter changed! Compiling request body")
-            let body = {}
-            let isFilter = false;
-            if(currentFilters==null) return;
-            Object.keys(currentFilters).forEach((field) => {
-                if (currentFilters[field]){
-                    isFilter = true;
-                    body[field] = currentFilters[field];
-                } 
-            })
-            if (isFilter){
-                console.log("Filter exists. Enter search mode");
+            if (!currentFilters) return;
+            const body = Object.keys(currentFilters).reduce((acc, field) => {
+                if (currentFilters[field]) {
+                    acc[field] = currentFilters[field];
+                }
+                return acc;
+            }, {});
+            if (Object.keys(body).length) {
                 setFilterRequestBody(body);
                 setSearchMode(true);  
-            }
-            else resetSearch();    
+            } else resetSearch();    
         }
         searchUsingFilter();
-    }, [JSON.stringify(currentFilters)])
+    }, [JSON.stringify(currentFilters)]);
 
     const deleteUser = async (id) => {
-        const result = await userService.deleteUser(id);
+        await userService.deleteUser(id);
+        triggerReload();
     }
 
-    const activeUser = async (id) => {
-        const result = await userService.activateUser({id:id});
-        return result;
-    }
+    const toggleUserStatus = async (record) => {
+        const action = record.active_user ? deactivateUser : activeUser;
+        const confirmationMessage = record.active_user 
+            ? `Bạn có chắc muốn khoá tài khoản ${record.username}?` 
+            : `Bạn có chắc muốn kích hoạt tài khoản ${record.username}?`;
 
-    const deactivateUser = async (id) => {
-        const result = await userService.deactivateUser({id:id});
-        return result;
-    }
-    /**@callback {resetPassword} */
-    /**@param {string} */
-    /**@returns {boolean} */
+        const result = await modal.confirm({
+            title: record.active_user ? 'Xác nhận khoá' : 'Xác nhận kích hoạt',
+            icon: <ExclamationCircleFilled />,
+            content: confirmationMessage,
+            onOk: async () => {
+                await action(record.id);
+                triggerReload();
+            },
+        });
+    };
+
     const resetPassword = async (username) => {
-        const result = await userService.resetPassword({username:username});
+        const result = await userService.resetPassword({ username });
         return result;
     }
 
     const triggerReload = () => {
-        setReloadToggle((prev) => !prev)
+        setReloadToggle(prev => !prev);
     }
 
     const showInfoModal = () => {
-        if (selectedRowKeys.length==0) setInfoModalOpen(true); // Prevent accidental popup when mis-click selection
+        if (selectedRowKeys.length === 0) setInfoModalOpen(true);
     }
+
+    const closeInfoModal = () => {
+        setInfoModalOpen(false);
+    };
 
     const onSelectedRowKeysChange = (newSelectedRowsKey, newSelectedRowsRecord) => {
         setSelectedRowKeys(newSelectedRowsKey);
         selectedRowKeyCallback(newSelectedRowsKey, newSelectedRowsRecord);
-        console.log(newSelectedRowsRecord);
     }
 
     const resetSearch = () => {
         setSearchMode(false);
     };
 
-    const onTableChange = async (pagination, filters, sorter, extra) => {
-        console.log(filters);
-        let cleanedFilters = filters;
-        cleanedFilters.username = cleanedFilters.username?cleanedFilters.username[0]:null;
-        cleanedFilters.full_name = cleanedFilters.full_name?cleanedFilters.full_name[0]:null;
-
+    const onTableChange = (pagination, filters) => {
+        const cleanedFilters = {
+            username: filters.username?.[0] || null,
+            full_name: filters.full_name?.[0] || null,
+        };
         setCurrentFilters(cleanedFilters);
     }
 
     const columns = [
         {
             title: 'Tên người dùng',
-            dataIndex: 'username',
-            key: 'username',
+            dataIndex: ['user_auth', 'username'],  // Nested field for username
+            key: 'user_auth.username',
             align: 'center',
             ...getColumnSearchProps("Username", "username"),
-            sorter: (a, b) => a.username.localeCompare(b.username),
+            sorter: (a, b) => a.user_auth.username.localeCompare(b.user_auth.username),
         },
         {
             title: 'Họ tên',
-            key: 'full_name',
-            dataIndex: 'full_name',
+            key: 'name',
+            dataIndex: 'name',  // Direct field for full name
             align: 'center',
-            ...getColumnSearchProps('Họ tên', 'full_name'),
-            sorter: (a, b) => a.full_name.localeCompare(b.full_name),
+            ...getColumnSearchProps('Họ tên', 'name'),  // Use 'name' for full name search
+            sorter: (a, b) => a.name.localeCompare(b.name),  // Sort based on name
+        },
+        {
+            title: 'Số điện thoại',
+            key: 'phone_number',
+            dataIndex: 'phone_number',
+            align: 'center',
+            ...getColumnSearchProps('Số điện thoại', 'phone_number'), 
+        },
+        {
+            title: 'Ngày sinh',
+            key: 'birthdate',
+            dataIndex: 'birthdate',
+            align: 'center',
+            ...getColumnSearchProps('Ngày sinh', 'birthdate'), 
+        },
+        {
+            title: 'Địa chỉ',
+            key: 'address',
+            dataIndex: 'address',
+            align: 'center',
+            ...getColumnSearchProps('Địa chỉ', 'address'), 
         },
         {
             title: 'Vai trò',
+            dataIndex: ['role', 'name'],  // Nested field for role name
             key: 'role',
-            dataIndex: 'role', // Data comes in form: [1, CNTT 15 - 01] => Need nested path (Which probably use student_class_id.get(1) under the hood)
             align: 'center',
             filters: [
-                {text: 'Admin', value: 'Admin'},
-                {text: 'User', value: 'User'}
+                { text: 'Admin', value: 'admin' },
+                { text: 'User', value: 'user' }
             ],
-            sorter: (a, b) => a.role.localeCompare(b.role),
+            onFilter: (value, record) => record.role.name === value,  // Filter based on nested role name
+            sorter: (a, b) => a.role.name.localeCompare(b.role.name),
         },
         {
             title: 'Trạng thái',
-            key: 'active_user',
-            dataIndex: 'active_user', // Data comes in form: [1, CNTT 15 - 01] => Need nested path (Which probably use student_class_id.get(1) under the hood)
+            key: 'status',
+            dataIndex: 'status',
             align: 'center',
             filters: [
-                {text: 'Đang hoạt động', value: true},
-                {text: 'Không hoạt động', value: false}
+                { text: 'Đang hoạt động', value: true },
+                { text: 'Không hoạt động', value: false }
             ],
-            sorter: (a, b) => a.active_user - b.active_user,
-            render: (value) => value?'Đang hoạt động':'Không hoạt động'
+            onFilter: (value, record) => record.status === value,  // Filter by active status
+            sorter: (a, b) => a.status - b.status,  // Sort by active status
+            render: value => (value ? 'Đang hoạt động' : 'Không hoạt động')  // Display active status
         },
         {
             title: 'Thao tác',
             key: 'actions',
             align: 'center',
-            render: (record) => {
-                return (
-                    <Space>
-                        <Tooltip title={record.active_user?'Khoá':'Kích hoạt'}>
-                            <Button
-                                shape="circle"
-                                className={record.active_user?'bg-red-500 hover:bg-red-500':'bg-green-500'}
-                                type='primary'
-                                onClick={async (e) => {
-                                    e.stopPropagation();
-                                    let config = {
-                                        title: record.active_user?'Xác nhận khoá':'Xác nhận kích hoạt',
-                                        icon: <ExclamationCircleFilled />,
-                                        content: record.active_user?`Bạn có chắc muốn khoá tài khoản ${record.username}?`:`Bạn có chắc muốn kích hoạt tài khoản ${record.username}?`,
-                                        onOk: async () => {
-                                            let res;
-                                            if (record.active_user){
-                                                res = await deactivateUser(record.id);
-                                            }
-                                            else{
-                                                res = await activeUser(record.id);
-                                            }
-                                            if (res){
-                                                await modal.success({
-                                                    title: record.active_user?'Khoá tài khoản thành công':'Kích hoạt tài khoản thành công', 
-                                                    content: record.active_user?`Tài khoản ${record.username} đã bị khoá`:`Tài khoản ${record.username} đã được kích hoạt`,
-                                                    onOk: () => {
-                                                        triggerReload();
-                                                    }
-                                                });
-                                            }
-                                            else{
-                                                await modal.error({
-                                                    title: 'Thao tác thất bại',
-                                                    content: record.active_user?'Khoá tài khoản thất bại. Vui lòng thử lại':'Kích hoạt tài khoản thất bại. Vui lòng thử lại'
-                                                })
-                                            }
-                                        },
-                                        onCancel() {},
-                                    };
-                                    await modal.confirm(config);
-                                }}
-                            >
-                                <PoweroffOutlined color='#ffffff'/>
-                            </Button>    
-                        </Tooltip>
-                        <Tooltip title="Đặt lại mật khẩu">
-                            <Button
-                                shape="circle"
-                                className='bg-blue-500'
-                                type='primary'
-                                onClick={async (e) => {
-                                    e.stopPropagation();
-                                    let config = {
-                                        title: 'Xác nhận đặt lại',
-                                        icon: <ExclamationCircleFilled />,
-                                        content: `Bạn có chắc muốn đặt lại mật khẩu cho tài khoản ${record.username}?`,
-                                        onOk: async () => {
-                                            let res = await resetPassword(record.username);
-                                            
-                                            if (res){
-                                                await modal.success({
-                                                    title: 'Đặt lại mật khẩu thành công', 
-                                                    content: `Mật khẩu của tài khoản ${record.username} đã được đặt lại thành công`,
-                                                });
-                                            }
-                                            else{
-                                                await modal.error({
-                                                    title: 'Đặt lại mật khẩu thất bại',
-                                                    content: 'Đặt lại mật khẩu cho tài khoản thất bại. Vui lòng thử lại'
-                                                })
-                                            }
-                                        },
-                                        onCancel() {},
-                                    };
-                                    await modal.confirm(config);
-                                }}
-                            >
-                                <KeyOutlined />
-                            </Button>    
-                        </Tooltip>
-                        <Tooltip title="Sửa">
-                            <Button
-                                shape="circle"
-                                className='bg-yellow-300'
-                                type='primary'
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditModalRecord(record);
-                                    setEditModalOpen(true);
-                                }}
-                            >
-                                <EditOutlined className='text-slate-900 font-[300]'/>
-                            </Button>    
-                        </Tooltip>
-                        <Tooltip title="Xoá">
-                            <Button
-                                shape="circle"
-                                className='bg-red-500'
-                                type='primary'
-                                onClick={async (e) => {
-                                    e.stopPropagation();
-                                    let config = {
-                                        title: 'Xác nhận xoá',
-                                        icon: <ExclamationCircleFilled />,
-                                        content: `Bạn có chắc muốn xoá tài khoản ${record.username}?`,
-                                        onOk() {
-                                            deleteUser(record.id);
-                                            triggerReload();
-                                        },
-                                        onCancel() {},
-                                    };
-                                    await modal.confirm(config);
-                                }}
-                            >
-                                <DeleteOutlined style={{ color: '#ffffff' }} />
-                            </Button>    
-                        </Tooltip>
-                    </Space>    
-                )
-            }
+            render: (record) => (
+                <Space>
+                    <Tooltip title={record.active_user ? 'Khoá' : 'Kích hoạt'}>
+                        <Button
+                            shape="circle"
+                            className={record.active_user ? 'bg-red-500 hover:bg-red-500' : 'bg-green-500'}
+                            type='primary'
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleUserStatus(record);
+                            }}
+                        >
+                            <PoweroffOutlined style={{ color: '#ffffff' }} />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip title="Đặt lại mật khẩu">
+                        <Button
+                            shape="circle"
+                            className='bg-blue-500'
+                            type='primary'
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                const confirmationMessage = `Bạn có chắc muốn đặt lại mật khẩu cho tài khoản ${record.user_auth.username}?`;
+                                await modal.confirm({
+                                    title: 'Xác nhận đặt lại',
+                                    icon: <ExclamationCircleFilled />,
+                                    content: confirmationMessage,
+                                    onOk: async () => {
+                                        await resetPassword(record.user_auth.username);
+                                        triggerReload();
+                                    },
+                                });
+                            }}
+                        >
+                            <KeyOutlined />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip title="Sửa">
+                        <Button
+                            shape="circle"
+                            className='bg-yellow-300'
+                            type='primary'
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setEditModalRecord(record);
+                                setEditModalOpen(true);
+                            }}
+                        >
+                            <EditOutlined className='text-slate-900 font-[300]' />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip title="Xoá">
+                        <Button
+                            shape="circle"
+                            className='bg-red-500'
+                            type='primary'
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                const confirmationMessage = `Bạn có chắc muốn xoá tài khoản ${record.user_auth.username}?`;
+                                await modal.confirm({
+                                    title: 'Xác nhận xoá',
+                                    icon: <ExclamationCircleFilled />,
+                                    content: confirmationMessage,
+                                    onOk: async () => {
+                                        await deleteUser(record.id);
+                                        triggerReload();
+                                    },
+                                });
+                            }}
+                        >
+                            <DeleteOutlined style={{ color: '#ffffff' }} />
+                        </Button>
+                    </Tooltip>
+                </Space>
+            )
         }
-    ]
+    ];
+    
+
     return (
         <>
-            <Table  columns={columns}
+            <Table
+                columns={columns}
                 dataSource={userList}
                 onChange={onTableChange}
-                scroll={{
-                    x:1300, // Not working
-                }}
+                scroll={{ x: 1300 }}
                 pagination={{
                     onChange: (page, pageSize) => {
                         setCurrentPage(page);
-                        setPageSize(pageSize); // Might have unintended side effects
-                        console.log(totalPages);
+                        setPageSize(pageSize);
                     },
-                    pageSize: pageSize,
-                    total: totalPages*pageSize,
-                    showSizeChanger: true
+                    pageSize,
+                    total: totalPages * pageSize,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Tổng ${total} người dùng`
                 }}
-                rowKey={(record) => record.id}
-                onRow={(record, index) => {
-                    return({
-                        onClick: event => {
-                            console.log(`${record.username} clicked`);
-                            setInfoModalRecord(record);
-                            showInfoModal();
-                        }
-                    })
-                }}    
                 rowSelection={{
-                    type: 'checkbox',
-                    selectedRowKeys: selectedRowKeys,
+                    selectedRowKeys,
                     onChange: onSelectedRowKeysChange,
                 }}
+                onRow={(record) => ({
+                    onClick: () => {
+                        setInfoModalRecord(record);
+                        setInfoModalOpen(true);
+                    }
+                })}
             />
-            <EditUser open={editModalOpen} 
-                        onCancel={() => setEditModalOpen(false)} 
-                        reload={triggerReload}
-                        record={editModalRecord} />
-            <ShowInfo open={infoModalOpen}
-                    onCancel={() => setInfoModalOpen(false)}
-                    record={infoModalRecord} />
-            {contextHolder /* Modal hook context holder. Should not be placed inside column or modal will trigger onRow??? */} 
+            {contextHolder}
+            <EditUser
+                open={editModalOpen}
+                onClose={() => {
+                    setEditModalOpen(false);
+                    triggerReload();
+                }}
+                record={editModalRecord}
+            />
+            <ShowInfo
+                open={infoModalOpen}
+                onClose={() => {
+                    setInfoModalOpen(false);
+                    triggerReload();
+                }}
+                record={infoModalRecord}
+            />
         </>
-    )
+    );
 }
 
 export default UserTable;

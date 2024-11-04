@@ -76,6 +76,18 @@ const useBookApi = () => {
             return error?.response;
         }
     };
+    const checkBook = async (formData) => {
+        try {
+            const res = await httpPrivate.post('/book/check', formData, {
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                }, });
+            return res.data;
+        } catch (error) {
+            console.log(error);
+            return error;
+        }
+    };
 
     return {
         oneBook,
@@ -85,6 +97,7 @@ const useBookApi = () => {
         editBook,
         deleteBook,
         deleteListBooks,
+        checkBook
     };
 };
 
