@@ -27,7 +27,7 @@ function UserTable({
     const [filterRequestBody, setFilterRequestBody] = useState();
     const [searchMode, setSearchMode] = useState(false);
     const [modal, contextHolder] = Modal.useModal();
-    const { getAllUserByPage } = useUserApi();
+    const { getAllUserByPage, resetPassword, activateUser, deactivateUser, deleteUser } = useUserApi();
     const isFirstRender = useIsFirstRender();
 
     useEffect(() => {
@@ -48,7 +48,6 @@ function UserTable({
         if (!searchMode) fetchUserData();
 
     }, [reloadToggle, currentPage, pageSize, searchMode]);
-    console.log(userList)
     useEffect(() => {
         const fetchFilteredUserData = async () => {
             const res = await userService.searchUser(filterRequestBody, currentPage, pageSize);
@@ -77,19 +76,19 @@ function UserTable({
         searchUsingFilter();
     }, [JSON.stringify(currentFilters)]);
 
-    const deleteUser = async (id) => {
-        await userService.deleteUser(id);
+    const deleteUserInfo = async (id) => {
+        await deleteUser(id);
         triggerReload();
     }
 
     const toggleUserStatus = async (record) => {
-        const action = record.active_user ? deactivateUser : activeUser;
-        const confirmationMessage = record.active_user 
-            ? `Bạn có chắc muốn khoá tài khoản ${record.username}?` 
-            : `Bạn có chắc muốn kích hoạt tài khoản ${record.username}?`;
+        const action = record.status ? deactivateUser : activateUser;
+        const confirmationMessage = record.status 
+            ? `Bạn có chắc muốn khoá tài khoản "${record.user_auth.username}"?` 
+            : `Bạn có chắc muốn kích hoạt tài khoản "${record.user_auth.username}"?`;
 
         const result = await modal.confirm({
-            title: record.active_user ? 'Xác nhận khoá' : 'Xác nhận kích hoạt',
+            title: record.status ? 'Xác nhận khoá' : 'Xác nhận kích hoạt',
             icon: <ExclamationCircleFilled />,
             content: confirmationMessage,
             onOk: async () => {
@@ -99,8 +98,8 @@ function UserTable({
         });
     };
 
-    const resetPassword = async (username) => {
-        const result = await userService.resetPassword({ username });
+    const resetPwd = async (username) => {
+        const result = await resetPassword({ username });
         return result;
     }
 
@@ -158,13 +157,6 @@ function UserTable({
             ...getColumnSearchProps('Số điện thoại', 'phone_number'), 
         },
         {
-            title: 'Ngày sinh',
-            key: 'birthdate',
-            dataIndex: 'birthdate',
-            align: 'center',
-            ...getColumnSearchProps('Ngày sinh', 'birthdate'), 
-        },
-        {
             title: 'Địa chỉ',
             key: 'address',
             dataIndex: 'address',
@@ -202,10 +194,10 @@ function UserTable({
             align: 'center',
             render: (record) => (
                 <Space>
-                    <Tooltip title={record.active_user ? 'Khoá' : 'Kích hoạt'}>
+                    <Tooltip title={record.status ? 'Khoá' : 'Kích hoạt'}>
                         <Button
                             shape="circle"
-                            className={record.active_user ? 'bg-red-500 hover:bg-red-500' : 'bg-green-500'}
+                            className={record.status ? 'bg-red-500 hover:bg-red-500' : 'bg-green-500'}
                             type='primary'
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -228,7 +220,7 @@ function UserTable({
                                     icon: <ExclamationCircleFilled />,
                                     content: confirmationMessage,
                                     onOk: async () => {
-                                        await resetPassword(record.user_auth.username);
+                                        await resetPwd(record.user_auth.username);
                                         triggerReload();
                                     },
                                 });

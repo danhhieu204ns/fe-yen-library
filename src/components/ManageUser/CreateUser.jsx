@@ -12,6 +12,9 @@ function CreateUser({
     const [username, setUsername] = useState('');
     const [userFullName, setUserFullName] = useState('');
     const [role, setRole] = useState('');
+    const [userPhoneNumber, setUserPhoneNumber] = useState(null);
+    const [userAddress, setUserAddress] = useState(null);
+    const [userBirthdate, setUserBirthdate] = useState(null);
     const [active, setActive] = useState(false);
 
     const [apiStatus, setApiStatus] = useState('');

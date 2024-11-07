@@ -12,27 +12,27 @@ function EditUser({
     const [disabled, setDisabled] = useState(true);
     const [username, setUsername] = useState(null);
     const [userFullName, setUserFullName] = useState(null);
+    const [userPhoneNumber, setUserPhoneNumber] = useState(null);
+    const [userAddress, setUserAddress] = useState(null);
+    const [userBirthdate, setUserBirthdate] = useState(null);
+    
     const [role, setRole] = useState(null);
-    const [active, setActive] = useState(null);
-
-    const [apiStatus, setApiStatus] = useState('');
-
     const [modal, contextHolder] = Modal.useModal();
-
     let userRecordId = useRef(null); // ID to call API
 
-    const userService = useUserApi();
+    const { updateUserById } = useUserApi();
 
-    // Set to disable when close or open
     useEffect(() => {
         setDisabled(true);
     }, [open]);
 
     useEffect(() => {
-        setUsername(record?.username);
-        setUserFullName(record?.full_name);
-        setRole(record?.role);
-        setActive(record?.active_user);
+        setUsername(record?.user_auth.username);
+        setUserFullName(record?.name);
+        setRole(record?.role.name);
+        setUserAddress(record?.address)
+        setUserBirthdate(record?.birthdate)
+        setUserPhoneNumber(record?.phone_number)
 
         userRecordId.current = record?.id;
     }, [open]);
@@ -43,15 +43,15 @@ function EditUser({
             cancel();
             return;
         }
-        console.log('Update user info');
         const body = {
-            username: username,
-            full_name: userFullName,
+            name: userFullName,
             role: role,
+            birthdate: userBirthdate, 
+            address: userAddress, 
+            phone_number: userPhoneNumber
         };
-        let status = await userService.updateUserById(userRecordId.current, body);
-        setApiStatus(status);
-        status ? success(cancel) : error();
+        let status = await updateUserById(userRecordId.current, body);
+        (status) ? success(cancel) : error();
     };
 
     const updateInfoOnSearch = (data) => {
@@ -118,10 +118,40 @@ function EditUser({
                         value={role}
                         onChange={(value) => setRole(value)}
                         options={[
-                            {label: 'Admin', value: 'Admin'},
-                            {label: 'User', value: 'User'}
+                            {label: 'Admin', value: 'admin'},
+                            {label: 'User', value: 'user'}
                         ]}
                         style={{ width: '100%' }}
+                    />
+                </Col>
+                <Col span={12}>
+                    <Typography>Số điện thoại</Typography>
+                    <Input
+                        disabled={disabled}
+                        value={userPhoneNumber}
+                        onChange={(e) => {
+                            setUserPhoneNumber(e.target.value);
+                        }}
+                    />
+                </Col>
+                <Col span={12}>
+                    <Typography>Địa chỉ</Typography>
+                    <Input
+                        disabled={disabled}
+                        value={userAddress}
+                        onChange={(e) => {
+                            setUserAddress(e.target.value);
+                        }}
+                    />
+                </Col>
+                <Col span={12}>
+                    <Typography>Ngày sinh</Typography>
+                    <Input
+                        disabled={disabled}
+                        value={userBirthdate}
+                        onChange={(e) => {
+                            setUserBirthdate(e.target.value);
+                        }}
                     />
                 </Col>
             </Row>
