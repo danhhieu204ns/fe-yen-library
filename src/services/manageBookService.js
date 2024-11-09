@@ -1,6 +1,6 @@
 import useHttpPrivate from 'src/hooks/useHttpPrivate';
 
-const useBookGroupApi = () => {
+const useBookApi = () => {
     const httpPrivate = useHttpPrivate();
 
     // Sách
@@ -13,7 +13,7 @@ const useBookGroupApi = () => {
         }
     };
 
-    const allBooks = async () => {
+    const getAllBooks = async () => {
         try {
             const res = await httpPrivate.get('/book/all');
             return res?.data;
@@ -76,16 +76,29 @@ const useBookGroupApi = () => {
             return error?.response;
         }
     };
+    const checkBook = async (formData) => {
+        try {
+            const res = await httpPrivate.post('/book/check', formData, {
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                }, });
+            return res.data;
+        } catch (error) {
+            console.log(error);
+            return error;
+        }
+    };
 
     return {
         oneBook,
-        allBooks,
+        getAllBooks,
         bookData,
         createBook,
         editBook,
         deleteBook,
         deleteListBooks,
+        checkBook
     };
 };
 
-export default useBookGroupApi;
+export default useBookApi;

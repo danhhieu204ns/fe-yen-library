@@ -3,55 +3,45 @@ import { Input, Typography, Col, Row, Modal, Select } from 'antd';
 import { toast } from 'react-toastify';
 import ErrorMessage from 'src/utils/error/errorMessage';
 import useManageBorrowApi from 'src/services/manageBorrowService';
-import useManageBookgroupApi from 'src/services/manageBookgroupService';
+import useManageBookApi from 'src/services/manageBookService';
 import { useUserApi } from 'src/services/userService';
-import { useAdminApi } from 'src/services/adminService';
+import { useSelector } from 'react-redux';
+import { selectedCurrentUser } from 'src/redux/auth/authSlice';
 
 function EditBorrow({ openModal, closeModal, handleReload, data }) {
-    const [bookgroupName, setBookgroupName] = useState('');
+    const [bookName, setBookName] = useState('');
     const [userName, setUserName] = useState('');
     const [staffName, setStaffName] = useState('');
     const [duration, setDuration] = useState('');
     const [status, setStatus] = useState('');
     const [errorMessages, setErrorMessages] = useState('');
+    const staff = useSelector(selectedCurrentUser);
 
     // Dữ liệu gốc và dữ liệu lọc
-    const [bookGroups, setBookGroups] = useState([]);
+    const [books, setBooks] = useState([]);
     const [users, setUsers] = useState([]);
-    const [staffs, setStaffs] = useState([]);
-    
-    const [filteredBookGroups, setFilteredBookGroups] = useState([]);
+    const [filteredBooks, setFilteredBooks] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
-    const [filteredStaffs, setFilteredStaffs] = useState([]);
 
     const { editBorrow } = useManageBorrowApi();
-    const { allBookgroups } = useManageBookgroupApi();
+    const { getAllBooks } = useManageBookApi();
     const { getAllUser } = useUserApi();
-    const { getAllAdmin } = useAdminApi();
 
     useEffect(() => {
-        // Tải danh sách sách, người dùng và nhân viên khi component được render
         const loadData = async () => {
-            const bookGroups = await allBookgroups();
+            const books = await getAllBooks();
             const users = await getAllUser();
-            const staffs = await getAllAdmin();
-            
-            // Lưu trữ toàn bộ dữ liệu gốc
-            setBookGroups(bookGroups);
+            setBooks(books);
             setUsers(users);
-            setStaffs(staffs);
-
-            // Hiển thị toàn bộ danh sách ban đầu
-            setFilteredBookGroups(bookGroups);
+            setFilteredBooks(books);
             setFilteredUsers(users);
-            setFilteredStaffs(staffs);
         };
         loadData();
     }, []);
 
     useEffect(() => {
         if (data) {
-            setBookgroupName(data?.bookgroup?.name || '');
+            setBookName(data?.book?.name || '');
             setUserName(data?.user?.name || '');
             setStaffName(data?.staff?.name || '');
             setDuration(data?.duration || '');
@@ -60,30 +50,24 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
     }, [data]);
 
     const handleEditBorrow = async () => {
-        if (!bookgroupName || bookgroupName.trim().length === 0) {
+        setStaffName(staff.name)
+        if (!bookName || bookName.trim().length === 0) {
             setErrorMessages('Vui lòng nhập tên sách');
             return;
         }
-
         if (!userName || userName.trim().length === 0) {
             setErrorMessages('Vui lòng nhập tên người dùng');
             return;
         }
-
-        if (!staffName || staffName.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập tên nhân viên');
-            return;
-        }
-
         if (!duration || isNaN(duration) || Number(duration) <= 0) {
             setErrorMessages('Vui lòng nhập thời hạn hợp lệ');
             return;
         }
 
         const updatedData = {
-            bookgroup_id: bookGroups.find(book => book.name === bookgroupName)?.id,
+            book_id: books.find(book => book.name === bookName)?.id,
             user_id: users.find(user => user.name === userName)?.id,
-            staff_id: staffs.find(staff => staff.name === staffName)?.id,
+            staff_id: staff.id, // Lấy staff_id từ Redux
             duration: Number(duration),
             status: status.trim(),
         };
@@ -101,7 +85,7 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
         }
 
         if (result?.data) {
-            setBookgroupName('');
+            setBookName('');
             setUserName('');
             setStaffName('');
             setDuration('');
@@ -114,16 +98,12 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
     };
 
     // Hàm lọc dữ liệu theo input
-    const filterBookGroups = (input) => {
-        return bookGroups.filter(book => book.name.toLowerCase().includes(input.toLowerCase()));
+    const filterBooks = (input) => {
+        return books.filter(book => book.name.toLowerCase().includes(input.toLowerCase()));
     };
 
     const filterUsers = (input) => {
         return users.filter(user => user.name.toLowerCase().includes(input.toLowerCase()));
-    };
-
-    const filterStaffs = (input) => {
-        return staffs.filter(staff => staff.name.toLowerCase().includes(input.toLowerCase()));
     };
 
     return (
@@ -131,7 +111,7 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
             title="Sửa thông tin mượn sách"
             open={openModal}
             onCancel={() => {
-                setBookgroupName('');
+                setBookName('');
                 setUserName('');
                 setStaffName('');
                 setDuration('');
@@ -148,14 +128,14 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
                     <Select
                         showSearch
                         placeholder="Chọn tên sách"
-                        value={bookgroupName}
+                        value={bookName}
                         style={{ width: '100%' }}  // Điều chỉnh độ rộng
                         onSearch={(value) => {
-                            const filtered = filterBookGroups(value);
-                            setFilteredBookGroups(filtered);
+                            const filtered = filterBooks(value);
+                            setFilteredBooks(filtered);
                         }}
-                        onChange={(value) => setBookgroupName(value)}
-                        options={filteredBookGroups.map((book) => ({
+                        onChange={(value) => setBookName(value)}
+                        options={filteredBooks.map((book) => ({
                             label: book.name,
                             value: book.name,  // Sử dụng tên để tránh trùng key
                             key: book.id,      // Key là ID
@@ -183,22 +163,13 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
                 </Col>
                 <Col span={24}>
                     <Typography>Tên nhân viên</Typography>
-                    <Select
-                        showSearch
-                        placeholder="Chọn tên nhân viên"
-                        value={staffName}
-                        style={{ width: '100%' }}  // Điều chỉnh độ rộng
-                        onSearch={(value) => {
-                            const filtered = filterStaffs(value);
-                            setFilteredStaffs(filtered);
-                        }}
-                        onChange={(value) => setStaffName(value)}
-                        options={filteredStaffs.map((staff) => ({
-                            label: staff.name,
-                            value: staff.name,  // Sử dụng tên để tránh trùng key
-                            key: staff.id,      // Key là ID
-                        }))}
-                    />
+                    <div style={{ 
+                        border: '1px solid #d9d9d9', // Viền mỏng
+                        padding: '8px',             // Khoảng cách bên trong
+                        borderRadius: '4px'         // Bo góc
+                    }}>
+                        <Typography.Text>{staff.name}</Typography.Text> {/* Hiển thị tên nhân viên */}
+                    </div>
                 </Col>
                 <Col span={24}>
                     <Typography>Thời hạn (ngày)</Typography>
@@ -217,8 +188,11 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
                         style={{ width: '100%' }}  // Điều chỉnh độ rộng
                         onChange={(value) => setStatus(value)}
                         options={[
+                            { label: 'Đang chờ xác nhận', value: 'Đang chờ xác nhận' },
                             { label: 'Đang mượn', value: 'Đang mượn' },
                             { label: 'Đã trả', value: 'Đã trả' },
+                            { label: 'Đã quá hạn', value: 'Đã quá hạn' },
+                            { label: 'Đã hủy', value: 'Đã hủy' }                       
                         ]}
                     />
                 </Col>

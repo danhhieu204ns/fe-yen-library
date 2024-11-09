@@ -13,9 +13,9 @@ const useSearchBookApi = () => {
         }
     };
 
-    const listgroupbook = async (id) => {
+    const getAllBooks = async (id) => {
         try {
-            const res = await httpPrivate.get("/bookgroup/all");
+            const res = await httpPrivate.get("/book/all");
             return res.data;
         } catch (error) {
             console.log(error);
@@ -73,7 +73,7 @@ const useSearchBookApi = () => {
 
     return {
         absenceByClassData,
-        listgroupbook,
+        getAllBooks,
         allSubjectInSemester,
         absenceBySubjectData,
         studentsAbsenceBySubject,

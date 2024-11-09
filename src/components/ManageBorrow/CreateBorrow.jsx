@@ -1,48 +1,37 @@
-import { memo, useState, useEffect } from 'react';
-import { Input, Typography, Col, Row, Modal, Select } from 'antd';
+import React, { memo, useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import ErrorMessage from 'src/utils/error/errorMessage';
-import useManageBorrowApi from 'src/services/manageBorrowService';
-import useManageBookgroupApi from 'src/services/manageBookgroupService';
+import { Input, Typography, Col, Row, Modal, Select, Button } from 'antd';
+import { useSelector } from 'react-redux';
+import { selectedCurrentUser } from 'src/redux/auth/authSlice';
 import { useUserApi } from 'src/services/userService';
-import { useAdminApi } from 'src/services/adminService';
+import useManageBorrowApi from 'src/services/manageBorrowService';
+import useManageBookApi from 'src/services/manageBookService';
 
 function CreateBorrow({ openModal, closeModal, handleReload }) {
     const [borrowInfo, setBorrowInfo] = useState({
-        bookgroup_id: '',
+        book_id: '',
         user_id: '',
         staff_id: '',
         duration: '',
     });
     const [allBooks, setAllBooks] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
-    const [allStaffs, setAllStaffs] = useState([]);
-
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
-    const [filteredStaffs, setFilteredStaffs] = useState([]);
-    const [errorMessages, setErrorMessages] = useState('');
+    const staff = useSelector(selectedCurrentUser);
 
     const { createBorrow } = useManageBorrowApi();
-    const { allBookgroups } = useManageBookgroupApi();
+    const { getAllBooks } = useManageBookApi();
     const { getAllUser } = useUserApi();
-    const { getAllAdmin } = useAdminApi();
 
     useEffect(() => {
-        // Fetch all data once on component mount
-        allBookgroups().then((books) => {
+        getAllBooks().then((books) => {
             setAllBooks(books);
             setFilteredBooks(books);
         });
-
         getAllUser().then((users) => {
             setAllUsers(users);
             setFilteredUsers(users);
-        });
-
-        getAllAdmin().then((staffs) => {
-            setAllStaffs(staffs);
-            setFilteredStaffs(staffs);
         });
     }, []);
 
@@ -51,7 +40,7 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             book.name.toLowerCase().includes(value.toLowerCase())
         );
         setFilteredBooks(filtered);
-        handleChange('bookgroup_id', value); // Allow keyboard input
+        handleChange('book_id', value);
     };
 
     const handleSearchUsers = (value) => {
@@ -59,45 +48,32 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             user.name.toLowerCase().includes(value.toLowerCase())
         );
         setFilteredUsers(filtered);
-        handleChange('user_id', value); // Allow keyboard input
-    };
-
-    const handleSearchStaffs = (value) => {
-        const filtered = allStaffs.filter((staff) =>
-            staff.name.toLowerCase().includes(value.toLowerCase())
-        );
-        setFilteredStaffs(filtered);
-        handleChange('staff_id', value); // Allow keyboard input
+        handleChange('user_id', value);
     };
 
     const handleCreateBorrow = async () => {
-        const { bookgroup_id, user_id, staff_id, duration } = borrowInfo;
-
-        if (!bookgroup_id || !user_id || !staff_id || !duration) {
-            setErrorMessages('Vui lòng nhập đầy đủ thông tin');
+        const { book_id, user_id, duration } = borrowInfo;
+        if (!book_id || !user_id || !duration) {
+            toast.error('Vui lòng nhập đầy đủ thông tin');
             return;
         }
-
         const result = await createBorrow({
-            bookgroup_id,
+            book_id,
             user_id,
-            staff_id,
+            staff_id: staff.id,
             duration: Number(duration),
         });
-
-        if (result?.name === 'AxiosError') {
-            toast.error('Tạo thông tin mượn sách thất bại. Vui lòng thử lại!');
+        if (result?.detail) {
+            toast.error(result.detail);
             return;
         }
-
-        if (result?.data) {
+        else {
             setBorrowInfo({
-                bookgroup_id: '',
+                book_id: '',
                 user_id: '',
                 staff_id: '',
                 duration: '',
             });
-            setErrorMessages('');
             closeModal();
             handleReload();
             toast.success('Tạo thông tin mượn sách thành công');
@@ -109,7 +85,6 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             ...borrowInfo,
             [key]: value
         });
-        setErrorMessages('');
     };
 
     return (
@@ -118,36 +93,35 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             open={openModal}
             onCancel={() => {
                 setBorrowInfo({
-                    bookgroup_id: '',
+                    book_id: '',
                     user_id: '',
                     staff_id: '',
                     duration: '',
                 });
-                setErrorMessages('');
                 closeModal();
             }}
             onOk={handleCreateBorrow}
             maskClosable={false}
         >
-            <Row gutter={[12, 12]}>
+            <Row gutter={[12, 12]} className="p-4">
                 <Col span={24}>
-                    <Typography>Tên sách</Typography>
+                    <Typography.Text className="font-semibold">Tên sách</Typography.Text>
                     <Select
                         showSearch
-                        style={{ width: '100%' }} // Đặt độ rộng tối đa
+                        className="w-full"
                         placeholder="Nhập tên sách hoặc chọn"
-                        value={borrowInfo.bookgroup_id}
+                        value={borrowInfo.book_id}
                         onSearch={handleSearchBooks}
-                        onChange={(value) => handleChange('bookgroup_id', value)}
+                        onChange={(value) => handleChange('book_id', value)}
                         filterOption={false}
                         options={filteredBooks.map((book) => ({ label: book.name, value: book.id }))}
                     />
                 </Col>
                 <Col span={24}>
-                    <Typography>Tên người dùng</Typography>
+                    <Typography.Text className="font-semibold">Tên người dùng</Typography.Text>
                     <Select
                         showSearch
-                        style={{ width: '100%' }} // Đặt độ rộng tối đa
+                        className="w-full"
                         placeholder="Nhập tên người dùng hoặc chọn"
                         value={borrowInfo.user_id}
                         onSearch={handleSearchUsers}
@@ -158,27 +132,23 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
                 </Col>
                 <Col span={24}>
                     <Typography>Tên nhân viên</Typography>
-                    <Select
-                        showSearch
-                        style={{ width: '100%' }} // Đặt độ rộng tối đa
-                        placeholder="Nhập tên nhân viên hoặc chọn"
-                        value={borrowInfo.staff_id}
-                        onSearch={handleSearchStaffs}
-                        onChange={(value) => handleChange('staff_id', value)}
-                        filterOption={false}
-                        options={filteredStaffs.map((staff) => ({ label: staff.name, value: staff.id }))}
-                    />
+                    <div style={{ 
+                        border: '1px solid #d9d9d9', // Viền mỏng
+                        padding: '8px',             // Khoảng cách bên trong
+                        borderRadius: '4px'         // Bo góc
+                    }}>
+                        <Typography.Text>{staff.name}</Typography.Text> {/* Hiển thị tên nhân viên */}
+                    </div>
                 </Col>
                 <Col span={24}>
-                    <Typography>Thời hạn (ngày)</Typography>
+                    <Typography.Text className="font-semibold">Thời hạn (ngày)</Typography.Text>
                     <Input
-                        style={{ width: '100%' }} // Đặt độ rộng tối đa
+                        className="w-full"
                         placeholder="Nhập thời hạn"
                         value={borrowInfo.duration}
                         onChange={(e) => handleChange('duration', e.target.value)}
                     />
                 </Col>
-                <ErrorMessage message={errorMessages} />
             </Row>
         </Modal>
     );

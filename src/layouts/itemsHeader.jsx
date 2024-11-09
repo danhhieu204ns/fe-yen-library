@@ -42,8 +42,35 @@ const MenuItems = () => {
             ),
         },
 
-        // Chỉ thêm 'manage_library' nếu vai trò là 'admin'
+        // Chỉ thêm list sau nếu vai trò là 'admin'
         ...(role === 'admin' ? [
+        {
+            key: 'input',
+            label: (
+                <div className="flex items-center space-x-2">
+                    <span>Nhập liệu</span>
+                    <DownOutlined />
+                </div>
+            ),
+            children: [
+                {
+                    key: 'author',
+                    label: <Link to="/input/author">Nhập Tác giả</Link>,
+                },
+                {
+                    key: 'publisher',
+                    label: <Link to="/input/publisher">Nhập Nhà xuất bản</Link>,
+                },
+                {
+                    key: 'genre',
+                    label: <Link to="/input/genre">Nhập Thể loại sách</Link>,
+                },
+                {
+                    key: 'book',
+                    label: <Link to="/input/book">Nhập Sách</Link>,
+                },
+            ],
+        },
         {
             key: 'manage_library',
             label: (
@@ -54,68 +81,65 @@ const MenuItems = () => {
             ),
             children: [
                 {
-                    key: 'author',
-                    label: <Link to="/manage/author">Quản lý Tác giả</Link>,
-                },
-                {
-                    key: 'publisher',
-                    label: <Link to="/manage/publisher">Quản lý Nhà xuất bản</Link>,
-                },
-                {
-                    key: 'genre',
-                    label: <Link to="/manage/genre">Quản lý Thể loại sách</Link>,
-                },
-                {
-                    key: 'bookgroup',
-                    label: <Link to="/manage/bookgroup">Quản lý Nhóm sách</Link>,
-                },
-                {
-                    key: 'book',
-                    label: <Link to="/manage/book">Quản lý Sách</Link>,
-                },
-                {
                     key: 'borrow',
                     label: <Link to="/manage/borrow">Quản lý Mượn sách</Link>,
                 },
             ],
         },
         {
-            key: 'analize_library',
+            key: 'analize',
             label: (
                 <div className="flex items-center space-x-2">
-                    <span>Thống kê</span>
+                    <span>Thống kê số liệu</span>
                     <DownOutlined />
                 </div>
             ),
             children: [
                 {
                     key: '1',
-                    label: <Link to="/k/1">Quản lý Tác giả</Link>,
+                    label: <Link to="/k/1">Thống kê</Link>,
                 },
                 {
                     key: '2',
-                    label: <Link to="/k/2">Quản lý Nhà xuất bản</Link>,
+                    label: <Link to="/k/2">Thống kê</Link>,
                 },
                 {
                     key: '3',
-                    label: <Link to="/k/3">Quản lý Thể loại sách</Link>,
+                    label: <Link to="/k/3">Thống kê</Link>,
                 },
                 {
                     key: '4',
-                    label: <Link to="/k/4">Quản lý Nhóm sách</Link>,
-                },
-                {
-                    key: '5',
-                    label: <Link to="/k/5">Quản lý Sách</Link>,
+                    label: <Link to="/k/4">Thống kê</Link>,
                 },
                 {
                     key: '6',
-                    label: <Link to="/k/5">Quản lý Mượn sách</Link>,
+                    label: <Link to="/k/5">Thống kê</Link>,
                 },
             ],
         },
+        {
+            key: 'manage_user',
+            label: (
+                <Link to={'/manage/user'} className="flex items-center space-x-2">
+                    Quản lý người dùng
+                </Link>
+            ),
+        },
 
-        ] : []), // Nếu không phải admin, trả về mảng rỗng
+        ] : []), 
+        
+        // Cho user
+        ...(role === 'user' ? [
+            {
+                key: 'my_book_cart',
+                label: (
+                    <Link to={'/mybookcart'} className="flex items-center space-x-2">
+                        Giỏ sách của tôi
+                    </Link>
+                ),
+            },
+    
+        ] : []), // Nếu không phải user, trả về mảng rỗng
     ];
 
     return menuItems;

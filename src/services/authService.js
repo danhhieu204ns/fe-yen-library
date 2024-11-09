@@ -18,6 +18,7 @@ export const login = async ({ username, password }) => {
     }
 };
 
+
 const useAuthPrivateApi = () => {
     const httpPrivate = useHttpPrivate();
 
