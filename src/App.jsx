@@ -10,7 +10,7 @@ import ChangePassword from './components/auth/ChangePassword';
 import ManageUser from './components/ManageUser/ManageUser';
 
 import HomeComponent from './components/Home';
-import SearchBook from './components/Search/Search'
+import SearchBook from 'src/components/Search/Search.jsx'
 import Volunteer from './components/Volunteer/Volunteer'
 import Schedule from './components/Schedule/Schedule'
 import Event from './components/Event/Event'
