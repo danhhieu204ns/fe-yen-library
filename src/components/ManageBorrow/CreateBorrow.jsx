@@ -1,5 +1,4 @@
 import React, { memo, useState, useEffect } from 'react';
-import Webcam from 'react-webcam';
 import { toast } from 'react-toastify';
 import { Input, Typography, Col, Row, Modal, Select, Button } from 'antd';
 import { useSelector } from 'react-redux';
@@ -19,13 +18,11 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
     const [allUsers, setAllUsers] = useState([]);
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
-    const [isCapturingBook, setIsCapturingBook] = useState(false);
-    const [isCapturingUser, setIsCapturingUser] = useState(false);
     const staff = useSelector(selectedCurrentUser);
 
     const { createBorrow } = useManageBorrowApi();
-    const { getAllBooks, checkBook } = useManageBookApi();
-    const { getAllUser, checkUser } = useUserApi();
+    const { getAllBooks } = useManageBookApi();
+    const { getAllUser } = useUserApi();
 
     useEffect(() => {
         getAllBooks().then((books) => {
@@ -66,7 +63,6 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             staff_id: staff.id,
             duration: Number(duration),
         });
-        console.log(result)
         if (result?.detail) {
             toast.error(result.detail);
             return;
@@ -89,39 +85,6 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
             ...borrowInfo,
             [key]: value
         });
-    };
-
-    const webcamRefBook = React.useRef(null);
-    const webcamRefUser = React.useRef(null);
-
-    const captureBook = async () => {
-        const imageSrc = webcamRefBook.current.getScreenshot();
-        setIsCapturingBook(false);
-        const formDataToSend = new FormData();
-            if (imageSrc) {
-                formDataToSend.append('book_img', imageSrc);
-            }
-        const result = await checkBook(formDataToSend);
-        if (result?.id) {
-            handleChange('book_id', result.id);
-        } else {
-            toast.error('Không tìm thấy thông tin bìa sách, hãy thử lại!');
-        }
-    };
-
-    const captureUser = async () => {
-        const imageSrc = webcamRefUser.current.getScreenshot();
-        setIsCapturingUser(false);
-        const formDataToSend = new FormData();
-        if (imageSrc) {
-            formDataToSend.append('user_img', imageSrc);
-        }
-        const result = await checkUser(formDataToSend);
-        if (result?.id) {
-            handleChange('user_id', result.id);
-        } else {
-            toast.error('Không tìm thấy thông tin người dùng, hãy thử lại!');
-        }
     };
 
     return (
@@ -153,32 +116,6 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
                         filterOption={false}
                         options={filteredBooks.map((book) => ({ label: book.name, value: book.id }))}
                     />
-                    <Button
-                        onClick={() => {
-                            setIsCapturingBook(true);
-                        }}
-                        className="mt-2"
-                        type="primary"
-                    >
-                        Chụp ảnh bìa sách
-                    </Button>
-                    {isCapturingBook && (
-                        <div className="mt-2">
-                            <Webcam
-                                audio={false}
-                                ref={webcamRefBook} // Tham chiếu cho bìa sách
-                                screenshotFormat="image/jpeg"
-                                className="w-full h-60"
-                            />
-                            <Button
-                                onClick={captureBook} // Gọi hàm captureBook khi ấn nút chụp ảnh
-                                type="primary"
-                                className="mt-2"
-                            >
-                                Chụp ảnh
-                            </Button>
-                        </div>
-                    )}
                 </Col>
                 <Col span={24}>
                     <Typography.Text className="font-semibold">Tên người dùng</Typography.Text>
@@ -192,32 +129,6 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
                         filterOption={false}
                         options={filteredUsers.map((user) => ({ label: user.name, value: user.id }))}
                     />
-                    <Button
-                        onClick={() => {
-                            setIsCapturingUser(true);
-                        }}
-                        className="mt-2"
-                        type="primary"
-                    >
-                        Chụp ảnh khuôn mặt
-                    </Button>
-                    {isCapturingUser && (
-                        <div className="mt-2">
-                            <Webcam
-                                audio={false}
-                                ref={webcamRefUser} // Tham chiếu cho khuôn mặt
-                                screenshotFormat="image/jpeg"
-                                className="w-full h-60"
-                            />
-                            <Button
-                                onClick={captureUser} // Gọi hàm captureUser khi ấn nút chụp ảnh
-                                type="primary"
-                                className="mt-2"
-                            >
-                                Chụp ảnh
-                            </Button>
-                        </div>
-                    )}
                 </Col>
                 <Col span={24}>
                     <Typography>Tên nhân viên</Typography>

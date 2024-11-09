@@ -20,7 +20,6 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
     // Dữ liệu gốc và dữ liệu lọc
     const [books, setBooks] = useState([]);
     const [users, setUsers] = useState([]);
-    
     const [filteredBooks, setFilteredBooks] = useState([]);
     const [filteredUsers, setFilteredUsers] = useState([]);
 
@@ -29,16 +28,11 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
     const { getAllUser } = useUserApi();
 
     useEffect(() => {
-        // Tải danh sách sách, người dùng khi component được render
         const loadData = async () => {
             const books = await getAllBooks();
             const users = await getAllUser();
-            
-            // Lưu trữ toàn bộ dữ liệu gốc
             setBooks(books);
             setUsers(users);
-
-            // Hiển thị toàn bộ danh sách ban đầu
             setFilteredBooks(books);
             setFilteredUsers(users);
         };
@@ -65,11 +59,6 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
             setErrorMessages('Vui lòng nhập tên người dùng');
             return;
         }
-        if (!staffName || staffName.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập tên nhân viên');
-            return;
-        }
-
         if (!duration || isNaN(duration) || Number(duration) <= 0) {
             setErrorMessages('Vui lòng nhập thời hạn hợp lệ');
             return;

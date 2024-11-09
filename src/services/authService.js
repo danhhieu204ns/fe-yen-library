@@ -18,18 +18,6 @@ export const login = async ({ username, password }) => {
     }
 };
 
-export const loginFace = async (formData) => {
-    try {
-        const res = await httpRequest.post('/login_face', formData, {
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            }, });
-        return res.data;
-    } catch (error) {
-        console.log(error.response?.data);  // Hiển thị chi tiết lỗi từ máy chủ nếu có
-        return error.response;
-    }
-};
 
 const useAuthPrivateApi = () => {
     const httpPrivate = useHttpPrivate();

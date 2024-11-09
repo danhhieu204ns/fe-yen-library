@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 import CreateBorrow from './CreateBorrow';
 import EditBorrow from './EditBorrow';
 import ShowInfoBorrow from './ShowInfoBorrow';
-import ReturnBook from './ReturnBook'; // Import component ReturnBook
 
 
 function ManageBorrow() {
@@ -22,7 +21,6 @@ function ManageBorrow() {
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [modalDelete, contextHolder] = Modal.useModal();
-    const [returnModalOpen, setReturnModalOpen] = useState(false);
 
     const [filteredBorrows, setFilteredBorrowrs] = useState([]); // Dữ liệu sau khi lọc
     const [searchTerm, setSearchTerm] = useState('');
@@ -261,10 +259,6 @@ function ManageBorrow() {
                         <DeleteOutlined />
                         Xóa {listBorrowToDelete.length !== 0 ? listBorrowToDelete.length + ' thông tin' : ''}
                     </Button>
-                    <Button type="primary" onClick={() => setReturnModalOpen(true)}>
-                        <PlusCircleOutlined />
-                        Trả sách
-                    </Button>
                 </Space>
                 <div>
                     <Table
@@ -310,11 +304,6 @@ function ManageBorrow() {
                     data={borrowInfo}
                     openModal={showInfoModal}
                     closeModal={handleCloseShowInfoModal}
-                />
-                <ReturnBook
-                    openModal={returnModalOpen}
-                    closeModal={() => setReturnModalOpen(false)}
-                    handleReload={handleReload} // Giả sử ReturnBook cũng cần reload danh sách sau khi trả sách thành công
                 />
                 {contextHolder}
             </div>

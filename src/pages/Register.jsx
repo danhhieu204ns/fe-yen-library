@@ -2,9 +2,7 @@ import { useState, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Input, Button, Modal, Upload } from 'antd';
-import { CameraOutlined, UploadOutlined } from '@ant-design/icons';
-import Webcam from 'react-webcam';
+import { Input, Button } from 'antd';
 import { useUserApi } from 'src/services/userService';
 import { setCredentials } from 'src/redux/auth/authSlice';
 
@@ -17,16 +15,11 @@ function Register({ closeModal }) {
         address: '',
         phone_number: '',
     });
-    const [previewUrl, setPreviewUrl] = useState(null);
-    const [imageData, setImageData] = useState(null);
-    const [useWebcam, setUseWebcam] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const { createUser } = useUserApi();
-    const webcamRef = useRef(null);
-    const streamRef = useRef(null); // Sử dụng useRef để lưu MediaStream
 
     const validateForm = () => {
         const { username, password, name, birthdate, address, phone_number } = formData;
@@ -37,34 +30,13 @@ function Register({ closeModal }) {
         setError(null);
         return true;
     };
-    async function startCamera() {
-        try {
-            streamRef.current = await navigator.mediaDevices.getUserMedia({ video: true });
-            const videoElement = document.getElementById('video');
-            if (videoElement) {
-                videoElement.srcObject = streamRef.current;
-            }
-        } catch (err) {
-            console.error("Lỗi khi truy cập máy ảnh:", err);
-        }
-    }
-    function stopCamera() {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-            streamRef.current = null; // Đặt lại stream sau khi dừng
-        }
-    }
+
     const handleRegister = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
         setLoading(true);
-        stopCamera(); // Dừng camera trước khi gửi yêu cầu
-        const formDataToSend = new FormData();
-        Object.keys(formData).forEach((key) => formDataToSend.append(key, formData[key]));
-        if (imageData) {
-            formDataToSend.append('image', imageData);
-        }
-        const result = await createUser(formDataToSend);
+        console.log(formData);
+        const result = await createUser(formData);
         setLoading(false);
         if (result?.detail === 400) {
             setError(`Đăng ký không thành công. ${result?.detail}`);
@@ -82,22 +54,6 @@ function Register({ closeModal }) {
         } else {
             toast.error(`Đăng ký thất bại. ${result?.detail}`);
         }
-    };
-
-    const handleFileChange = (info) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            setPreviewUrl(reader.result);
-            setImageData(reader.result);
-        };
-        reader.readAsDataURL(info.file);
-    };
-
-    const capture = () => {
-        const imageSrc = webcamRef.current.getScreenshot();
-        setPreviewUrl(imageSrc);
-        setImageData(imageSrc);
-        setUseWebcam(false);
     };
 
     return (
@@ -119,64 +75,6 @@ function Register({ closeModal }) {
                             />
                         </div>
                     ))}
-
-                    <div className="col-span-2 mb-4">
-                        <label className="block text-white font-semibold mb-2">Ảnh khuôn mặt</label>
-                        <div className="flex items-center space-x-4">
-                            <Upload
-                                beforeUpload={(file) => {
-                                    handleFileChange({ file });
-                                    return false;
-                                }}
-                                accept="image/*"
-                                showUploadList={false}
-                                className="w-1/2"
-                            >
-                                <Button icon={<UploadOutlined />} className="w-full">
-                                    Tải ảnh từ máy
-                                </Button>
-                            </Upload>
-                            <Button
-                                icon={<CameraOutlined />}
-                                onClick={() => {
-                                    startCamera(); // Bắt đầu camera khi nhấn nút chụp ảnh
-                                    setUseWebcam(true);
-                                }}
-                                className="w-1/2"
-                            >
-                                Chụp ảnh
-                            </Button>
-                        </div>
-                    </div>
-
-                    <Modal
-                        open={useWebcam}
-                        footer={null}
-                        onCancel={() => {
-                            setUseWebcam(false);
-                            stopCamera();  // Dừng camera khi modal bị đóng
-                        }}
-                        title="Chụp ảnh từ webcam"
-                    >
-                      <Webcam
-                          audio={false}
-                          ref={webcamRef}
-                          screenshotFormat="image/jpeg"
-                          className="w-full rounded"
-                      />
-                      <Button onClick={capture} className="w-full mt-4" type="primary">
-                          Chụp ảnh
-                      </Button>
-                    </Modal>
-
-                    {previewUrl && (
-                        <div className="col-span-2 flex justify-center mt-4">
-                            <img src={previewUrl} alt="Ảnh xem trước" className="w-32 h-32 rounded-full object-cover" />
-                        </div>
-                    )}
-
-                    {error && <div className="col-span-2 text-red-500 text-center">{error}</div>}
-
                     <Button
                         type="primary"
                         htmlType="submit"

@@ -93,7 +93,6 @@ function SearchBook() {
             book_id: selectedBook.id, // ID sách
             duration: borrowDays // Số ngày mượn
         });
-        console.log(result)
         if (result?.detail) {
             toast.error(result.detail);
             return;
