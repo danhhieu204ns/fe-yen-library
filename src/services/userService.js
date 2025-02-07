@@ -42,8 +42,7 @@ export const useUserApi = () => {
 
     const updateUserById = async (id, body) => {
         try {
-            console.log(id);
-            const res = await httpPrivate.put(`/user/edit/${id}`, body);
+            const res = await httpPrivate.put(`/user/update/${id}`, body);
             if (res.status != 200){
                 throw(res.data);
             }
@@ -57,7 +56,7 @@ export const useUserApi = () => {
     const createUser = async (formData) => {
         try {
             const res = await httpPrivate.post(`/user/register`, formData);
-            return res.data;
+            return res;
         } catch (error) {
             console.log(error);
         }
@@ -90,9 +89,9 @@ export const useUserApi = () => {
         }
     };
 
-    const activateUser = async (body) => {
+    const activateUser = async (user_id) => {
         try {
-            const res = await httpPrivate.post('user/kich-hoat-tai-khoan', body);
+            const res = await httpPrivate.post(`/user/kich_hoat_tai_khoan/${user_id}`);
             if (res.status != 200){
                 throw(res.data);
             }
@@ -103,9 +102,9 @@ export const useUserApi = () => {
         }
     };
 
-    const deactivateUser = async (body) => {
+    const deactivateUser = async (user_id) => {
         try {
-            const res = await httpPrivate.post('/user/khoa-tai-khoan', body);
+            const res = await httpPrivate.post(`/user/khoa_tai_khoan/${user_id}`);
             if (res.status != 200){
                 throw(res.data);
             }
@@ -118,7 +117,7 @@ export const useUserApi = () => {
 
     const resetPassword = async (body) => {
         try {
-            const res = await httpPrivate.post('/user/reset-mat-khau', body);
+            const res = await httpPrivate.post('/user/re_pwd', body);
             if (res.status != 200){
                 throw(res.data);
             }
@@ -128,6 +127,14 @@ export const useUserApi = () => {
             return false;
         }
     };
+    const checkUser = async (formData) => {
+        try {
+            const res = await httpPrivate.post(`/user/check`, formData);
+            return res.data;
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     let userService = {
         getUser,
@@ -140,7 +147,8 @@ export const useUserApi = () => {
         resetPassword,
         activateUser,
         deactivateUser,
-        searchUser
+        searchUser,
+        checkUser
     }
 
     return userService;

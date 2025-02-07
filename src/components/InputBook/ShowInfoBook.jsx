@@ -1,52 +1,62 @@
 import { memo } from 'react';
 import { Input, Typography, Col, Row, Modal } from 'antd';
 
-function ShowInfoBorrow({ openModal, closeModal, data }) {
+function ShowInfoBook({ openModal, closeModal, data }) {
     return (
-        <Modal title="Thông tin mượn sách" open={openModal} onCancel={closeModal} onOk={closeModal} maskClosable={false}>
+        <Modal title="Thông tin sách" open={openModal} onCancel={closeModal} onOk={closeModal} maskClosable={false}>
             <Row gutter={[12, 12]}>
                 <Col span={24}>
                     <Typography>Tên sách</Typography>
                     <Input
                         placeholder="Tên sách"
                         disabled
-                        value={data?.book?.name}
+                        value={data?.name}
                         className="disabled:bg-white disabled:text-black"
                     />
                 </Col>
                 <Col span={24}>
-                    <Typography>Tên người dùng</Typography>
+                    <Typography>Tình trạng</Typography>
                     <Input
-                        placeholder="Tên người dùng"
-                        disabled
-                        value={data?.user?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Tên nhân viên</Typography>
-                    <Input
-                        placeholder="Tên nhân viên"
-                        disabled
-                        value={data?.staff?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Thời hạn (ngày)</Typography>
-                    <Input
-                        placeholder="Thời hạn"
-                        disabled
-                        value={data?.duration}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Trạng thái</Typography>
-                    <Input
-                        placeholder="Trạng thái"
+                        placeholder="Tình trạng"
                         disabled
                         value={data?.status}
+                        className="disabled:bg-white disabled:text-black"
+                    />
+                </Col>
+                <Col span={24}>
+                    <Typography>Nội dung</Typography>
+                    <Input.TextArea
+                        placeholder="Nội dung"
+                        disabled
+                        value={data?.content}
+                        className="disabled:bg-white disabled:text-black"
+                        rows={4}
+                    />
+                </Col>
+                <Col span={24}>
+                    <Typography>Tác giả</Typography>
+                    <Input
+                        placeholder="Tác giả"
+                        disabled
+                        value={data?.author?.name}
+                        className="disabled:bg-white disabled:text-black"
+                    />
+                </Col>
+                <Col span={24}>
+                    <Typography>Nhà xuất bản</Typography>
+                    <Input
+                        placeholder="Nhà xuất bản"
+                        disabled
+                        value={data?.publisher?.name}
+                        className="disabled:bg-white disabled:text-black"
+                    />
+                </Col>
+                <Col span={24}>
+                    <Typography>Thể loại</Typography>
+                    <Input
+                        placeholder="Thể loại"
+                        disabled
+                        value={data?.genre?.name}
                         className="disabled:bg-white disabled:text-black"
                     />
                 </Col>
@@ -55,7 +65,7 @@ function ShowInfoBorrow({ openModal, closeModal, data }) {
                     <Input
                         placeholder="Ngày tạo"
                         disabled
-                        value={data?.created_at} // Giả sử bạn có thuộc tính created_at
+                        value={data?.created_at} // Giả sử bạn có thuộc tính createdAt
                         className="disabled:bg-white disabled:text-black"
                     />
                 </Col>
@@ -64,4 +74,4 @@ function ShowInfoBorrow({ openModal, closeModal, data }) {
     );
 }
 
-export default memo(ShowInfoBorrow);
+export default memo(ShowInfoBook);
