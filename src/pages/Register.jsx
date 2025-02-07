@@ -10,7 +10,7 @@ function Register({ closeModal }) {
     const [formData, setFormData] = useState({
         username: '',
         password: '',
-        name: '',
+        full_name: '',
         birthdate: '',
         address: '',
         phone_number: '',
@@ -22,8 +22,8 @@ function Register({ closeModal }) {
     const { createUser } = useUserApi();
 
     const validateForm = () => {
-        const { username, password, name, birthdate, address, phone_number } = formData;
-        if (!username || !password || !name || !birthdate || !address || !phone_number) {
+        const { username, password, full_name, birthdate, address, phone_number } = formData;
+        if (!username || !password || !full_name || !birthdate || !address || !phone_number) {
             setError('Tất cả các trường đều phải được điền.');
             return false;
         }
@@ -35,16 +35,15 @@ function Register({ closeModal }) {
         e.preventDefault();
         if (!validateForm()) return;
         setLoading(true);
-        console.log(formData);
         const result = await createUser(formData);
         setLoading(false);
-        if (result?.detail === 400) {
-            setError(`Đăng ký không thành công. ${result?.detail}`);
-        } else if (result?.user) {
+        if (result?.status === 400) {
+            setError(`Đăng ký không thành công. ${result?.data?.detail}`);
+        } else if (result?.status === 201) {
             setFormData({
                 username: '',
                 password: '',
-                name: '',
+                full_name: '',
                 birthdate: '',
                 address: '',
                 phone_number: '',
@@ -52,7 +51,7 @@ function Register({ closeModal }) {
             closeModal();
             navigate('/');
         } else {
-            toast.error(`Đăng ký thất bại. ${result?.detail}`);
+            toast.error(`Đăng ký thất bại. ${result?.data?.detail}`);
         }
     };
 
@@ -62,7 +61,7 @@ function Register({ closeModal }) {
                 <h2 className="text-2xl font-bold text-white">Chào mừng đến với YÊN!</h2>
                 <h2 className="text-xl font-bold text-white">Đăng ký</h2>
                 <form className="grid grid-cols-2 gap-x-6 gap-y-5" onSubmit={handleRegister}>
-                    {['username', 'password', 'name', 'birthdate', 'address', 'phone_number'].map((field, idx) => (
+                    {['username', 'password', 'full_name', 'birthdate', 'address', 'phone_number'].map((field, idx) => (
                         <div key={idx} className="col-span-1 flex items-center mb-4">
                             <label className="text-white mr-2 w-1/3 capitalize">{field}</label>
                             <Input
