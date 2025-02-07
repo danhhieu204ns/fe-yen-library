@@ -127,8 +127,7 @@ function DefaultLayout() {
                 styles={{
                     content: {
                         padding: 0, 
-                        borderRadius: '20px', 
-                        padding: 0
+                        borderRadius: '20px'
                 }}}
             >
                 <Login 
@@ -145,8 +144,7 @@ function DefaultLayout() {
                 styles={{
                     content: {
                         padding: 0, 
-                        borderRadius: '20px', 
-                        padding: 0
+                        borderRadius: '20px'
                 }}}
             >
                 <Register closeModal={() => setIsRegisterModalVisible(false)} />
