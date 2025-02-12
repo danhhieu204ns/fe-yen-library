@@ -214,11 +214,11 @@ function ManageAuthor() {
                     onChange={(value) => setFilterOption(value)}
                     style={{ width: '200px' }}
                 >
-                    <Option value="name">Tên tác giả</Option>
-                    <Option value="birthdate">Ngày sinh</Option>
-                    <Option value="address">Địa chỉ</Option>
-                    <Option value="pen_name">Bút danh</Option>
-                    <Option value="biography">Tiểu sử</Option>
+                    <Select.Option value="name">Tên tác giả</Select.Option>
+                    <Select.Option value="birthdate">Ngày sinh</Select.Option>
+                    <Select.Option value="address">Địa chỉ</Select.Option>
+                    <Select.Option value="pen_name">Bút danh</Select.Option>
+                    <Select.Option value="biography">Tiểu sử</Select.Option>
                 </Select>
             </div>
             <Space className="mb-2">

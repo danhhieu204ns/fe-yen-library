@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
     user: null,
     token: null,
-    role: null,
+    roles: null,
     expirationTime: null
 };
 
@@ -12,10 +12,10 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         setCredentials: (state, action) => {
-            const { user, access_token, role, expire } = action.payload;
+            const { user, access_token, expire } = action.payload;
             state.user = user;
             state.token = access_token;
-            state.role = role;
+            state.roles = user.roles;
             if (expire) {
                 state.expirationTime = new Date(expire).getTime(); // Chuyển đổi giá trị expire thành timestamp
             } else {
@@ -25,7 +25,7 @@ const authSlice = createSlice({
         logOut: (state, action) => {
             state.user = null;
             state.token = null;
-            state.role = null;
+            state.roles = null;
             state.expirationTime = null;
         }, 
     },
@@ -37,5 +37,5 @@ export default authSlice.reducer;
 
 export const selectedCurrentUser = (state) => state.auth.user;
 export const selectCurrentToken = (state) => state.auth.token;
-export const selectCurrentRole = (state) => state.auth.role;
+export const selectCurrentRoles = (state) => state.auth.roles;
 export const selectCurrentExpirationTime = (state) => state.auth.expirationTime;

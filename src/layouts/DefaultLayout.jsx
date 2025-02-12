@@ -86,7 +86,7 @@ function DefaultLayout() {
                             >
                                 <div className="flex items-center space-x-2 cursor-pointer">
                                     <Avatar icon={<UserOutlined />} />
-                                    <div className="whitespace-nowrap">{user.name}</div>
+                                    <div className="whitespace-nowrap">{user.full_name}</div>
                                 </div>
                             </Dropdown>
                         ) : (
