@@ -37,7 +37,7 @@ function Login({ closeModal }) {
             setError('Tên đăng nhập hoặc mật khẩu không chính xác.');
         } else if (result?.user) {
             dispatch(setCredentials(result));
-            setFormData({ username: '', password: '' });
+            // setFormData({ username: '', password: '' });
             closeModal(); // Đóng modal sau khi đăng nhập thành công
             navigate('/');
         } else {
@@ -59,7 +59,6 @@ function Login({ closeModal }) {
                             <label htmlFor="username" className="text-white mr-2 w-1/4">Tên đăng nhập</label>
                             <Input
                                 id="username"
-                                placeholder="Tên đăng nhập"
                                 size="large"
                                 className="w-3/4 mt-2"
                                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
