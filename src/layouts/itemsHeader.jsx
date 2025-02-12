@@ -1,11 +1,11 @@
 import { DownOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectCurrentRole } from '../redux/auth/authSlice';
+import { selectCurrentRoles } from '../redux/auth/authSlice';
 
 
 const MenuItems = () => {
-    const role = useSelector(selectCurrentRole); // Lấy vai trò từ Redux store
+    const role = useSelector(selectCurrentRoles); // Lấy vai trò từ Redux store
 
     // Định nghĩa các mục menu
     const menuItems = [
@@ -43,7 +43,7 @@ const MenuItems = () => {
         },
 
         // Chỉ thêm list sau nếu vai trò là 'admin'
-        ...(role === 'admin' ? [
+        ...((role && role.includes('admin')) ? [
         {
             key: 'input',
             label: (
@@ -129,7 +129,7 @@ const MenuItems = () => {
         ] : []), 
         
         // Cho user
-        ...(role === 'user' ? [
+        ...((role && role.includes('user')) ? [
             {
                 key: 'my_book_cart',
                 label: (
