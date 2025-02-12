@@ -36,10 +36,9 @@ function Register({ closeModal }) {
         if (!validateForm()) return;
         setLoading(true);
         const result = await createUser(formData);
+        console.log(result);
         setLoading(false);
-        if (result?.status === 400) {
-            setError(`Đăng ký không thành công. ${result?.data?.detail}`);
-        } else if (result?.status === 201) {
+        if (result?.message) {
             setFormData({
                 username: '',
                 password: '',
@@ -48,10 +47,11 @@ function Register({ closeModal }) {
                 address: '',
                 phone_number: '',
             });
+            toast.success(`Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.`);
             closeModal();
             navigate('/');
         } else {
-            toast.error(`Đăng ký thất bại. ${result?.data?.detail}`);
+            toast.error(`Đăng ký thất bại. ${result?.detail}`);
         }
     };
 
