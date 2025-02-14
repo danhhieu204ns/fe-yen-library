@@ -154,7 +154,7 @@ function EditBorrow({ openModal, closeModal, handleReload, data }) {
                             setFilteredUsers(filtered);
                         }}
                         onChange={(value) => setUserName(value)}
-                        options={filteredUsers.map((user) => ({
+                        options={filteredUsers?.map((user) => ({
                             label: user.name,
                             value: user.name,  // Sử dụng tên để tránh trùng key
                             key: user.id,      // Key là ID

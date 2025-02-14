@@ -83,7 +83,7 @@ function ManageBorrow() {
                 return;
             }
             const lowercasedTerm = searchTerm.toLowerCase();
-            const filtered = borrowList.filter((borrow) => {
+            const filtered = borrowList?.filter((borrow) => {
                 if (filterOption === 'name') {
                     return borrow.book.name.toLowerCase().includes(lowercasedTerm);
                 } else if (filterOption === 'user') {

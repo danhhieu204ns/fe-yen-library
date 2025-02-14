@@ -127,7 +127,7 @@ function CreateBorrow({ openModal, closeModal, handleReload }) {
                         onSearch={handleSearchUsers}
                         onChange={(value) => handleChange('user_id', value)}
                         filterOption={false}
-                        options={filteredUsers.map((user) => ({ label: user.name, value: user.id }))}
+                        options={filteredUsers?.map((user) => ({ label: user.name, value: user.id }))}
                     />
                 </Col>
                 <Col span={24}>
