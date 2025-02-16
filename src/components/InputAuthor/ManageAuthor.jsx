@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { Button, Table, Tooltip, Modal, Space, Input, Select, Typography, Upload } from 'antd';
+import { Button, Table, Tooltip, Modal, Space, Input, Select, Typography, Upload, Flex } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined } from '@ant-design/icons';
 import useManageAuthorApi from 'src/services/manageAuthorService';
 import CreateAuthor from './CreateAuthor';
@@ -8,6 +8,7 @@ import EditAuthor from './EditAuthor';
 import ShowInfoAuthor from './ShowInfoAuthor';
 import moment from 'moment';
 import { UploadOutlined, CheckCircleOutlined, ImportOutlined, DownloadOutlined } from '@ant-design/icons';
+import { getColumnSearchProps } from 'src/utils/searchByApi';
 
 import * as XLSX from 'xlsx';
 
@@ -33,6 +34,8 @@ function ManageAuthor() {
     const [selectedFile, setSelectedFile] = useState(null);
 
     const [isUploading, setIsUploading] = useState(false);
+    const [total, setTotal] = useState();
+    const { authorData, deleteAuthor, deleteListAuthor, importAuthor } = useManageAuthorApi();
 
     const handleImport = async () => {
         if (!selectedFile) {
@@ -42,8 +45,8 @@ function ManageAuthor() {
 
         setIsUploading(true);
         try {
-            // const result = await importStudent(selectedFile);
-            // toast.success(result?.message || 'Import thành công!');
+            const result = await importAuthor(selectedFile);
+            toast.success(result?.message || 'Import thành công!');
             setIsImportModalVisible(false);
             setSelectedFile(null);
             fetchData();
@@ -65,11 +68,10 @@ function ManageAuthor() {
         XLSX.writeFile(wb, 'author_import_template.xlsx');
     };
 
-    const { authorData, deleteAuthor, deleteListAuthor } = useManageAuthorApi();
-
     const fetchData = async () => {
         const results = await authorData(page, pageSize);
         setAuthorList(results?.authors);
+        setTotal(results?.total_data);
         setTotalData(results?.total_pages * pageSize);
     };
 
@@ -94,6 +96,8 @@ function ManageAuthor() {
         setShowInfoModal(false);
         setAuthorInfo({});
     }, []);
+
+    console.log(total);
 
     const handleDelete = async (id) => {
         const result = await deleteAuthor(id);
@@ -147,6 +151,7 @@ function ManageAuthor() {
                 return false;
             });
             setFilteredAuthors(filtered);
+            setTotal(filtered.length);
         };
 
         filterAuthors();
@@ -157,6 +162,8 @@ function ManageAuthor() {
             title: 'Tên tác giả',
             dataIndex: 'name',
             key: 'author',
+            ...getColumnSearchProps('Tên tác giả', 'name'),
+            sorter: (a, b) => a.name.localeCompare(b.name),
         },
         {
             title: 'Ngày sinh',
@@ -168,11 +175,14 @@ function ManageAuthor() {
             title: 'Địa chỉ',
             dataIndex: 'address',
             key: 'address',
+            ...getColumnSearchProps('Địa chỉ', 'address'),
+            sorter: (a, b) => a.address.localeCompare(b.address),
         },
         {
             title: 'Bút danh',
             dataIndex: 'pen_name',
             key: 'pen_name',
+            ...getColumnSearchProps('Bút danh', 'pen_name'),
         },
         {
             title: 'Tiểu sử',
@@ -247,9 +257,36 @@ function ManageAuthor() {
                         placeholder="Nhập từ khóa tìm kiếm..."
                         allowClear
                         size="large"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ width: '400px', marginRight: '10px' }}
+                        onChange={(e) => {
+                            const searchValue = e.target.value;
+                            setSearchTerm(searchValue);
+
+                            if (!searchValue) {
+                                setFilteredAuthors(authorList);
+                                setTotal(authorList.length);
+                                return;
+                            }
+
+                            const lowercasedTerm = searchValue.toLowerCase();
+                            const filtered = authorList.filter((author) => {
+                                if (filterOption === 'name') {
+                                    return author.name.toLowerCase().includes(lowercasedTerm);
+                                } else if (filterOption === 'birthdate') {
+                                    return moment(author.birthdate).format('DD/MM/YYYY').includes(lowercasedTerm);
+                                } else if (filterOption === 'address') {
+                                    return author.address?.toLowerCase().includes(lowercasedTerm);
+                                } else if (filterOption === 'pen_name') {
+                                    return author.pen_name?.toLowerCase().includes(lowercasedTerm);
+                                } else if (filterOption === 'biography') {
+                                    return author.biography?.toLowerCase().includes(lowercasedTerm);
+                                }
+                                return false;
+                            });
+
+                            setFilteredAuthors(filtered);
+                            setTotal(filtered.length);
+                        }}
                     />
                     <label style={{ marginRight: '10px' }}>Lọc theo:</label>
                     <Select
@@ -265,14 +302,27 @@ function ManageAuthor() {
                     </Select>
                 </div>
 
+                <Flex gap={6} justify="center" align="center">
+                    <span style={{ fontWeight: 'bold' }}>Tổng số:</span>
+                    <Input
+                        style={{
+                            width: '60px',
+                            color: 'red',
+                            fontWeight: 'bold',
+                        }}
+                        value={total}
+                        readOnly
+                        disabled
+                    />
+                </Flex>
+            </div>
+            <Space className="mb-2">
                 <Button
                     className="bg-[#28A745] shadow-none text-white border-none"
                     onClick={() => setIsImportModalVisible(true)}
                 >
                     <PlusCircleOutlined /> Import
                 </Button>
-            </div>
-            <Space className="mb-2">
                 <Button type="primary" onClick={() => setCreateModalOpen(true)}>
                     <PlusCircleOutlined />
                     Tạo mới
@@ -344,7 +394,7 @@ function ManageAuthor() {
                 title={
                     <div className="flex items-center gap-2">
                         <UploadOutlined className="text-blue-500" />
-                        <span>Import Danh Sách Học Sinh</span>
+                        <span>Import danh sách tác giả</span>
                     </div>
                 }
                 open={isImportModalVisible}
