@@ -18,17 +18,23 @@ function ManageAuthor() {
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [showModalOpen, setShowModalOpen] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
     const [modalDelete, contextHolder] = Modal.useModal();
 
     const [filteredAuthors, setFilteredAuthors] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterOption, setFilterOption] = useState('name');
+    const [listAuthorToDelete, setListAuthorToDelete] = useState([]);
 
     const [isImportModalVisible, setIsImportModalVisible] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
 
     const [isUploading, setIsUploading] = useState(false);
     const [total, setTotal] = useState();
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [reloadToggle, setReloadToggle] = useState(false);
+    const [totalData, setTotalData] = useState(0);
     const { authorData, deleteAuthor, deleteListAuthor, importAuthor } = useManageAuthorApi();
 
     const handleImport = async () => {
