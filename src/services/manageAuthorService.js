@@ -1,6 +1,5 @@
 import useHttpPrivate from 'src/hooks/useHttpPrivate';
 
-
 const useAuthorApi = () => {
     const httpPrivate = useHttpPrivate();
 
@@ -69,12 +68,25 @@ const useAuthorApi = () => {
     const deleteListAuthor = async (listId) => {
         try {
             const res = await httpPrivate.delete('/author/delete-many', {
-                data: { list_id: listId }  // Đảm bảo rằng body chứa một object với key là author_ids
+                data: { list_id: listId }, // Đảm bảo rằng body chứa một object với key là author_ids
             });
             return res.data;
         } catch (error) {
             console.log(error);
             return error?.response;
+        }
+    };
+
+    const importAuthor = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await httpPrivate.post('/author/import', formData, {});
+            return response.data;
+        } catch (error) {
+            console.error('Import failed:', error);
+            throw error;
         }
     };
 
@@ -86,6 +98,7 @@ const useAuthorApi = () => {
         editAuthor,
         deleteAuthor,
         deleteListAuthor,
+        importAuthor,
     };
 };
 
