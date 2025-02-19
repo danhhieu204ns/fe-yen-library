@@ -1,66 +1,72 @@
 import { memo } from 'react';
-import { Input, Typography, Col, Row, Modal } from 'antd';
+import { Typography, Col, Row, Modal, Button } from 'antd';
+import moment from 'moment';
 
 function ShowInfoAuthor({ openModal, closeModal, data }) {
+    const formatDate = (date) => {
+        return moment(date).format('DD/MM/YYYY');
+    };
+
     return (
-        <Modal title="Thông tin tác giả" open={openModal} onCancel={closeModal} onOk={closeModal} maskClosable={false}>
-            <Row gutter={[12, 12]}>
-                <Col span={24}>
-                    <Typography>Tên tác giả</Typography>
-                    <Input
-                        placeholder="Tên tác giả"
-                        disabled
-                        value={data?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Ngày sinh</Typography>
-                    <Input
-                        placeholder="Ngày sinh"
-                        disabled
-                        value={data?.birthdate}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Địa chỉ</Typography>
-                    <Input
-                        placeholder="Địa chỉ"
-                        disabled
-                        value={data?.address}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Bút danh</Typography>
-                    <Input
-                        placeholder="Bút danh"
-                        disabled
-                        value={data?.pen_name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Tiểu sử</Typography>
-                    <Input.TextArea
-                        placeholder="Tiểu sử"
-                        disabled
-                        value={data?.biography}
-                        className="disabled:bg-white disabled:text-black"
-                        rows={4}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Ngày tạo</Typography> 
-                    <Input
-                        placeholder="Ngày tạo"
-                        disabled
-                        value={data?.created_at} // Giả sử bạn có thuộc tính createdAt
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-            </Row>
+        <Modal
+            title="Thông tin tác giả"
+            open={openModal}
+            footer={null}
+            onCancel={closeModal}
+            maskClosable={true}
+            centered
+            width={600}
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
+                background: '#fff',
+            }}
+        >
+            <div className="p-4">
+                <Row gutter={[0, 16]}>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Tên tác giả</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.name || 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Ngày sinh</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.birthdate ? formatDate(data.birthdate) : 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Địa chỉ</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.address || 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Bút danh</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.pen_name || 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Tiểu sử</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white min-h-[72px] whitespace-pre-wrap">
+                            {data?.biography || 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                </Row>
+            </div>
         </Modal>
     );
 }
