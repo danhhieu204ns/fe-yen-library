@@ -32,10 +32,6 @@ function ManageCategory() {
     const [filterRequestBody, setFilterRequestBody] = useState();
     const [modal, contextHolder] = Modal.useModal();
 
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
-    const [filteredCategories, setFilteredCategories] = useState([]);
-
     const { getAllCategoryByPage, deleteCategory, deleteCategoryList, searchCategory, importCategory, exportCategories } = useManageCategoryApi();
 
     useEffect(() => {
@@ -59,7 +55,6 @@ function ManageCategory() {
 
     useEffect(() => {
         const searchUsingFilter = async () => {
-            console.log("Filter changed! Compiling request body")
             let body = {}
             let isFilter = false; // Check nếu tất cả các field mà null thì là đang không có filter
             if (currentFilters == null) return;
@@ -70,7 +65,6 @@ function ManageCategory() {
                 }
             })
             if (isFilter){
-                console.log("Filter exists. Enter search mode");
                 setFilterRequestBody(body);
                 setSearchMode(true);    
             } 
@@ -142,7 +136,6 @@ function ManageCategory() {
     };
 
     const resetSearch = () => {
-        console.log("Exit search mode! Resetting");
         setSearchMode(false);
     };
 
@@ -261,116 +254,40 @@ function ManageCategory() {
         });
     };
 
-    const handleSearch = (selectedKeys, confirm, dataIndex) => {
-        const searchValue = selectedKeys[0] || '';
-        confirm();
-        setSearchText(searchValue);
-        setSearchedColumn(dataIndex);
-
-        if (!searchValue) {
-            setFilteredCategories([]);
-            return;
-        }
-
-        const filtered = categoryList.filter(item => {
-            const targetValue = item[dataIndex];
-            if (!targetValue) return false;
-            
-            if (dataIndex === 'age_limit') {
-                return targetValue.toString().includes(searchValue);
-            }
-            return targetValue.toString().toLowerCase().includes(searchValue.toLowerCase());
-        });
-
-        setFilteredCategories(filtered);
-    };
-
-    const handleReset = (clearFilters, confirm) => {
-        if (clearFilters) {
-            clearFilters();
-        }
-        setSearchText('');
-        setFilteredCategories([]);
-        confirm();
-    };
-
-    const getColumnSearchProps = (placeholder, dataIndex) => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div style={{ padding: 8 }}>
-                <Input
-                    placeholder={`Tìm ${placeholder}`}
-                    value={selectedKeys[0] || ''}
-                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                    style={{ width: 188, marginBottom: 8, display: 'block' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Button
-                        type="primary"
-                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Tìm
-                    </Button>
-                    <Button
-                        onClick={() => handleReset(clearFilters, confirm)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Xóa
-                    </Button>
-                </div>
-            </div>
-        ),
-        filterIcon: filtered => (
-            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-        ),
-        onFilter: (value, record) => {
-            if (!record[dataIndex]) return false;
-            return record[dataIndex].toString().toLowerCase()
-                .includes((value || '').toLowerCase());
-        },
-        filteredValue: searchedColumn === dataIndex ? [searchText] : null,
-    });
-
     const columns = [
         {
-            title: 'Tên danh mục',
+            title: 'Tên thể loại',
             dataIndex: 'name',
             key: 'name',
-            width: '25%',
             align: 'center',
-            ...getColumnSearchProps('tên danh mục', 'name'),
-            sorter: (a, b) => a.name.localeCompare(b.name),
-        },
-        {
-            title: 'Giới hạn tuổi',
-            dataIndex: 'age_limit',
-            key: 'age_limit',
-            width: '15%',
-            align: 'center',
-            ...getColumnSearchProps('giới hạn tuổi', 'age_limit'),
-            sorter: (a, b) => (a.age_limit || 0) - (b.age_limit || 0),
+            width: '30%',
+            ...getColumnSearchProps('Tên thể loại', 'name'),
         },
         {
             title: 'Mô tả',
             dataIndex: 'description',
             key: 'description',
-            width: '40%',
             align: 'center',
-            ...getColumnSearchProps('mô tả', 'description'),
-            sorter: (a, b) => (a.description || '').localeCompare(b.description || ''),
+            width: '30%',
+            ...getColumnSearchProps('Mô tả', 'description'),
             render: (text) => (
                 <div style={{ 
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    maxWidth: '200px'
                 }}>
                     {text || 'Chưa có mô tả'}
                 </div>
             ),
+        },
+        {
+            title: 'Giới hạn tuổi',
+            dataIndex: 'age_limit',
+            key: 'age_limit',
+            width: '20%',
+            align: 'center',
+            ...getColumnSearchProps('giới hạn tuổi', 'age_limit'),
+            sorter: (a, b) => (a.age_limit || 0) - (b.age_limit || 0),
         },
         {
             title: 'Thao tác',
@@ -487,7 +404,7 @@ function ManageCategory() {
             </Space>
             <Table
                 columns={columns}
-                dataSource={filteredCategories.length > 0 ? filteredCategories : categoryList}
+                dataSource={categoryList}
                 onChange={onTableChange}
                 rowKey={(record) => record.id}
                 pagination={{

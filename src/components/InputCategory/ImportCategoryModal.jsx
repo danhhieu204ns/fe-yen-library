@@ -1,72 +1,79 @@
-import { Modal, Button, Upload, Typography, Space } from 'antd';
-import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
-import * as XLSX from 'xlsx';
+import { memo } from 'react';
+import { Modal, Upload, Button, Typography } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+
+const { Dragger } = Upload;
 
 function ImportCategoryModal({ open, onClose, onFileChange, onImport, selectedFile }) {
-    const generateExcelTemplate = () => {
-        // Create workbook and worksheet
-        const wb = XLSX.utils.book_new();
+    const props = {
+        name: 'file',
+        maxCount: 1,
+        accept: '.xlsx, .xls',
+        beforeUpload: (file) => {
+            const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                           file.type === 'application/vnd.ms-excel';
+            
+            if (!isExcel) {
+                message.error('Chỉ chấp nhận file Excel!');
+                return Upload.LIST_IGNORE;
+            }
 
-        // Headers matching the uploaded file
-        const headers = ['Tên danh mục', 'Giới hạn tuổi', 'Mô tả'];
-
-        // Sample rows to demonstrate format
-        const sampleRows = [
-            ['Danh mục A', '18', 'Mô tả cho danh mục A'],
-            // ['Danh mục B', '21', 'Mô tả cho danh mục B'],
-            // ['Danh mục C', '16', 'Mô tả cho danh mục C'],
-        ];
-
-        // Create worksheet data with headers and sample rows
-        const wsData = [headers, ...sampleRows];
-
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, 'Template');
-
-        // Generate blob and download
-        XLSX.writeFile(wb, 'category_import_template.xlsx');
+            onFileChange(file);
+            return false;
+        },
+        onRemove: () => {
+            onFileChange(null);
+        }
     };
 
     return (
         <Modal
-            title="Import thể loại"
+            title="Import Thể Loại từ Excel"
             open={open}
             onCancel={onClose}
             footer={[
-                <Button key="cancel" onClick={onClose}>
+                <Button key="back" onClick={onClose}>
                     Hủy
                 </Button>,
-                <Button key="import" type="primary" onClick={onImport}>
+                <Button
+                    key="submit"
+                    type="primary"
+                    onClick={onImport}
+                    disabled={!selectedFile}
+                >
                     Import
-                </Button>,
+                </Button>
             ]}
+            maskClosable={false}
             centered
-            style={{ padding: '24px', backgroundColor: '#f0f2f5', borderRadius: '8px' }}
+            width={600}
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
+            }}
         >
-            <Space direction="vertical" style={{ width: '100%' }}>
-                <Space>
-                    <Upload 
-                        name="file" 
-                        beforeUpload={() => false} // Prevent automatic upload
-                        onChange={onFileChange}
-                        showUploadList={false}
-                    >
-                        <Button icon={<UploadOutlined />}>Chọn file</Button>
-                    </Upload>
-                    <Button icon={<DownloadOutlined />} onClick={generateExcelTemplate}>
-                        Download mẫu file
-                    </Button>
-                </Space>
-                {selectedFile && (
-                    <Typography.Text style={{ marginTop: '16px', display: 'block' }}>
-                        {selectedFile.name}
-                    </Typography.Text>
-                )}
-            </Space>
+            <div className="p-4">
+                <Typography.Text>
+                    Chọn file Excel để import dữ liệu thể loại. 
+                    File phải có định dạng .xlsx hoặc .xls
+                </Typography.Text>
+                <div className="mt-4">
+                    <Dragger {...props} fileList={selectedFile ? [selectedFile] : []}>
+                        <p className="ant-upload-drag-icon">
+                            <InboxOutlined />
+                        </p>
+                        <p className="ant-upload-text">
+                            Click hoặc kéo thả file vào đây
+                        </p>
+                        <p className="ant-upload-hint">
+                            Hỗ trợ file .xlsx, .xls
+                        </p>
+                    </Dragger>
+                </div>
+            </div>
         </Modal>
     );
 }
 
-export default ImportCategoryModal;
+export default memo(ImportCategoryModal);
