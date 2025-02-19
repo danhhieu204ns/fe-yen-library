@@ -1,98 +1,69 @@
 import { Input, Space, Button, DatePicker } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
-
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
 
-// Không khác gì lắm so với SearchInColumn.
-// QUAN TRỌNG: TỰ NÓ KO SEARCH ĐC. Cần phải sử dụng với onChange ở Table để search cùng filter bình thường
-export function getColumnSearchProps(title, dataIndex) {
-    const [searchText, setSearchText] = useState(''); // Update Highlight state
-    const [searchedColumn, setSearchedColumn] = useState(''); // Isolate Highlight to only searched column?
-    const searchInput = useRef(null); // Hold search input
-
-    const handleSearch = async (selectedKeys, confirm, dataIndex) => {
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
-        confirm();
-    };
-
-    const handleReset = (setSelectedKeys, clearFilters, confirm) => {
-        setSearchText('');
-        setSelectedKeys([]);
-        clearFilters();
-        // reset();
-        confirm();
-    };
+// Hàm search cơ bản cho text
+export const getColumnSearchProps = (title, dataIndex) => {
+    let searchText = '';  // Add this line
 
     return {
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
-            <div className="p-2" onKeyDown={(e) => e.stopPropagation()}>
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+            <div style={{ padding: 8 }}>
                 <Input
-                    ref={searchInput}
-                    placeholder={`Tìm kiếm trong ${title}`}
+                    placeholder={`Tìm ${title}`}
                     value={selectedKeys[0]}
-                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])} // Change search input into array to match selectedKeys form
-                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                    style={{
-                        marginBottom: 8,
-                        display: 'block',
+                    onChange={e => {
+                        setSelectedKeys(e.target.value ? [e.target.value] : []);
+                        searchText = e.target.value;  // Update searchText when input changes
                     }}
+                    onPressEnter={() => confirm()}
+                    style={{ width: 188, marginBottom: 8, display: 'block' }}
                 />
-                <Space className="flex justify-between">
-                    <Button
-                        type="text"
-                        onClick={() => {
-                            handleReset(setSelectedKeys, clearFilters, confirm);
-                        }}
-                        size="small"
-                        style={{
-                            width: 90,
-                        }}
-                    >
-                        Reset
-                    </Button>
+                <Space>
                     <Button
                         type="primary"
-                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                        onClick={() => {
+                            confirm();
+                            searchText = selectedKeys[0];  // Update searchText when confirming
+                        }}
                         icon={<SearchOutlined />}
                         size="small"
-                        style={{
-                            width: 90,
-                        }}
+                        style={{ width: 90 }}
                     >
-                        Search
+                        Tìm
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            clearFilters?.();
+                            searchText = '';  // Clear searchText when resetting
+                            confirm();
+                        }}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Xóa
                     </Button>
                 </Space>
             </div>
         ),
-        filterIcon: (filtered) => <SearchOutlined className={filtered ? 'stroke-primary' : ''} />,
-        onFilterDropdownOpenChange: (visible) => {
-            if (visible) {
-                setTimeout(() => searchInput.current?.select(), 100);
-            }
-        },
-        render: (text) =>
-            searchedColumn === dataIndex ? (
-                <Highlighter
-                    highlightStyle={{
-                        backgroundColor: '#ffc069',
-                        padding: 0,
-                    }}
-                    searchWords={[searchText]}
-                    autoEscape
-                    textToHighlight={text ? text.toString() : ''}
-                />
-            ) : (
-                text
-            ),
+        filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+        render: (text) => (
+            <Highlighter
+                highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+                searchWords={[searchText]}
+                autoEscape
+                textToHighlight={text ? text.toString() : ''}
+            />
+        )
     };
-}
+};
 
-export function getColumnSearchDateProps(title, dataIndex) {
+// Hàm search cho date range
+export const getColumnSearchDateProps = (title, dataIndex) => {
     const handleSearch = async (selectedKeys, confirm, dataIndex) => {
         confirm();
     };
@@ -100,7 +71,6 @@ export function getColumnSearchDateProps(title, dataIndex) {
     const handleReset = (setSelectedKeys, clearFilters, confirm) => {
         setSelectedKeys([]);
         clearFilters();
-        // reset();
         confirm();
     };
 
@@ -148,4 +118,4 @@ export function getColumnSearchDateProps(title, dataIndex) {
         ),
         filterIcon: (filtered) => <SearchOutlined className={filtered ? 'stroke-primary' : ''} />,
     };
-}
+};
