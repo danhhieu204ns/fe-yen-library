@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { Button, Table, Tooltip, Modal, Space, Input, Select, Typography, Upload, Flex, message } from 'antd';
-import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import useManageAuthorApi from 'src/services/manageAuthorService';
 import CreateAuthor from './CreateAuthor';
 import EditAuthor from './EditAuthor';
 import ShowInfoAuthor from './ShowInfoAuthor';
 import moment from 'moment';
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
+import { getColumnSearchProps } from 'src/utils/searchByApi';
 import ErrorModal from 'src/components/common/ErrorModal';
 import ImportAuthorModal from './ImportAuthorModal';
 
@@ -18,6 +19,9 @@ function ManageAuthor() {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
 
+    const [filteredAuthors, setFilteredAuthors] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterOption, setFilterOption] = useState('name');
     const [listAuthorToDelete, setListAuthorToDelete] = useState([]);
 
     const [importModalOpen, setImportModalOpen] = useState(false);
@@ -25,7 +29,7 @@ function ManageAuthor() {
 
     const [total, setTotal] = useState();
     const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(20);
     const [reloadToggle, setReloadToggle] = useState(false);
     const [totalData, setTotalData] = useState(0);
     const [exportLoading, setExportLoading] = useState(false);
@@ -34,10 +38,6 @@ function ManageAuthor() {
     const { authorData, deleteAuthor, deleteListAuthor, importAuthor, exportAuthors } = useManageAuthorApi();
 
     const [modal, contextHolder] = Modal.useModal(); // Keep only one modal instance
-
-    const [filteredAuthors, setFilteredAuthors] = useState([]);  // Thêm state này
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
 
     const handleImportClick = () => {
         setImportModalOpen(true);
@@ -52,31 +52,20 @@ function ManageAuthor() {
             const formData = new FormData();
             formData.append('file', selectedFile);
             const response = await importAuthor(formData);
-            
-            // Kiểm tra nếu có lỗi từ response
-            if (response?.errors && response.errors.length > 0) {
+            console.log('response', response);
+            if (response.status === 200) {
+                message.success(`${selectedFile.name} file uploaded successfully`);
+                handleReload();
+                handleCloseImportModal();
+            } else {
                 const errorMessages = response.errors.map(error => `Dòng ${error.Dòng}: ${error.Lỗi}`);
                 setErrorMessages(errorMessages);
                 setErrorModalOpen(true);
-                return;
             }
-
-            // Nếu không có lỗi, xử lý thành công
-            message.success(`Import thành công ${selectedFile.name}`);
-            // Reset về trang đầu tiên sau khi import
-            setPage(1);
-            // Fetch lại data với page và pageSize hiện tại
-            const results = await authorData(1, pageSize);
-            setAuthorList(results?.authors || []);
-            setTotal(results?.total_data || 0);
-            setTotalData(results?.total_pages * pageSize || 0);
-            handleCloseImportModal();
         } catch (error) {
-            console.error('Import error:', error);
             message.error(`${selectedFile.name} file upload failed.`);
         }
     };
-
     const handleFileChange = (file) => {
         if (file) {
             setSelectedFile(file);
@@ -86,7 +75,7 @@ function ManageAuthor() {
     const fetchData = async () => {
         const results = await authorData(page, pageSize);
         setAuthorList(results?.authors || []);
-        setTotal(results?.total_data || 0); // Sử dụng total_data từ API
+        setTotal(results?.total_data || 0);
         setTotalData(results?.total_pages * pageSize || 0);
     };
 
@@ -143,75 +132,34 @@ function ManageAuthor() {
         }
     };
 
-    const handleSearch = (selectedKeys, confirm, dataIndex) => {
-        confirm();
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
-
-        const searchValue = selectedKeys[0]?.toLowerCase();
-        if (!searchValue) {
-            setFilteredAuthors([]);
-            return;
-        }
-
-        const filtered = authorList.filter(item => {
-            const targetValue = item[dataIndex];
-            if (!targetValue) return false;
-            
-            if (dataIndex === 'birthdate') {
-                return moment(targetValue).format('DD/MM/YYYY').includes(searchValue);
+    useEffect(() => {
+        const filterAuthors = () => {
+            if (!searchTerm) {
+                setFilteredAuthors(authorList);
+                return;
             }
-            return targetValue.toString().toLowerCase().includes(searchValue);
-        });
 
-        setFilteredAuthors(filtered);
-    };
+            const lowercasedTerm = searchTerm.toLowerCase();
+            const filtered = authorList.filter((author) => {
+                if (filterOption === 'name') {
+                    return author.name.toLowerCase().includes(lowercasedTerm);
+                } else if (filterOption === 'birthdate') {
+                    return moment(author.birthdate).format('DD/MM/YYYY').includes(lowercasedTerm);
+                } else if (filterOption === 'address') {
+                    return author.address?.toLowerCase().includes(lowercasedTerm);
+                } else if (filterOption === 'pen_name') {
+                    return author.pen_name?.toLowerCase().includes(lowercasedTerm);
+                } else if (filterOption === 'biography') {
+                    return author.biography?.toLowerCase().includes(lowercasedTerm);
+                }
+                return false;
+            });
+            setFilteredAuthors(filtered);
+            setTotal(filtered.length);
+        };
 
-    const handleReset = (clearFilters, confirm) => {
-        clearFilters();
-        setSearchText('');
-        setFilteredAuthors([]);
-        confirm();
-    };
-
-    const getColumnSearchProps = (placeholder, dataIndex) => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div style={{ padding: 8 }}>
-                <Input
-                    placeholder={`Tìm ${placeholder}`}
-                    value={selectedKeys[0]}
-                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                    style={{ width: 188, marginBottom: 8, display: 'block' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Button
-                        type="primary"
-                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Tìm
-                    </Button>
-                    <Button
-                        onClick={() => handleReset(clearFilters, confirm)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Xóa
-                    </Button>
-                </div>
-            </div>
-        ),
-        filterIcon: filtered => (
-            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-        ),
-        onFilter: (value, record) =>
-            record[dataIndex]
-                ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
-                : '',
-        filteredValue: searchedColumn === dataIndex ? [searchText] : null,
-    });
+        filterAuthors();
+    }, [searchTerm, filterOption, authorList]);
 
     const columns = [
         {
@@ -220,7 +168,6 @@ function ManageAuthor() {
             key: 'author',
             ...getColumnSearchProps('Tên tác giả', 'name'),
             sorter: (a, b) => a.name.localeCompare(b.name),
-            filterSearch: true,  // Thêm thuộc tính này để cho phép search trong filter
         },
         {
             title: 'Ngày sinh',
@@ -233,15 +180,13 @@ function ManageAuthor() {
             dataIndex: 'address',
             key: 'address',
             ...getColumnSearchProps('Địa chỉ', 'address'),
-            sorter: (a, b) => (a.address || '').localeCompare(b.address || ''),  // Thêm null check
-            filterSearch: true,
+            sorter: (a, b) => a.address.localeCompare(b.address),
         },
         {
             title: 'Bút danh',
             dataIndex: 'pen_name',
             key: 'pen_name',
             ...getColumnSearchProps('Bút danh', 'pen_name'),
-            filterSearch: true,
         },
         {
             title: 'Tiểu sử',
@@ -321,13 +266,6 @@ function ManageAuthor() {
         }
     ];
 
-    // Thêm hàm xử lý onChange cho Table để handle search
-    const handleTableChange = (pagination, filters, sorter) => {
-        // Cập nhật page và pageSize
-        setPage(pagination.current);
-        setPageSize(pagination.pageSize);
-    };
-
     const handleExport = async () => {
         modal.confirm({
             title: 'Xác nhận xuất file',
@@ -372,7 +310,72 @@ function ManageAuthor() {
 
     return (
         <div className='py-20 px-4'>
-            <h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Tác giả</h1>
+<           h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Tác giả</h1>
+            <div className="flex justify-between items-center">
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+                    <Input
+                        placeholder="Nhập từ khóa tìm kiếm..."
+                        allowClear
+                        size="large"
+                        style={{ width: '400px', marginRight: '10px' }}
+                        onChange={(e) => {
+                            const searchValue = e.target.value;
+                            setSearchTerm(searchValue);
+
+                            if (!searchValue) {
+                                setFilteredAuthors(authorList);
+                                setTotal(authorList.length);
+                                return;
+                            }
+
+                            const lowercasedTerm = searchValue.toLowerCase();
+                            const filtered = authorList.filter((author) => {
+                                if (filterOption === 'name') {
+                                    return author.name.toLowerCase().includes(lowercasedTerm);
+                                } else if (filterOption === 'birthdate') {
+                                    return moment(author.birthdate).format('DD/MM/YYYY').includes(lowercasedTerm);
+                                } else if (filterOption === 'address') {
+                                    return author.address?.toLowerCase().includes(lowercasedTerm);
+                                } else if (filterOption === 'pen_name') {
+                                    return author.pen_name?.toLowerCase().includes(lowercasedTerm);
+                                } else if (filterOption === 'biography') {
+                                    return author.biography?.toLowerCase().includes(lowercasedTerm);
+                                }
+                                return false;
+                            });
+
+                            setFilteredAuthors(filtered);
+                            setTotal(filtered.length);
+                        }}
+                    />
+                    <label style={{ marginRight: '10px' }}>Lọc theo:</label>
+                    <Select
+                        value={filterOption}
+                        onChange={(value) => setFilterOption(value)}
+                        style={{ width: '200px' }}
+                    >
+                        <Select.Option value="name">Tên tác giả</Select.Option>
+                        <Select.Option value="birthdate">Ngày sinh</Select.Option>
+                        <Select.Option value="address">Địa chỉ</Select.Option>
+                        <Select.Option value="pen_name">Bút danh</Select.Option>
+                        <Select.Option value="biography">Tiểu sử</Select.Option>
+                    </Select>
+                </div>
+
+                <Flex gap={6} justify="center" align="center">
+                    <span style={{ fontWeight: 'bold' }}>Tổng số:</span>
+                    <Input
+                        style={{
+                            width: '60px',
+                            color: 'red',
+                            fontWeight: 'bold',
+                        }}
+                        value={total}
+                        readOnly
+                        disabled
+                    />
+                </Flex>
+            </div>
             <Space className="flex my-2 justify-between">
                 <Space>
                     <Button 
@@ -418,15 +421,11 @@ function ManageAuthor() {
                         Xóa {listAuthorToDelete.length !== 0 ? listAuthorToDelete.length + ' tác giả' : ''}
                     </Button>
                 </Space>
-                <Space>
-                    <Typography className='font-bold'>Tổng số: </Typography>
-                    <Input disabled className='disabled:bg-white disabled:text-red-500 font-bold w-16' value={total}/>    
-                </Space>
             </Space>
             <div>
                 <Table
                     columns={columns}
-                    dataSource={filteredAuthors.length > 0 ? filteredAuthors : authorList}  // Change from filteredAuthors to authorList
+                    dataSource={filteredAuthors}
                     rowSelection={{
                         type: 'checkbox',
                         selectedRowKeys: listAuthorToDelete,
@@ -443,12 +442,6 @@ function ManageAuthor() {
                             setPage(newPage);
                             setPageSize(newPageSize);
                         },
-                        showTotal: () => (
-                            <span style={{ margin: '0 8px' }}>
-                                Trang {page} / {Math.ceil(totalData/pageSize)}
-                            </span>
-                        ),
-                        style: { marginBottom: 0 },
                     }}
                     onRow={(record) => {
                         return {
@@ -457,7 +450,6 @@ function ManageAuthor() {
                             },
                         };
                     }}
-                    onChange={handleTableChange}
                 />
             </div>
 
