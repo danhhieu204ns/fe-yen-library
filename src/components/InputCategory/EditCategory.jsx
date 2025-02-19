@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from 'react';
-import { Input, Typography, Col, Row, Modal, Divider } from 'antd';
+import { Input, Typography, Col, Row, Modal, Divider, Button } from 'antd';
 import useManageCategoryApi from 'src/services/manageCategoryService';
 import { toast } from 'react-toastify';
 import ErrorMessage from 'src/utils/error/errorMessage';
@@ -70,50 +70,68 @@ function EditCategory({ openModal, closeModal, handleReload, data }) {
                 setErrorMessages('');
                 closeModal();
             }}
-            onOk={handleEditCategory}
+            footer={[
+                <Button key="back" onClick={closeModal}>
+                    Hủy
+                </Button>,
+                <Button key="submit" type="primary" onClick={handleEditCategory}>
+                    Cập nhật
+                </Button>,
+            ]}
             maskClosable={false}
             centered
-            style={{ padding: '24px', backgroundColor: '#f0f2f5', borderRadius: '8px' }}
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
+                background: '#fff',
+            }}
         >
-            <Row gutter={[16, 16]}>
-                <Col span={24}>
-                    <Typography.Title level={5} style={{ color: 'black' }}>Tên thể loại</Typography.Title>
-                    <Input
-                        placeholder="Nhập tên thể loại"
-                        value={name}
-                        onChange={(e) => {
-                            setName(e.target.value);
-                            setErrorMessages('');
-                        }}
-                        style={{ borderRadius: '8px', marginBottom: '16px' }}
-                    />
-                </Col>
-                <Divider />
-                <Col span={24}>
-                    <Typography.Title level={5} style={{ color: 'black' }}>Mô tả</Typography.Title>
-                    <Input.TextArea
-                        placeholder="Nhập mô tả cho thể loại"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        style={{ borderRadius: '8px', marginBottom: '16px' }}
-                    />
-                </Col>
-                <Divider />
-                <Col span={24}>
-                    <Typography.Title level={5} style={{ color: 'black' }}>Giới hạn độ tuổi</Typography.Title>
-                    <Input
-                        type="number"
-                        placeholder="Nhập giới hạn độ tuổi"
-                        value={ageLimit}
-                        onChange={(e) => {
-                            setAgeLimit(Number(e.target.value));
-                            setErrorMessages('');
-                        }}
-                        style={{ borderRadius: '8px', marginBottom: '16px' }}
-                    />
-                </Col>
-                <ErrorMessage message={errorMessages} />
-            </Row>
+            <div className="p-4">
+                <Row gutter={[0, 16]}>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Tên thể loại</Typography.Text>
+                            <span className="text-red-500 ml-1">*</span>
+                        </div>
+                        <Input
+                            placeholder="Nhập tên thể loại"
+                            value={name}
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                setErrorMessages('');
+                            }}
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Độ tuổi giới hạn</Typography.Text>
+                        </div>
+                        <Input
+                            placeholder="Nhập độ tuổi giới hạn"
+                            type="number"
+                            value={ageLimit}
+                            onChange={(e) => setAgeLimit(e.target.value)}
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Mô tả</Typography.Text>
+                        </div>
+                        <Input.TextArea
+                            placeholder="Nhập mô tả"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={3}
+                        />
+                    </Col>
+                    {errorMessages && (
+                        <Col span={24}>
+                            <div className="text-red-500">{errorMessages}</div>
+                        </Col>
+                    )}
+                </Row>
+            </div>
         </Modal>
     );
 }

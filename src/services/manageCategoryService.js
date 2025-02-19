@@ -40,7 +40,6 @@ const useCategoryApi = () => {
             });
             return res.data;
         } catch (error) {
-            // console.error('Import failed:', error);
             return error.response;
         }
     };

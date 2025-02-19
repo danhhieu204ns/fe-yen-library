@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Modal, Space, Table, Tooltip, Button, Typography, Input, message } from 'antd';
-import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined, UploadOutlined, DownloadOutlined, SearchOutlined } from '@ant-design/icons';
 import useManageCategoryApi from 'src/services/manageCategoryService';
 import CreateCategory from './CreateCategory';
 import ShowInfoCategory from './ShowInfoCategory';
 import EditCategory from './EditCategory';
 import ImportCategoryModal from './ImportCategoryModal';
-import ErrorModal from './ErrorModal';
+import ErrorModal from 'src/components/common/ErrorModal';
 import { getColumnSearchProps } from 'src/utils/searchByApi';
 
 function ManageCategory() {
@@ -31,6 +31,10 @@ function ManageCategory() {
     const [searchMode, setSearchMode] = useState(false);
     const [filterRequestBody, setFilterRequestBody] = useState();
     const [modal, contextHolder] = Modal.useModal();
+
+    const [searchText, setSearchText] = useState('');
+    const [searchedColumn, setSearchedColumn] = useState('');
+    const [filteredCategories, setFilteredCategories] = useState([]);
 
     const { getAllCategoryByPage, deleteCategory, deleteCategoryList, searchCategory, importCategory, exportCategories } = useManageCategoryApi();
 
@@ -257,6 +261,79 @@ function ManageCategory() {
         });
     };
 
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+        const searchValue = selectedKeys[0] || '';
+        confirm();
+        setSearchText(searchValue);
+        setSearchedColumn(dataIndex);
+
+        if (!searchValue) {
+            setFilteredCategories([]);
+            return;
+        }
+
+        const filtered = categoryList.filter(item => {
+            const targetValue = item[dataIndex];
+            if (!targetValue) return false;
+            
+            if (dataIndex === 'age_limit') {
+                return targetValue.toString().includes(searchValue);
+            }
+            return targetValue.toString().toLowerCase().includes(searchValue.toLowerCase());
+        });
+
+        setFilteredCategories(filtered);
+    };
+
+    const handleReset = (clearFilters, confirm) => {
+        if (clearFilters) {
+            clearFilters();
+        }
+        setSearchText('');
+        setFilteredCategories([]);
+        confirm();
+    };
+
+    const getColumnSearchProps = (placeholder, dataIndex) => ({
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+            <div style={{ padding: 8 }}>
+                <Input
+                    placeholder={`Tìm ${placeholder}`}
+                    value={selectedKeys[0] || ''}
+                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                    style={{ width: 188, marginBottom: 8, display: 'block' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Button
+                        type="primary"
+                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Tìm
+                    </Button>
+                    <Button
+                        onClick={() => handleReset(clearFilters, confirm)}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Xóa
+                    </Button>
+                </div>
+            </div>
+        ),
+        filterIcon: filtered => (
+            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+        ),
+        onFilter: (value, record) => {
+            if (!record[dataIndex]) return false;
+            return record[dataIndex].toString().toLowerCase()
+                .includes((value || '').toLowerCase());
+        },
+        filteredValue: searchedColumn === dataIndex ? [searchText] : null,
+    });
+
     const columns = [
         {
             title: 'Tên danh mục',
@@ -264,9 +341,8 @@ function ManageCategory() {
             key: 'name',
             width: '25%',
             align: 'center',
-            sorter: { multiple: 1 },
-            ...getColumnSearchProps('Tên danh mục', 'name'),
-            filteredValue: currentFilters?.name || null
+            ...getColumnSearchProps('tên danh mục', 'name'),
+            sorter: (a, b) => a.name.localeCompare(b.name),
         },
         {
             title: 'Giới hạn tuổi',
@@ -274,7 +350,8 @@ function ManageCategory() {
             key: 'age_limit',
             width: '15%',
             align: 'center',
-            sorter: { multiple: 2 },
+            ...getColumnSearchProps('giới hạn tuổi', 'age_limit'),
+            sorter: (a, b) => (a.age_limit || 0) - (b.age_limit || 0),
         },
         {
             title: 'Mô tả',
@@ -282,7 +359,18 @@ function ManageCategory() {
             key: 'description',
             width: '40%',
             align: 'center',
-            sorter: { multiple: 3 },
+            ...getColumnSearchProps('mô tả', 'description'),
+            sorter: (a, b) => (a.description || '').localeCompare(b.description || ''),
+            render: (text) => (
+                <div style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '200px'
+                }}>
+                    {text || 'Chưa có mô tả'}
+                </div>
+            ),
         },
         {
             title: 'Thao tác',
@@ -396,11 +484,10 @@ function ManageCategory() {
                     <Typography className='font-bold'>Tổng số: </Typography>
                     <Input disabled className='disabled:bg-white disabled:text-red-500 font-bold w-16' value={totalData}/>    
                 </Space>
-                
             </Space>
             <Table
                 columns={columns}
-                dataSource={categoryList}
+                dataSource={filteredCategories.length > 0 ? filteredCategories : categoryList}
                 onChange={onTableChange}
                 rowKey={(record) => record.id}
                 pagination={{

@@ -8,44 +8,45 @@ function ShowInfoCategory({ openModal, closeModal, data }) {
             open={openModal} 
             onCancel={closeModal} 
             footer={null}
+            maskClosable={true}
             centered
-            style={{ padding: '24px', backgroundColor: '#f0f2f5', borderRadius: '8px' }}
+            width={600}
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
+                background: '#fff',
+            }}
         >
-            <Row gutter={[16, 16]}>
-                <Col span={24}>
-                    <Typography.Title level={5} style={{ color: 'black' }}>Tên thể loại</Typography.Title>
-                    <Input
-                        placeholder="Tên thể loại"
-                        disabled
-                        value={data?.name}
-                        className="disabled:bg-white disabled:text-black"
-                        style={{ borderRadius: '8px', marginBottom: '16px' }}
-                    />
-                </Col>
-                <Divider />
-                <Col span={24}>
-                    <Typography.Title level={5} style={{ color: 'black' }}>Độ tuổi giới hạn</Typography.Title>
-                    <Input
-                        placeholder="Độ tuổi giới hạn"
-                        disabled
-                        value={data?.age_limit}
-                        className="disabled:bg-white disabled:text-black"
-                        style={{ borderRadius: '8px', marginBottom: '16px' }}
-                    />
-                </Col>
-                <Divider />
-                <Col span={24}>
-                    <Typography.Title level={5} style={{ color: 'black' }}>Mô tả</Typography.Title>
-                    <Input.TextArea
-                        placeholder="Mô tả"
-                        disabled
-                        value={data?.description}
-                        className="disabled:bg-white disabled:text-black"
-                        rows={4}
-                        style={{ borderRadius: '8px', marginBottom: '16px' }}
-                    />
-                </Col>
-            </Row>
+            <div className="p-4">
+                <Row gutter={[16, 8]}>
+                    <Col span={24}>
+                        <Typography.Text strong>Tên thể loại</Typography.Text>
+                        <Input
+                            disabled
+                            value={data?.name}
+                            className="mt-1 disabled:bg-white disabled:text-black"
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong>Độ tuổi giới hạn</Typography.Text>
+                        <Input
+                            disabled
+                            value={data?.age_limit}
+                            className="mt-1 disabled:bg-white disabled:text-black"
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong>Mô tả</Typography.Text>
+                        <Input.TextArea
+                            disabled
+                            value={data?.description}
+                            className="mt-1 disabled:bg-white disabled:text-black"
+                            rows={3}
+                        />
+                    </Col>
+                </Row>
+            </div>
         </Modal>
     );
 }
