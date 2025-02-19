@@ -347,7 +347,7 @@ function ManageCategory() {
 
     return (
         <div className='py-20 px-4'>
-            <h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Tác giả</h1>
+            <h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Thể loại sách</h1>
             <Space className="flex my-2 justify-between">
                 <Space>
                     <Button 
