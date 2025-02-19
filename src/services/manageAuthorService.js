@@ -107,6 +107,22 @@ const useManageAuthorApi = () => {
         }
     };
 
+    const searchAuthor = async (searchBody, page = 1, pageSize = 10) => {
+        try {
+            const searchData = {
+                name: searchBody.name || '',
+                address: searchBody.address || '',
+                pen_name: searchBody.pen_name || '',
+            };
+            
+            const response = await httpPrivate.post(`/author/search?page=${page}&page_size=${pageSize}`, searchData);
+            return response.data;
+        } catch (error) {
+            console.error('Error searching authors:', error);
+            return error;
+        }
+    };
+
     return {
         oneAuthor,
         allAuthors,
@@ -117,6 +133,7 @@ const useManageAuthorApi = () => {
         deleteListAuthor,
         importAuthor,
         exportAuthors,
+        searchAuthor,
     };
 };
 

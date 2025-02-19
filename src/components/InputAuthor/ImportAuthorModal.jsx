@@ -1,67 +1,79 @@
-import { Modal, Button, Upload, Typography, Space } from 'antd';
-import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
-import * as XLSX from 'xlsx';
+import { memo } from 'react';
+import { Modal, Upload, Button, Typography } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+
+const { Dragger } = Upload;
 
 function ImportAuthorModal({ open, onClose, onFileChange, onImport, selectedFile }) {
-    const generateExcelTemplate = () => {
-        const wb = XLSX.utils.book_new();
-        const headers = ['Tên tác giả', 'Ngày sinh', 'Địa chỉ', 'Bút danh', 'Tiểu sử'];
-        const sampleRows = [
-            ['Nguyễn Văn A', '29/09/1999', 'Hà Nội', 'Pen Name', 'Tiểu sử tác giả'],
-        ];
-        const wsData = [headers, ...sampleRows];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Template');
-        XLSX.writeFile(wb, 'author_import_template.xlsx');
+    const props = {
+        name: 'file',
+        maxCount: 1,
+        accept: '.xlsx, .xls',
+        beforeUpload: (file) => {
+            const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                           file.type === 'application/vnd.ms-excel';
+            
+            if (!isExcel) {
+                message.error('Chỉ chấp nhận file Excel!');
+                return Upload.LIST_IGNORE;
+            }
+
+            onFileChange(file);
+            return false;
+        },
+        onRemove: () => {
+            onFileChange(null);
+        }
     };
 
     return (
         <Modal
-            title="Import tác giả"
+            title="Import Tác Giả từ Excel"
             open={open}
             onCancel={onClose}
             footer={[
-                <Button key="cancel" onClick={onClose}>
+                <Button key="back" onClick={onClose}>
                     Hủy
                 </Button>,
-                <Button key="import" type="primary" onClick={onImport}>
+                <Button
+                    key="submit"
+                    type="primary"
+                    onClick={onImport}
+                    disabled={!selectedFile}
+                >
                     Import
-                </Button>,
+                </Button>
             ]}
+            maskClosable={false}
             centered
-            styles={{
-                body: {
-                    padding: '24px',
-                    backgroundColor: '#f0f2f5',
-                    borderRadius: '8px'
-                }
+            width={600}
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
             }}
         >
-            <Space direction="vertical" style={{ width: '100%' }}>
-                <Space>
-                    <Upload 
-                        accept=".xlsx,.xls"
-                        maxCount={1}
-                        beforeUpload={(file) => {
-                            onFileChange(file);
-                            return false;
-                        }}
-                        showUploadList={false}
-                    >
-                        <Button icon={<UploadOutlined />}>Chọn file</Button>
-                    </Upload>
-                    <Button icon={<DownloadOutlined />} onClick={generateExcelTemplate}>
-                        Download mẫu file
-                    </Button>
-                </Space>
-                {selectedFile && (
-                    <Typography.Text style={{ marginTop: '16px', display: 'block' }}>
-                        File đã chọn: {selectedFile instanceof File ? selectedFile.name : selectedFile.originFileObj?.name}
-                    </Typography.Text>
-                )}
-            </Space>
+            <div className="p-4">
+                <Typography.Text>
+                    Chọn file Excel để import dữ liệu tác giả. 
+                    File phải có định dạng .xlsx hoặc .xls
+                </Typography.Text>
+                <div className="mt-4">
+                    <Dragger {...props} fileList={selectedFile ? [selectedFile] : []}>
+                        <p className="ant-upload-drag-icon">
+                            <InboxOutlined />
+                        </p>
+                        <p className="ant-upload-text">
+                            Click hoặc kéo thả file vào đây
+                        </p>
+                        <p className="ant-upload-hint">
+                            Hỗ trợ file .xlsx, .xls
+                        </p>
+                    </Dragger>
+                </div>
+            </div>
         </Modal>
     );
 }
 
-export default ImportAuthorModal;
+export default memo(ImportAuthorModal);

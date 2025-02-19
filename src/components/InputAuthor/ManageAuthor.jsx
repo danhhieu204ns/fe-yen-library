@@ -1,43 +1,101 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { Button, Table, Tooltip, Modal, Space, Input, Select, Typography, Upload, Flex, message } from 'antd';
-import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import useManageAuthorApi from 'src/services/manageAuthorService';
 import CreateAuthor from './CreateAuthor';
 import EditAuthor from './EditAuthor';
 import ShowInfoAuthor from './ShowInfoAuthor';
 import moment from 'moment';
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
-import { getColumnSearchProps } from 'src/utils/searchByApi';
+import { getColumnSearchProps } from 'src/utils/searchByApi.jsx';
 import ErrorModal from 'src/components/common/ErrorModal';
 import ImportAuthorModal from './ImportAuthorModal';
 
 function ManageAuthor() {
     const [authorList, setAuthorList] = useState([]);
     const [authorInfo, setAuthorInfo] = useState(null);
-    const [createModalOpen, setCreateModalOpen] = useState(false);
-    const [editModalOpen, setEditModalOpen] = useState(false);
-    const [showInfoModal, setShowInfoModal] = useState(false);
-
-    const [filteredAuthors, setFilteredAuthors] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterOption, setFilterOption] = useState('name');
     const [listAuthorToDelete, setListAuthorToDelete] = useState([]);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalData, setTotalData] = useState(0);
+    const [reloadToggle, setReloadToggle] = useState(false);
+
+    const [currentFilters, setCurrentFilters] = useState({});
+    const [searchMode, setSearchMode] = useState(false);
+    const [filterRequestBody, setFilterRequestBody] = useState({});
 
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
 
-    const [total, setTotal] = useState();
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
-    const [reloadToggle, setReloadToggle] = useState(false);
-    const [totalData, setTotalData] = useState(0);
     const [exportLoading, setExportLoading] = useState(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorMessages, setErrorMessages] = useState([]);
-    const { authorData, deleteAuthor, deleteListAuthor, importAuthor, exportAuthors } = useManageAuthorApi();
+    const { authorData, deleteAuthor, deleteListAuthor, importAuthor, exportAuthors, searchAuthor } = useManageAuthorApi();
 
     const [modal, contextHolder] = Modal.useModal(); // Keep only one modal instance
+    const [total, setTotal] = useState(0); // Thêm state total
+    const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const results = await authorData(page, pageSize);
+            setAuthorList(results?.authors || []);
+            setTotalData(results?.total_data || 0);
+            setTotal(results?.total_data || 0); // Thêm dòng này
+        };
+        if (!searchMode) fetchData();
+    }, [page, pageSize, reloadToggle, searchMode]);
+
+    useEffect(() => {
+        const fetchFilteredData = async () => {
+            if (!filterRequestBody) return;
+            
+            try {
+                const res = await searchAuthor(filterRequestBody, page, pageSize);
+                if (res?.authors) {
+                    setAuthorList(res.authors);
+                    setTotalData(res.total_data);
+                    setTotal(res.total_data);
+                } else {
+                    message.error('Lỗi tìm kiếm');
+                    resetSearch();
+                }
+            } catch (error) {
+                message.error('Lỗi tìm kiếm');
+                resetSearch();
+            }
+        }
+
+        if (searchMode) fetchFilteredData();
+    }, [page, pageSize, searchMode, filterRequestBody]);
+
+    const resetSearch = () => {
+        setSearchMode(false);
+        setCurrentFilters({});
+        setFilterRequestBody({});
+    };
+
+    const onTableChange = async (pagination, filters, sorter) => {
+        const searchBody = {};
+        
+        // Only add non-empty values to search body
+        Object.keys(filters).forEach(key => {
+            if (filters[key]?.[0]) {
+                searchBody[key] = filters[key][0];
+            }
+        });
+
+        // If we have search terms, enter search mode
+        if (Object.keys(searchBody).length > 0) {
+            setSearchMode(true);
+            setFilterRequestBody(searchBody);
+        } else {
+            resetSearch();
+        }
+    };
 
     const handleImportClick = () => {
         setImportModalOpen(true);
@@ -75,8 +133,7 @@ function ManageAuthor() {
     const fetchData = async () => {
         const results = await authorData(page, pageSize);
         setAuthorList(results?.authors || []);
-        setTotal(results?.total_data || 0);
-        setTotalData(results?.total_pages * pageSize || 0);
+        setTotalData(results?.total_data || 0);
     };
 
     useEffect(() => {
@@ -132,66 +189,40 @@ function ManageAuthor() {
         }
     };
 
-    useEffect(() => {
-        const filterAuthors = () => {
-            if (!searchTerm) {
-                setFilteredAuthors(authorList);
-                return;
-            }
-
-            const lowercasedTerm = searchTerm.toLowerCase();
-            const filtered = authorList.filter((author) => {
-                if (filterOption === 'name') {
-                    return author.name.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'birthdate') {
-                    return moment(author.birthdate).format('DD/MM/YYYY').includes(lowercasedTerm);
-                } else if (filterOption === 'address') {
-                    return author.address?.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'pen_name') {
-                    return author.pen_name?.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'biography') {
-                    return author.biography?.toLowerCase().includes(lowercasedTerm);
-                }
-                return false;
-            });
-            setFilteredAuthors(filtered);
-            setTotal(filtered.length);
-        };
-
-        filterAuthors();
-    }, [searchTerm, filterOption, authorList]);
-
     const columns = [
         {
             title: 'Tên tác giả',
             dataIndex: 'name',
-            key: 'author',
+            key: 'name',
+            align: 'center',
             ...getColumnSearchProps('Tên tác giả', 'name'),
-            sorter: (a, b) => a.name.localeCompare(b.name),
         },
         {
             title: 'Ngày sinh',
             dataIndex: 'birthdate',
-            sorter: (a, b) => new Date(a.birthdate) - new Date(b.birthdate),
+            key: 'birthdate',
+            align: 'center',
             render: (text) => (text ? moment(text).format('DD/MM/YYYY') : 'Chưa xác định'),
         },
         {
             title: 'Địa chỉ',
             dataIndex: 'address',
             key: 'address',
+            align: 'center',
             ...getColumnSearchProps('Địa chỉ', 'address'),
-            sorter: (a, b) => a.address.localeCompare(b.address),
         },
         {
             title: 'Bút danh',
             dataIndex: 'pen_name',
             key: 'pen_name',
+            align: 'center',
             ...getColumnSearchProps('Bút danh', 'pen_name'),
         },
         {
             title: 'Tiểu sử',
             dataIndex: 'biography',
             key: 'biography',
+            align: 'center',
             render: (text) => (
                 <div
                     style={{
@@ -311,71 +342,6 @@ function ManageAuthor() {
     return (
         <div className='py-20 px-4'>
 <           h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Tác giả</h1>
-            <div className="flex justify-between items-center">
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                    <Input
-                        placeholder="Nhập từ khóa tìm kiếm..."
-                        allowClear
-                        size="large"
-                        style={{ width: '400px', marginRight: '10px' }}
-                        onChange={(e) => {
-                            const searchValue = e.target.value;
-                            setSearchTerm(searchValue);
-
-                            if (!searchValue) {
-                                setFilteredAuthors(authorList);
-                                setTotal(authorList.length);
-                                return;
-                            }
-
-                            const lowercasedTerm = searchValue.toLowerCase();
-                            const filtered = authorList.filter((author) => {
-                                if (filterOption === 'name') {
-                                    return author.name.toLowerCase().includes(lowercasedTerm);
-                                } else if (filterOption === 'birthdate') {
-                                    return moment(author.birthdate).format('DD/MM/YYYY').includes(lowercasedTerm);
-                                } else if (filterOption === 'address') {
-                                    return author.address?.toLowerCase().includes(lowercasedTerm);
-                                } else if (filterOption === 'pen_name') {
-                                    return author.pen_name?.toLowerCase().includes(lowercasedTerm);
-                                } else if (filterOption === 'biography') {
-                                    return author.biography?.toLowerCase().includes(lowercasedTerm);
-                                }
-                                return false;
-                            });
-
-                            setFilteredAuthors(filtered);
-                            setTotal(filtered.length);
-                        }}
-                    />
-                    <label style={{ marginRight: '10px' }}>Lọc theo:</label>
-                    <Select
-                        value={filterOption}
-                        onChange={(value) => setFilterOption(value)}
-                        style={{ width: '200px' }}
-                    >
-                        <Select.Option value="name">Tên tác giả</Select.Option>
-                        <Select.Option value="birthdate">Ngày sinh</Select.Option>
-                        <Select.Option value="address">Địa chỉ</Select.Option>
-                        <Select.Option value="pen_name">Bút danh</Select.Option>
-                        <Select.Option value="biography">Tiểu sử</Select.Option>
-                    </Select>
-                </div>
-
-                <Flex gap={6} justify="center" align="center">
-                    <span style={{ fontWeight: 'bold' }}>Tổng số:</span>
-                    <Input
-                        style={{
-                            width: '60px',
-                            color: 'red',
-                            fontWeight: 'bold',
-                        }}
-                        value={total}
-                        readOnly
-                        disabled
-                    />
-                </Flex>
-            </div>
             <Space className="flex my-2 justify-between">
                 <Space>
                     <Button 
@@ -421,11 +387,26 @@ function ManageAuthor() {
                         Xóa {listAuthorToDelete.length !== 0 ? listAuthorToDelete.length + ' tác giả' : ''}
                     </Button>
                 </Space>
+                <div className="flex justify-between items-center">
+                    <Flex gap={6} justify="center" align="center">
+                        <span style={{ fontWeight: 'bold' }}>Tổng số:</span>
+                        <Input
+                            style={{
+                                width: '60px',
+                                color: 'red',
+                                fontWeight: 'bold',
+                            }}
+                            value={total}
+                            readOnly
+                            disabled
+                        />
+                    </Flex>
+                </div>
             </Space>
             <div>
                 <Table
                     columns={columns}
-                    dataSource={filteredAuthors}
+                    dataSource={authorList} // Remove filtered logic
                     rowSelection={{
                         type: 'checkbox',
                         selectedRowKeys: listAuthorToDelete,
@@ -443,13 +424,7 @@ function ManageAuthor() {
                             setPageSize(newPageSize);
                         },
                     }}
-                    onRow={(record) => {
-                        return {
-                            onClick: () => {
-                                // Removed show modal on row click
-                            },
-                        };
-                    }}
+                    onChange={onTableChange}
                 />
             </div>
 
