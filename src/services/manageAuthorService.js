@@ -22,6 +22,15 @@ const useManageAuthorApi = () => {
         }
     };
 
+    const allAuthorNames = async () => {
+        try {
+            const res = await httpPrivate.get('/author/name');
+            return res?.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const authorData = async (page = 1, pageSize = 10) => {
         try {
             const response = await httpPrivate.get(`/author/pageable?page=${page}&page_size=${pageSize}`);
@@ -126,6 +135,7 @@ const useManageAuthorApi = () => {
     return {
         oneAuthor,
         allAuthors,
+        allAuthorNames, 
         authorData,
         createAuthor,
         editAuthor,
