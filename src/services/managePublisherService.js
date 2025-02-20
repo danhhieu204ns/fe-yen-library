@@ -13,6 +13,16 @@ const useManagePublisherApi = () => {
         }
     };
 
+    const allPublisherNames = async () => {
+        try {
+            const response = await httpPrivate.get('/publisher/name');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching publisher names:', error);
+            return error;
+        }
+    };
+
     const createPublisher = async (publisherInfo) => {
         try {
             const res = await httpPrivate.post('/publisher/create', publisherInfo);
@@ -100,6 +110,7 @@ const useManagePublisherApi = () => {
 
     return {
         publisherData,
+        allPublisherNames, 
         createPublisher,
         editPublisher, 
         deletePublisher,
