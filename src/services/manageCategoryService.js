@@ -31,6 +31,15 @@ const useCategoryApi = () => {
         }
     };
 
+    const allCategoryNames = async () => {
+        try {
+            const res = await httpPrivate.get('/category/name');
+            return res?.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const importCategory = async (formData) => {
         try {
             const res = await httpPrivate.post('/category/import', formData, {
@@ -125,6 +134,7 @@ const useCategoryApi = () => {
         oneCategory,
         allCategories,
         getAllCategoryByPage,
+        allCategoryNames, 
         importCategory, 
         searchCategory, 
         createCategory,
