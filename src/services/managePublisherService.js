@@ -96,7 +96,7 @@ const useManagePublisherApi = () => {
             const searchData = {
                 name: searchBody.name || '',
                 address: searchBody.address || '',
-                phone: searchBody.phone || '',
+                phone_number: searchBody.phone_number || '',
                 email: searchBody.email || '',
             };
             

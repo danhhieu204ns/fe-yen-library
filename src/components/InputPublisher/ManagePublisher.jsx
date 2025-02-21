@@ -7,7 +7,7 @@ import ShowInfoPublisher from './ShowInfoPublisher';
 import EditPublisher from './EditPublisher';
 import ImportPublisherModal from './ImportPublisherModal';
 import ErrorModal from 'src/components/common/ErrorModal';
-import { getColumnSearchProps } from 'src/utils/searchByApi';
+import { getColumnSearchProps } from 'src/utils/searchByApi.jsx';
 
 function ManagePublisher() {
     const [publisherList, setPublisherList] = useState([]);
@@ -27,8 +27,6 @@ function ManagePublisher() {
     const [selectedFile, setSelectedFile] = useState(null);
     const [exportLoading, setExportLoading] = useState(false);
     
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
     const [filteredPublishers, setFilteredPublishers] = useState([]);
     const [currentFilters, setCurrentFilters] = useState({});
     const [searchMode, setSearchMode] = useState(false);
@@ -76,13 +74,23 @@ function ManagePublisher() {
     };
 
     const onTableChange = (pagination, filters, sorter) => {
-        const searchBody = {};
+        console.log('Raw filters received:', filters);
         
-        // Build search body from filters
-        if (filters.name?.[0]) searchBody.name = filters.name[0].trim();
-        if (filters.address?.[0]) searchBody.address = filters.address[0].trim();
-        if (filters.phone?.[0]) searchBody.phone = filters.phone[0].trim();
-        if (filters.email?.[0]) searchBody.email = filters.email[0].trim();
+        const searchBody = {};
+
+        // Handle filters properly regardless of whether they're null or array
+        Object.entries(filters).forEach(([key, value]) => {
+            // For array values (like phone_number)
+            if (Array.isArray(value) && value.length > 0 && value[0]) {
+                searchBody[key] = value[0].trim();
+            }
+            // For direct values that might come as strings
+            else if (value && typeof value === 'string') {
+                searchBody[key] = value.trim();
+            }
+        });
+
+        console.log('Processed searchBody:', searchBody);
 
         if (Object.keys(searchBody).length > 0) {
             setSearchMode(true);
@@ -90,35 +98,6 @@ function ManagePublisher() {
         } else {
             resetSearch();
         }
-    };
-
-    const handleSearch = (selectedKeys, confirm, dataIndex) => {
-        const searchValue = selectedKeys[0] || '';
-        confirm();
-        setSearchText(searchValue);
-        setSearchedColumn(dataIndex);
-
-        if (!searchValue) {
-            setFilteredPublishers([]);
-            return;
-        }
-
-        const filtered = publisherList.filter(item => {
-            const targetValue = item[dataIndex];
-            if (!targetValue) return false;
-            return targetValue.toString().toLowerCase().includes(searchValue.toLowerCase());
-        });
-
-        setFilteredPublishers(filtered);
-    };
-
-    const handleReset = (clearFilters, confirm) => {
-        if (clearFilters) {
-            clearFilters();
-        }
-        setSearchText('');
-        setFilteredPublishers([]);
-        confirm();
     };
 
     const columns = [
@@ -137,7 +116,8 @@ function ManagePublisher() {
             key: 'phone_number',
             width: '25%',
             align: 'center',
-            ...getColumnSearchProps('số điện thoại', 'phone_number'),
+            ...getColumnSearchProps('số điện thoại', 'phone_number'), // Đơn giản hóa, bỏ options
+            filterSearch: true, // Add this to ensure filter value is properly passed
         },
         {
             title: 'Email',
@@ -395,16 +375,6 @@ function ManagePublisher() {
                     },
                 }}
                 rowKey={(record) => record.id}
-                pagination={{
-                    showSizeChanger: true,
-                    current: page,
-                    pageSize: pageSize,
-                    total: totalData,
-                    onChange: (page, pageSize) => {
-                        setPage(page);
-                        setPageSize(pageSize);
-                    },
-                }}
                 onChange={onTableChange}
             />
 
