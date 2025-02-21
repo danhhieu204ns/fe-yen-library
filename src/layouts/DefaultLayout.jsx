@@ -28,7 +28,6 @@ function DefaultLayout() {
         if (path.includes('volunteer')) return 'volunteer';
         if (path.includes('schedule')) return 'schedule';
         if (path.includes('event')) return 'event';
-        if (path.includes('input')) return 'input';
         if (path.includes('manage')) return 'manage';
         if (path.includes('analize')) return 'analize';
         if (path.includes('mybookcart')) return 'my_book_cart';
