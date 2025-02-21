@@ -1,50 +1,60 @@
 import { useState, useEffect, memo } from 'react';
-import { Input, Typography, Col, Row, Modal, Select, DatePicker } from 'antd';
-import moment from 'moment';
+import { Input, Typography, Col, Row, Modal, Select } from 'antd';
 import useManageBookApi from 'src/services/manageBookService';
-import useAuthorApi from 'src/services/manageAuthorService';
-import useGenreApi from 'src/services/manageGenreService';
-import usePublisherApi from 'src/services/managePublisherService';
+import useManageAuthorApi from 'src/services/manageAuthorService';
+import useManagePublisherApi from 'src/services/managePublisherService';
+import useManageCategoryApi from 'src/services/manageCategoryService';
 import { toast } from 'react-toastify';
 import ErrorMessage from 'src/utils/error/errorMessage';
 
-const { Option } = Select;
+const { TextArea } = Input;
 
-function EditBookgroup({ openModal, closeModal, handleReload, data }) {
+function EditBook({ openModal, closeModal, handleReload, data }) {
     const [name, setName] = useState('');
-    const [status, setStatus] = useState('');
-    const [content, setContent] = useState('');
     const [authorId, setAuthorId] = useState(null);
     const [publisherId, setPublisherId] = useState(null);
-    const [genreId, setGenreId] = useState(null);
-    const [authors, setAuthors] = useState([]);
-    const [publishers, setPublishers] = useState([]);
-    const [genres, setGenres] = useState([]);
+    const [categoryId, setCategoryId] = useState(null);
+    const [status, setStatus] = useState('');
+    const [content, setContent] = useState('');
     const [errorMessages, setErrorMessages] = useState('');
 
+    const [authors, setAuthors] = useState([]);
+    const [publishers, setPublishers] = useState([]);
+    const [categories, setCategories] = useState([]);
+
     const { editBook } = useManageBookApi();
-    const { allAuthors } = useAuthorApi();
-    const { allGenres } = useGenreApi();
-    const { allPublishers } = usePublisherApi();
+    const { allAuthorNames } = useManageAuthorApi();
+    const { allPublisherNames } = useManagePublisherApi();
+    const { allCategories } = useManageCategoryApi();
 
     useEffect(() => {
-        // Fetch lists of authors, publishers, and genres for dropdown options
-        const loadDropdowns = async () => {
-            setAuthors(await allAuthors());
-            setPublishers(await allPublishers());
-            setGenres(await allGenres());
-        };
-        loadDropdowns();
-        
-        if (data) {
-            setName(data?.name || '');
-            setStatus(data?.status || '');
-            setContent(data?.content || '');
-            setAuthorId(data?.author?.id || null);
-            setPublisherId(data?.publisher?.id || null);
-            setGenreId(data?.genre?.id || null);
+        if (openModal) {
+            fetchDropdownData();
+            if (data) {
+                setName(data?.name || '');
+                setAuthorId(data?.author?.id || null);
+                setPublisherId(data?.publisher?.id || null);
+                setCategoryId(data?.category?.id || null);
+                setStatus(data?.status || '');
+                setContent(data?.content || '');
+            }
         }
-    }, [data]);
+    }, [openModal, data]);
+
+    const fetchDropdownData = async () => {
+        try {
+            const [authorsRes, publishersRes, categoriesRes] = await Promise.all([
+                allAuthorNames(),
+                allPublisherNames(),
+                allCategories()
+            ]);
+            setAuthors(authorsRes.authors || []);
+            setPublishers(publishersRes.publishers || []);
+            setCategories(categoriesRes.categories || []);
+        } catch (error) {
+            toast.error('Lỗi khi tải dữ liệu!');
+        }
+    };
 
     const handleEditBook = async () => {
         if (!name || name.trim().length === 0) {
@@ -52,135 +62,181 @@ function EditBookgroup({ openModal, closeModal, handleReload, data }) {
             return;
         }
 
-        const updatedData = {
-            name: name.trim(),
-            status: status.trim(),
-            content: content.trim(),
-            author_id: authorId,
-            publisher_id: publisherId,
-            genre_id: genreId,
-        };
-        
-        const result = await editBook(data.id, updatedData);
-
-        if (result?.name === 'AxiosError' && result?.response?.status === 409) {
-            setErrorMessages('Sách đã tồn tại');
+        if (!authorId) {
+            setErrorMessages('Vui lòng chọn tác giả');
             return;
         }
+
+        if (!publisherId) {
+            setErrorMessages('Vui lòng chọn nhà xuất bản');
+            return;
+        }
+
+        if (!categoryId) {
+            setErrorMessages('Vui lòng chọn thể loại');
+            return;
+        }
+
+        const updatedData = {
+            name: name.trim(),
+            author_id: authorId,
+            publisher_id: publisherId,
+            category_id: categoryId,
+            status: status.trim(),
+            content: content.trim(),
+        };
+        const result = await editBook(data.id, updatedData);
 
         if (result?.name === 'AxiosError') {
             toast.error('Cập nhật sách thất bại. Vui lòng thử lại!');
             return;
         }
 
-        if (result?.data) {
-            setName('');
-            setStatus('');
-            setContent('');
-            setAuthorId(null);
-            setPublisherId(null);
-            setGenreId(null);
-            setErrorMessages('');
+        if (result?.status === 200) {
+            resetForm();
             closeModal();
             handleReload();
             toast.success('Cập nhật sách thành công');
         }
     };
 
+    const resetForm = () => {
+        setName('');
+        setAuthorId(null);
+        setPublisherId(null);
+        setCategoryId(null);
+        setStatus('');
+        setContent('');
+        setErrorMessages('');
+    };
+
+    const filterOption = (input, option) =>
+        (option?.children ?? '').toLowerCase().includes(input.toLowerCase());
+
     return (
         <Modal
-            title="Sửa thông tin sách"
+            title={<div className="text-lg">Sửa thông tin sách</div>}
             open={openModal}
             onCancel={() => {
-                setName('');
-                setStatus('');
-                setContent('');
-                setAuthorId(null);
-                setPublisherId(null);
-                setGenreId(null);
-                setErrorMessages('');
+                resetForm();
                 closeModal();
             }}
             onOk={handleEditBook}
             maskClosable={false}
+            centered
+            width={600}
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
+                background: '#fff',
+            }}
         >
-            <Row gutter={[12, 12]}>
-                <Col span={24}>
-                    <Typography>Tên sách</Typography>
-                    <Input
-                        placeholder="Nhập tên sách"
-                        value={name}
-                        onChange={(e) => {
-                            setName(e.target.value);
-                            setErrorMessages('');
-                        }}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Trạng thái</Typography>
-                    <Input
-                        placeholder="Nhập trạng thái"
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Nội dung</Typography>
-                    <Input.TextArea
-                        placeholder="Nhập nội dung"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Tác giả</Typography>
-                    <Select
-                        placeholder="Chọn tác giả"
-                        value={authorId}
-                        onChange={setAuthorId}
-                        style={{ width: '100%' }}
-                    >
-                        {authors.map((author) => (
-                            <Option key={author.id} value={author.id}>
-                                {author.name}
-                            </Option>
-                        ))}
-                    </Select>
-                </Col>
-                <Col span={24}>
-                    <Typography>Nhà xuất bản</Typography>
-                    <Select
-                        placeholder="Chọn nhà xuất bản"
-                        value={publisherId}
-                        onChange={setPublisherId}
-                        style={{ width: '100%' }}
-                    >
-                        {publishers.map((publisher) => (
-                            <Option key={publisher.id} value={publisher.id}>
-                                {publisher.name}
-                            </Option>
-                        ))}
-                    </Select>
-                </Col>
-                <Col span={24}>
-                    <Typography>Thể loại</Typography>
-                    <Select
-                        placeholder="Chọn thể loại"
-                        value={genreId}
-                        onChange={setGenreId}
-                        style={{ width: '100%' }}
-                    >
-                        {genres.map((genre) => (
-                            <Option key={genre.id} value={genre.id}>
-                                {genre.name}
-                            </Option>
-                        ))}
-                    </Select>
-                </Col>
-                <ErrorMessage message={errorMessages} />
-            </Row>
+            <div className="p-4">
+                <Row gutter={[0, 16]}>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Tên sách:</Typography.Text>
+                        <Input
+                            placeholder="Nhập tên sách"
+                            value={name}
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                setErrorMessages('');
+                            }}
+                            className="mt-2"
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Tác giả:</Typography.Text>
+                        <Select
+                            showSearch
+                            style={{ width: '100%' }}
+                            placeholder="Tìm kiếm hoặc chọn tác giả"
+                            optionFilterProp="children"
+                            value={authorId}
+                            onChange={(value) => {
+                                setAuthorId(value);
+                                setErrorMessages('');
+                            }}
+                            filterOption={filterOption}
+                            className="mt-2"
+                        >
+                            {authors.map(author => (
+                                <Select.Option key={author.id} value={author.id}>
+                                    {author.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Nhà xuất bản:</Typography.Text>
+                        <Select
+                            showSearch
+                            style={{ width: '100%' }}
+                            placeholder="Tìm kiếm hoặc chọn nhà xuất bản"
+                            optionFilterProp="children"
+                            value={publisherId}
+                            onChange={(value) => {
+                                setPublisherId(value);
+                                setErrorMessages('');
+                            }}
+                            filterOption={filterOption}
+                            className="mt-2"
+                        >
+                            {publishers.map(publisher => (
+                                <Select.Option key={publisher.id} value={publisher.id}>
+                                    {publisher.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Thể loại:</Typography.Text>
+                        <Select
+                            showSearch
+                            style={{ width: '100%' }}
+                            placeholder="Tìm kiếm hoặc chọn thể loại"
+                            optionFilterProp="children"
+                            value={categoryId}
+                            onChange={(value) => {
+                                setCategoryId(value);
+                                setErrorMessages('');
+                            }}
+                            filterOption={filterOption}
+                            className="mt-2"
+                        >
+                            {categories.map(category => (
+                                <Select.Option key={category.id} value={category.id}>
+                                    {category.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Tình trạng:</Typography.Text>
+                        <Input
+                            placeholder="Nhập tình trạng sách"
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="mt-2"
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Nội dung:</Typography.Text>
+                        <TextArea
+                            placeholder="Nhập nội dung"
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            rows={4}
+                            className="mt-2"
+                            style={{ resize: 'none' }}
+                        />
+                    </Col>
+                    <ErrorMessage message={errorMessages} />
+                </Row>
+            </div>
         </Modal>
     );
 }
 
-export default memo(EditBookgroup);
+export default memo(EditBook);

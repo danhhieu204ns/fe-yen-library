@@ -1,41 +1,59 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Button, Table, Tooltip, Modal, Space, Input, Select } from 'antd';
-import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined } from '@ant-design/icons';
-import useManageBookApi from 'src/services/manageBookService'; // Giả sử bạn có service cho nhóm sách
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Button, Table, Tooltip, Modal, Space, Input, Select, Flex, Upload } from 'antd';
+import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined, UploadOutlined, DownloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
+import useManageBookApi from '../../services/manageBookService';
 import CreateBook from './CreateBook'; // Component tạo mới nhóm sách
 import EditBook from './EditBook'; // Component sửa thông tin nhóm sách
 import ShowInfoBook from './ShowInfoBook'; // Component hiển thị thông tin nhóm sách
-
+import ImportBook from './ImportBook';
 
 function ManageBook() {
+    const { bookData, deleteBook, deleteListBooks, importBook, exportBooks } = useManageBookApi();
     const [bookList, setBookList] = useState([]);
     const [listBookToDelete, setListBookToDelete] = useState([]);
     const [bookInfo, setBookInfo] = useState({});
     const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(10);
     const [totalData, setTotalData] = useState(0);
     const [reloadToggle, setReloadToggle] = useState(false);
 
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
+    const [importModalOpen, setImportModalOpen] = useState(false);
     const [modalDelete, contextHolder] = Modal.useModal();
 
     const [filteredBooks, setFilteredBooks] = useState([]); // Dữ liệu sau khi lọc
     const [searchTerm, setSearchTerm] = useState('');
     const [filterOption, setFilterOption] = useState('name'); // Mặc định lọc theo tên nhom sach
-
-    const { bookData, deleteBook, deleteListBooks } = useManageBookApi(); // Giả sử bạn có service cho nhóm sách
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [sortConfig, setSortConfig] = useState({ field: null, order: null });
+    const [searchText, setSearchText] = useState('');
+    const [searchedColumn, setSearchedColumn] = useState('');
+    const searchInput = useRef(null);
 
     useEffect(() => {
         const fetchData = async () => {
-            const results = await bookData(page, pageSize);
-            setBookList(results?.books);
-            setTotalData(results?.total_pages * pageSize);
+            try {
+                const response = await bookData(page, pageSize, {
+                    searchTerm,
+                    filterOption,
+                    sortField: sortConfig.field,
+                    sortOrder: sortConfig.order
+                });
+                if (response?.books) {
+                    setBookList(response.books);
+                    setFilteredBooks(response.books);
+                    setTotalData(response.total_data);
+                }
+            } catch (error) {
+                console.error('Error details:', error);
+                toast.error('Lỗi khi tải danh sách sách');
+            }
         };
         fetchData();
-    }, [page, pageSize, reloadToggle]);
+    }, [page, pageSize, reloadToggle, searchTerm, filterOption, sortConfig]);
 
     const handleReload = useCallback(() => {
         setReloadToggle(!reloadToggle);
@@ -55,104 +73,224 @@ function ManageBook() {
         setBookInfo({});
     }, []);
 
-    const handleDelete = async (id) => {
-        const result = await deleteBook(id);
-        if (result?.status) {
-            toast.error('Xóa thất bại');
-            return;
-        }
+    const handleCloseImportModal = useCallback(() => {
+        setImportModalOpen(false);
+    }, []);
 
-        toast.success('Xóa thành công');
-        handleReload();
+    const handleDelete = async (id) => {
+        try {
+            const response = await deleteBook(id);
+            if (response?.status === 200 || response?.data?.status === 200) {
+                toast.success('Xóa thành công');
+                handleReload();
+            } else {
+                toast.error('Xóa thất bại');
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Xóa thất bại');
+        }
     };
 
     const handleDeleteListBook = async () => {
-        const result = await deleteListBooks(listBookToDelete);
-        if (result?.status) {
-            toast.error('Xóa thất bại');
+        try {
+            const response = await deleteListBooks(listBookToDelete);
+            if (response?.status === 200 || response?.data?.status === 200) {
+                toast.success('Xóa thành công');
+                setListBookToDelete([]);
+                handleReload();
+            } else {
+                toast.error('Xóa thất bại');
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Xóa thất bại');
+        }
+    };
+
+    const handleFileChange = (file) => {
+        setSelectedFile(file);
+    };
+
+    const handleImport = async () => {
+        if (!selectedFile) {
+            toast.error('Vui lòng chọn file để import!');
             return;
         }
 
-        toast.success('Xóa thành công');
-        setListBookToDelete([]);
-        handleReload();
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const response = await importBook(formData);
+            
+            // Kiểm tra cả status và data.status
+            if (response?.status === 200 || response?.status === 201 || response?.data?.status === 200) {
+                toast.success('Import dữ liệu thành công!');
+                setSelectedFile(null);
+                handleCloseImportModal();
+                handleReload();
+            } else {
+                // Log response để debug
+                console.log('Import response:', response);
+                toast.error(response?.data?.message || 'Import dữ liệu thất bại!');
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            toast.error(error.response?.data?.message || 'Import dữ liệu thất bại!');
+        }
     };
 
-    useEffect(() => {
-        const filterBooks = () => {
-            if (!searchTerm) {
-                setFilteredBooks(bookList);
-                return;
-            }
+    const handleOpenImport = () => {
+        setImportModalOpen(true);
+    };
 
-            const lowercasedTerm = searchTerm.toLowerCase();
-            const filtered = bookList.filter((book) => {
-                if (filterOption === 'name') {
-                    return book.name.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'status') {
-                    return book.status?.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'content') {
-                    return book.content?.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'author') {
-                    return book.author?.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'publisher') {
-                    return book.publisher?.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'genre') {
-                    return book.genre?.toLowerCase().includes(lowercasedTerm);
+    const handleExport = async () => {
+        modalDelete.confirm({
+            title: 'Xác nhận export',
+            icon: <ExclamationCircleFilled />,
+            content: 'Bạn có chắc chắn muốn export danh sách sách?',
+            onOk: async () => {
+                try {
+                    const response = await exportBooks();
+                    
+                    if (response?.status === 200) {
+                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', 'books.xlsx');
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        window.URL.revokeObjectURL(url);
+                        toast.success('Export dữ liệu thành công!');
+                    } else {
+                        toast.error('Export dữ liệu thất bại!');
+                    }
+                } catch (error) {
+                    console.error('Export error:', error);
+                    toast.error('Export dữ liệu thất bại!');
                 }
-                return false;
-            });
-            setFilteredBooks(filtered);
-        };
+            },
+            onCancel() {},
+        });
+    };
 
-        filterBooks();
-    }, [searchTerm, filterOption, bookList]);
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+        confirm();
+        setSearchText(selectedKeys[0]);
+        setSearchedColumn(dataIndex);
+        setPage(1); // Reset về trang 1 khi search
+    };
+
+    const handleReset = (clearFilters, confirm, dataIndex) => {
+        clearFilters();
+        setSearchText('');
+        confirm();
+        handleSearch('', confirm, dataIndex);
+    };
+
+    const getColumnSearchProps = (dataIndex, nestedField) => ({
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+            <div style={{ padding: 8 }}>
+                <Input
+                    ref={searchInput}
+                    placeholder={`Tìm ${dataIndex}`}
+                    value={selectedKeys[0]}
+                    onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                    style={{ marginBottom: 8, display: 'block' }}
+                />
+                <Space>
+                    <Button
+                        type="primary"
+                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                        icon={<SearchOutlined />}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Tìm
+                    </Button>
+                    <Button
+                        onClick={() => handleReset(clearFilters, confirm, dataIndex)}
+                        size="small"
+                        style={{ width: 90 }}
+                    >
+                        Đặt lại
+                    </Button>
+                </Space>
+            </div>
+        ),
+        filterIcon: (filtered) => (
+            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+        ),
+        onFilter: (value, record) => {
+            if (nestedField) {
+                return record[dataIndex]?.[nestedField]
+                    ?.toString()
+                    .toLowerCase()
+                    .includes(value.toLowerCase()) ?? false;
+            }
+            return record[dataIndex]
+                ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+                : '';
+        },
+        onFilterDropdownOpenChange: (visible) => {
+            if (visible) {
+                setTimeout(() => searchInput.current?.select(), 100);
+            }
+        },
+    });
 
     const columns = [
         {
             title: 'Tên sách',
             dataIndex: 'name',
             key: 'name',
+            sorter: (a, b) => a.name.localeCompare(b.name),
+            ...getColumnSearchProps('name'),
         },
         {
             title: 'Tình trạng',
             dataIndex: 'status',
             key: 'status',
+            sorter: (a, b) => (a.status || '').localeCompare(b.status || ''),
+            ...getColumnSearchProps('status'),
+            render: (text) => text || 'Chưa rõ tình trạng'
         },
         {
             title: 'Nội dung',
-            dataIndex: 'content',
-            key: 'content',
+            dataIndex: 'summary',
+            key: 'summary',
+            sorter: (a, b) => (a.summary || '').localeCompare(b.summary || ''),
+            ...getColumnSearchProps('summary'),
             render: (text) => (
-                <div
-                    style={{
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: '200px', // Bạn có thể điều chỉnh độ rộng cột tại đây
-                    }}
-                >
+                <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
                     {text || 'Chưa có nội dung'}
                 </div>
             ),
         },
         {
             title: 'Tác giả',
-            dataIndex: 'author', // Chú ý bạn cần thay 'author_id' thành 'author' nếu bạn đã load đầy đủ thông tin tác giả
+            dataIndex: 'author',
             key: 'author',
-            render: (author) => author?.name || 'Không có tác giả', // Hiển thị tên tác giả
+            sorter: (a, b) => (a.author?.name || '').localeCompare(b.author?.name || ''),
+            ...getColumnSearchProps('author', 'name'),
+            render: (author) => author?.name || 'Không có tác giả',
         },
         {
             title: 'Nhà xuất bản',
-            dataIndex: 'publisher', // Thay 'publisher_id' thành 'publisher' nếu đã load thông tin nhà xuất bản
+            dataIndex: 'publisher',
             key: 'publisher',
-            render: (publisher) => publisher?.name || 'Không có nhà xuất bản', // Hiển thị tên nhà xuất bản
+            sorter: (a, b) => (a.publisher?.name || '').localeCompare(b.publisher?.name || ''),
+            ...getColumnSearchProps('publisher', 'name'),
+            render: (publisher) => publisher?.name || 'Không có nhà xuất bản',
         },
         {
             title: 'Thể loại',
-            dataIndex: 'genre', // Thay 'genre_id' thành 'genre' nếu đã load thông tin thể loại
-            key: 'genre',
-            render: (genre) => genre?.name || 'Không có thể loại', // Hiển thị tên thể loại
+            dataIndex: 'category',
+            key: 'category',
+            sorter: (a, b) => (a.category?.name || '').localeCompare(b.category?.name || ''),
+            ...getColumnSearchProps('category', 'name'),
+            render: (category) => category?.name || 'Không có thể loại',
         },
         {
             title: 'Thao tác',
@@ -160,6 +298,19 @@ function ManageBook() {
             align: 'center',
             render: (text, record) => (
                 <div className="space-x-2">
+                    <Tooltip title="Xem chi tiết">
+                        <Button
+                            shape="circle"
+                            className="bg-blue-500"
+                            type="primary"
+                            icon={<EyeOutlined />}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setBookInfo(record);
+                                setShowInfoModal(true);
+                            }}
+                        />
+                    </Tooltip>
                     <Tooltip title="Sửa">
                         <Button
                             shape="circle"
@@ -199,58 +350,65 @@ function ManageBook() {
     ];
 
     return (
-        <div style={{ padding: '20px' }}>
-            <div className="flex justify-center">
-                <h1 className="text-2xl mt-[60px] mb-[10px]">Quản lý Sách</h1>
-            </div>
-            <h2>Tìm kiếm Sách</h2>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                <Input
-                    placeholder="Nhập từ khóa tìm kiếm..."
-                    allowClear
-                    size="large"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ width: '400px', marginRight: '10px' }}
-                />
-                <label style={{ marginRight: '10px' }}>Lọc theo:</label>
-                <Select
-                    value={filterOption}
-                    onChange={(value) => setFilterOption(value)}
-                    style={{ width: '200px' }}
-                >
-                    <Option value="name">Tên sách</Option>
-                    <Option value="status">Tình trạng</Option>
-                    <Option value="content">Nội dung</Option>
-                    <Option value="author">Tác giả</Option>
-                    <Option value="publisher">Nhà xuất bản</Option>
-                    <Option value="genre">Thể loại</Option>
-                </Select>
-            </div>
-            <Space className="mb-2">
-                <Button type="primary" onClick={() => setCreateModalOpen(true)}>
-                    <PlusCircleOutlined />
-                    Tạo mới
-                </Button>
-                <Button
-                    type="primary"
-                    className="bg-red-500"
-                    disabled={listBookToDelete.length === 0}
-                    onClick={() => {
-                        modalDelete.confirm({
-                            title: 'Xác nhận xoá',
-                            icon: <ExclamationCircleFilled />,
-                            content: `Bạn có chắc muốn xóa ${listBookToDelete.length} sách đã chọn?`,
-                            onOk() {
-                                handleDeleteListBook();
-                            },
-                            onCancel() {},
-                        });
-                    }}
-                >
-                    <DeleteOutlined />
-                    Xóa {listBookToDelete.length !== 0 ? listBookToDelete.length + ' sách' : ''}
-                </Button>
+        <div className='py-20 px-4'>
+            <h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Sách</h1>
+            <Space className="flex my-2 justify-between">
+                <Space>
+                    <Button type="primary" onClick={() => setCreateModalOpen(true)}>
+                        <PlusCircleOutlined />
+                        Thêm mới
+                    </Button>
+                    <Button 
+                        type="primary" 
+                        icon={<UploadOutlined />}
+                        className="bg-green-500"
+                        onClick={handleOpenImport}
+                    >
+                        Import
+                    </Button>
+                    <Button 
+                        type="primary" 
+                        icon={<DownloadOutlined />}
+                        className="bg-blue-500"
+                        onClick={handleExport}
+                    >
+                        Export
+                    </Button>
+                    <Button
+                        type="primary"
+                        className="bg-red-500"
+                        disabled={listBookToDelete.length === 0}
+                        onClick={() => {
+                            modalDelete.confirm({
+                                title: 'Xác nhận xoá',
+                                icon: <ExclamationCircleFilled />,
+                                content: `Bạn có chắc muốn xóa ${listBookToDelete.length} sách đã chọn?`,
+                                onOk() {
+                                    handleDeleteListBook();
+                                },
+                                onCancel() {},
+                            });
+                        }}
+                    >
+                        <DeleteOutlined />
+                        Xóa {listBookToDelete.length !== 0 ? listBookToDelete.length + ' sách' : ''}
+                    </Button>
+                </Space>
+                <div className="flex justify-between items-center">
+                    <Flex gap={6} justify="center" align="center">
+                        <span style={{ fontWeight: 'bold' }}>Tổng số:</span>
+                        <Input
+                            style={{
+                                width: '60px',
+                                color: 'red',
+                                fontWeight: 'bold',
+                            }}
+                            value={totalData}
+                            readOnly
+                            disabled
+                        />
+                    </Flex>
+                </div>
             </Space>
             <div>
                 <Table
@@ -273,12 +431,12 @@ function ManageBook() {
                             setPageSize(newPageSize);
                         },
                     }}
-                    onRow={(record) => ({
-                        onClick: () => {
-                            setBookInfo(record);
-                            setShowInfoModal(true);
-                        },
-                    })}
+                    onChange={(pagination, filters, sorter) => {
+                        if (sorter) {
+                            const { field, order } = sorter;
+                            // Client-side sorting is handled by the sorter functions in columns
+                        }
+                    }}
                 />
             </div>
 
@@ -299,6 +457,14 @@ function ManageBook() {
                 data={bookInfo}
                 openModal={showInfoModal}
                 closeModal={handleCloseShowInfoModal}
+            />
+
+            <ImportBook
+                openModal={importModalOpen}
+                closeModal={handleCloseImportModal}
+                onFileChange={handleFileChange}
+                onImport={handleImport}
+                selectedFile={selectedFile}
             />
 
             {contextHolder}
