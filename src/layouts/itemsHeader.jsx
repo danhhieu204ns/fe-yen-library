@@ -106,14 +106,14 @@ const MenuItems = () => {
         //         },
         //     ],
         // },
-        // {
-        //     key: 'manage_user',
-        //     label: (
-        //         <Link to={'/manage/user'} className="flex items-center space-x-2">
-        //             Quản lý người dùng
-        //         </Link>
-        //     ),
-        // },
+        {
+            key: 'manage_user',
+            label: (
+                <Link to={'/manage/user'} className="flex items-center space-x-2">
+                    Quản lý người dùng
+                </Link>
+            ),
+        },
 
         ] : []), 
         
