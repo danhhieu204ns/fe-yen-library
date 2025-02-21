@@ -45,33 +45,6 @@ const MenuItems = () => {
         // Chỉ thêm list sau nếu vai trò là 'admin'
         ...((role && role.includes('admin')) ? [
         {
-            key: 'input',
-            label: (
-                <div className="flex items-center space-x-2">
-                    <span>Nhập liệu</span>
-                    <DownOutlined />
-                </div>
-            ),
-            children: [
-                {
-                    key: 'author',
-                    label: <Link to="/input/author">Nhập Tác giả</Link>,
-                },
-                {
-                    key: 'publisher',
-                    label: <Link to="/input/publisher">Nhập Nhà xuất bản</Link>,
-                },
-                {
-                    key: 'genre',
-                    label: <Link to="/input/genre">Nhập Thể loại sách</Link>,
-                },
-                {
-                    key: 'book',
-                    label: <Link to="/input/book">Nhập Sách</Link>,
-                },
-            ],
-        },
-        {
             key: 'manage_library',
             label: (
                 <div className="flex items-center space-x-2">
@@ -81,9 +54,25 @@ const MenuItems = () => {
             ),
             children: [
                 {
-                    key: 'borrow',
-                    label: <Link to="/manage/borrow">Quản lý Mượn sách</Link>,
+                    key: 'author',
+                    label: <Link to="/manage/author">Nhập Tác giả</Link>,
                 },
+                {
+                    key: 'publisher',
+                    label: <Link to="/manage/publisher">Nhập Nhà xuất bản</Link>,
+                },
+                {
+                    key: 'genre',
+                    label: <Link to="/manage/genre">Nhập Thể loại sách</Link>,
+                },
+                {
+                    key: 'book',
+                    label: <Link to="/manage/book">Nhập Sách</Link>,
+                },
+                // {
+                //     key: 'borrow',
+                //     label: <Link to="/manage/borrow">Quản lý Mượn sách</Link>,
+                // },
             ],
         },
         // {

@@ -47,14 +47,12 @@ export default function App() {
                         <Route path="/volunteer" element={<Volunteer/>} />
                         <Route path="/schedule" element={<Schedule/>} />
                         <Route path="/event" element={<Event/>} />
-
-                        {/* input */}
-                        <Route path="/input/author" element={<ManageAuthor />} />
-                        <Route path="/input/publisher" element={<ManagePublisher />} />
-                        <Route path="/input/genre" element={<ManageGenre />} />
-                        <Route path="/input/book" element={<ManageBook />} />
-
+                        
                         {/* manage_library */}
+                        <Route path="/manage/author" element={<ManageAuthor />} />
+                        <Route path="/manage/publisher" element={<ManagePublisher />} />
+                        <Route path="/manage/genre" element={<ManageGenre />} />
+                        <Route path="/manage/book" element={<ManageBook />} />
                         <Route path="/manage/borrow" element={<ManageBorrow />} />
                         <Route path="/manage/user" element={<ManageUser />} />
 
