@@ -142,12 +142,24 @@ function ManageCategory() {
     const onTableChange = async (pagination, filters, sorter, extra) => {
         // Handle filters
         let cleanedFilters = {};
-        if (filters.name) {
+        let isFilter = false;
+
+        // Check all possible filters
+        if (filters.name && filters.name[0]) {
             cleanedFilters.name = filters.name[0];
-            const searchBody = {
-                name: filters.name[0]
-            };
-            setFilterRequestBody(searchBody);
+            isFilter = true;
+        }
+        if (filters.description && filters.description[0]) {
+            cleanedFilters.description = filters.description[0];
+            isFilter = true;
+        }
+        if (filters.age_limit && filters.age_limit[0]) {
+            cleanedFilters.age_limit = filters.age_limit[0];
+            isFilter = true;
+        }
+
+        if (isFilter) {
+            setFilterRequestBody(cleanedFilters);
             setSearchMode(true);
         } else {
             setSearchMode(false);
@@ -155,25 +167,22 @@ function ManageCategory() {
         setCurrentFilters(cleanedFilters);
 
         // Handle sorting
-        if (sorter && sorter.field) {
+        if (sorter && sorter.field && sorter.order) {
             const sortedList = [...categoryList].sort((a, b) => {
                 const fieldA = a[sorter.field];
                 const fieldB = b[sorter.field];
 
+                if (fieldA === null) return sorter.order === 'ascend' ? -1 : 1;
+                if (fieldB === null) return sorter.order === 'ascend' ? 1 : -1;
+
                 if (typeof fieldA === 'string') {
-                    if (sorter.order === 'ascend') {
-                        return fieldA.localeCompare(fieldB);
-                    } else if (sorter.order === 'descend') {
-                        return fieldB.localeCompare(fieldA);
-                    }
-                } else if (typeof fieldA === 'number') {
-                    if (sorter.order === 'ascend') {
-                        return fieldA - fieldB;
-                    } else if (sorter.order === 'descend') {
-                        return fieldB - fieldA;
-                    }
+                    return sorter.order === 'ascend' 
+                        ? fieldA.localeCompare(fieldB)
+                        : fieldB.localeCompare(fieldA);
                 }
-                return 0;
+                return sorter.order === 'ascend' 
+                    ? fieldA - fieldB 
+                    : fieldB - fieldA;
             });
             setCategoryList(sortedList);
         }
@@ -262,6 +271,7 @@ function ManageCategory() {
             align: 'center',
             width: '30%',
             ...getColumnSearchProps('Tên thể loại', 'name'),
+            sorter: true, // thêm dòng này
         },
         {
             title: 'Mô tả',
@@ -270,6 +280,7 @@ function ManageCategory() {
             align: 'center',
             width: '30%',
             ...getColumnSearchProps('Mô tả', 'description'),
+            sorter: true, // thêm dòng này
             render: (text) => (
                 <div style={{ 
                     whiteSpace: 'nowrap',
@@ -287,7 +298,7 @@ function ManageCategory() {
             width: '20%',
             align: 'center',
             ...getColumnSearchProps('giới hạn tuổi', 'age_limit'),
-            sorter: (a, b) => (a.age_limit || 0) - (b.age_limit || 0),
+            sorter: true, // thêm dòng này
         },
         {
             title: 'Thao tác',
@@ -407,21 +418,20 @@ function ManageCategory() {
                 dataSource={categoryList}
                 onChange={onTableChange}
                 rowKey={(record) => record.id}
-                pagination={{
-                    showSizeChanger: true,
-                    current: page,
-                    pageSize: pageSize,
-                    total: totalData,
-                    onChange: (page, pageSize) => {
-                        setPage(page);
-                        setPageSize(pageSize);
-                    },
-                }}
                 rowSelection={{
                     type: 'checkbox',
                     selectedRowKeys: selectedRows,
                     onChange: (selectedRowKeys, selectedRows) => {
                         setSelectedRows(selectedRowKeys); // get Id of selected rows to delete
+                    },
+                }}
+                pagination={{
+                    current: page,
+                    pageSize: pageSize,
+                    total: totalData,
+                    onChange: (newPage, newPageSize) => {
+                        setPage(newPage);
+                        setPageSize(newPageSize);
                     },
                 }}
                 onRow={(record) => {
