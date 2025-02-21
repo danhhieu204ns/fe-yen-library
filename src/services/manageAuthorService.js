@@ -1,6 +1,6 @@
 import useHttpPrivate from 'src/hooks/useHttpPrivate';
 
-const useAuthorApi = () => {
+const useManageAuthorApi = () => {
     const httpPrivate = useHttpPrivate();
 
     // Tác giả
@@ -22,12 +22,22 @@ const useAuthorApi = () => {
         }
     };
 
-    const authorData = async (page, pageSize) => {
+    const allAuthorNames = async () => {
         try {
-            const res = await httpPrivate.get(`/author/pageable?page=${page}&page_size=${pageSize}`);
+            const res = await httpPrivate.get('/author/name');
             return res?.data;
         } catch (error) {
             console.log(error);
+        }
+    };
+
+    const authorData = async (page = 1, pageSize = 10) => {
+        try {
+            const response = await httpPrivate.get(`/author/pageable?page=${page}&page_size=${pageSize}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching author data:', error);
+            return error;
         }
     };
 
@@ -67,39 +77,74 @@ const useAuthorApi = () => {
 
     const deleteListAuthor = async (listId) => {
         try {
-            const res = await httpPrivate.delete('/author/delete-many', {
-                data: { list_id: listId }, // Đảm bảo rằng body chứa một object với key là author_ids
+            const response = await httpPrivate.delete('/author/delete-many', {
+                data: { list_id: listId }
             });
-            return res.data;
+            return response.data;
         } catch (error) {
-            console.log(error);
-            return error?.response;
+            console.error('Error deleting authors:', error);
+            throw error;
         }
     };
 
-    const importAuthor = async (file) => {
-        const formData = new FormData();
-        formData.append('file', file);
-
+    const importAuthor = async (formData) => {
         try {
-            const response = await httpPrivate.post('/author/import', formData, {});
+            const response = await httpPrivate.post('/author/import', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            return response.data
+        } catch (error) {
+            return error.response;
+        }
+    };
+
+    const exportAuthors = async () => {
+        try {
+            const res = await httpPrivate.get('/author/export', {
+                responseType: 'blob',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }
+            });
+            return res?.data;
+        } catch (error) {
+            console.error('Export error:', error);
+            return null;
+        }
+    };
+
+    const searchAuthor = async (searchBody, page = 1, pageSize = 10) => {
+        try {
+            const searchData = {
+                name: searchBody.name || '',
+                address: searchBody.address || '',
+                pen_name: searchBody.pen_name || '',
+            };
+            
+            const response = await httpPrivate.post(`/author/search?page=${page}&page_size=${pageSize}`, searchData);
             return response.data;
         } catch (error) {
-            console.error('Import failed:', error);
-            throw error;
+            console.error('Error searching authors:', error);
+            return error;
         }
     };
 
     return {
         oneAuthor,
         allAuthors,
+        allAuthorNames, 
         authorData,
         createAuthor,
         editAuthor,
         deleteAuthor,
         deleteListAuthor,
         importAuthor,
+        exportAuthors,
+        searchAuthor,
     };
 };
 
-export default useAuthorApi;
+export default useManageAuthorApi;

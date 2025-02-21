@@ -1,78 +1,167 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { Button, Table, Tooltip, Modal, Space, Input, Select, Typography, Upload, Flex } from 'antd';
-import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined } from '@ant-design/icons';
+import { Button, Table, Tooltip, Modal, Space, Input, Select, Typography, Upload, Flex, message } from 'antd';
+import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons';
 import useManageAuthorApi from 'src/services/manageAuthorService';
 import CreateAuthor from './CreateAuthor';
 import EditAuthor from './EditAuthor';
 import ShowInfoAuthor from './ShowInfoAuthor';
 import moment from 'moment';
-import { UploadOutlined, CheckCircleOutlined, ImportOutlined, DownloadOutlined } from '@ant-design/icons';
-import { getColumnSearchProps } from 'src/utils/searchByApi';
-
-import * as XLSX from 'xlsx';
+import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
+import { getColumnSearchProps } from 'src/utils/searchByApi.jsx';
+import ErrorModal from 'src/components/common/ErrorModal';
+import ImportAuthorModal from './ImportAuthorModal';
 
 function ManageAuthor() {
     const [authorList, setAuthorList] = useState([]);
+    const [authorInfo, setAuthorInfo] = useState(null);
     const [listAuthorToDelete, setListAuthorToDelete] = useState([]);
-    const [authorInfo, setAuthorInfo] = useState({});
     const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(10);
     const [totalData, setTotalData] = useState(0);
     const [reloadToggle, setReloadToggle] = useState(false);
 
+    const [currentFilters, setCurrentFilters] = useState({});
+    const [searchMode, setSearchMode] = useState(false);
+    const [filterRequestBody, setFilterRequestBody] = useState({});
+
+    const [importModalOpen, setImportModalOpen] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
+
+    const [exportLoading, setExportLoading] = useState(false);
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [errorMessages, setErrorMessages] = useState([]);
+    const { authorData, deleteAuthor, deleteListAuthor, importAuthor, exportAuthors, searchAuthor } = useManageAuthorApi();
+
+    const [modal, contextHolder] = Modal.useModal(); // Keep only one modal instance
+    const [total, setTotal] = useState(0); // Thêm state total
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const [modalDelete, contextHolder] = Modal.useModal();
 
-    const [filteredAuthors, setFilteredAuthors] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterOption, setFilterOption] = useState('name');
+    useEffect(() => {
+        const fetchData = async () => {
+            const results = await authorData(page, pageSize);
+            setAuthorList(results?.authors || []);
+            setTotalData(results?.total_data || 0);
+            setTotal(results?.total_data || 0); // Thêm dòng này
+        };
+        if (!searchMode) fetchData();
+    }, [page, pageSize, reloadToggle, searchMode]);
 
-    const [isImportModalVisible, setIsImportModalVisible] = useState(false);
-    const [selectedFile, setSelectedFile] = useState(null);
-
-    const [isUploading, setIsUploading] = useState(false);
-    const [total, setTotal] = useState();
-    const { authorData, deleteAuthor, deleteListAuthor, importAuthor } = useManageAuthorApi();
-
-    const handleImport = async () => {
-        if (!selectedFile) {
-            toast.error('Vui lòng chọn file để import!');
-            return;
+    useEffect(() => {
+        const fetchFilteredData = async () => {
+            if (!filterRequestBody) return;
+            
+            try {
+                const res = await searchAuthor(filterRequestBody, page, pageSize);
+                if (res?.authors) {
+                    setAuthorList(res.authors);
+                    setTotalData(res.total_data);
+                    setTotal(res.total_data);
+                } else {
+                    message.error('Lỗi tìm kiếm');
+                    resetSearch();
+                }
+            } catch (error) {
+                message.error('Lỗi tìm kiếm');
+                resetSearch();
+            }
         }
 
-        setIsUploading(true);
-        try {
-            const result = await importAuthor(selectedFile);
-            toast.success(result?.message || 'Import thành công!');
-            setIsImportModalVisible(false);
-            setSelectedFile(null);
+        if (searchMode) fetchFilteredData();
+    }, [page, pageSize, searchMode, filterRequestBody]);
+
+    const resetSearch = () => {
+        setSearchMode(false);
+        setCurrentFilters({});
+        setFilterRequestBody({});
+    };
+
+    const onTableChange = async (pagination, filters, sorter) => {
+        const searchBody = {};
+        
+        // Handle filters
+        Object.keys(filters).forEach(key => {
+            if (filters[key]?.length) {
+                // Only add the search term if it's not empty
+                if (filters[key][0].trim() !== '') {
+                    searchBody[key] = filters[key][0].trim();
+                }
+            }
+        });
+
+        // Only set search mode if we have valid search criteria
+        if (Object.keys(searchBody).length > 0) {
+            setSearchMode(true);
+            setFilterRequestBody(searchBody);
+        } else {
+            resetSearch();
             fetchData();
-        } catch (error) {
-            toast.error('Đã xảy ra lỗi khi import dữ liệu.');
-        } finally {
-            setIsUploading(false);
-            setIsImportModalVisible(false);
+        }
+
+        // Xử lý sort sau khi có kết quả search hoặc data gốc
+        if (sorter.field && sorter.order) {
+            setTimeout(() => {
+                const dataToSort = [...authorList];
+                const sortedData = dataToSort.sort((a, b) => {
+                    let compareA = a[sorter.field];
+                    let compareB = b[sorter.field];
+
+                    if (sorter.field === 'birthdate') {
+                        compareA = compareA ? new Date(compareA).getTime() : 0;
+                        compareB = compareB ? new Date(compareB).getTime() : 0;
+                    }
+
+                    if (sorter.order === 'ascend') {
+                        return compareA > compareB ? 1 : -1;
+                    } else {
+                        return compareA < compareB ? 1 : -1;
+                    }
+                });
+                
+                setAuthorList(sortedData);
+            }, 100); // Đợi một chút để đảm bảo data đã được cập nhật
         }
     };
 
-    const generateExcelTemplate = () => {
-        const wb = XLSX.utils.book_new();
-        const headers = ['Tên tác giả', 'Ngày sinh', 'Địa chỉ', 'Bút danh', 'Tiểu sử'];
-        const sampleRows = [['Nguyễn Văn A', '29/09/2099', 'Hà Nội', 'Hello', 'File']];
-        const wsData = [headers, ...sampleRows];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, 'Template');
-        XLSX.writeFile(wb, 'author_import_template.xlsx');
+    const handleImportClick = () => {
+        setImportModalOpen(true);
+    };
+
+    const handleImport = async () => {
+        if (!selectedFile) {
+            message.error('Vui lòng chọn file để import!');
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            const response = await importAuthor(formData);
+            console.log('response', response);
+            if (response.status === 200) {
+                message.success(`${selectedFile.name} file uploaded successfully`);
+                handleReload();
+                handleCloseImportModal();
+            } else {
+                const errorMessages = response.errors.map(error => `Dòng ${error.Dòng}: ${error.Lỗi}`);
+                setErrorMessages(errorMessages);
+                setErrorModalOpen(true);
+            }
+        } catch (error) {
+            message.error(`${selectedFile.name} file upload failed.`);
+        }
+    };
+    const handleFileChange = (file) => {
+        if (file) {
+            setSelectedFile(file);
+        }
     };
 
     const fetchData = async () => {
         const results = await authorData(page, pageSize);
-        setAuthorList(results?.authors);
-        setTotal(results?.total_data);
-        setTotalData(results?.total_pages * pageSize);
+        setAuthorList(results?.authors || []);
+        setTotalData(results?.total_data || 0);
     };
 
     useEffect(() => {
@@ -97,97 +186,74 @@ function ManageAuthor() {
         setAuthorInfo({});
     }, []);
 
-    console.log(total);
+    const handleCloseImportModal = useCallback(() => {
+        setImportModalOpen(false);
+        setSelectedFile(null);
+    }, []);
 
     const handleDelete = async (id) => {
         const result = await deleteAuthor(id);
-        console.log(result);
         if (result?.status) {
             toast.error('Xóa thất bại');
             return;
         }
-
         toast.success('Xóa thành công');
-        handleReload();
+        fetchData();
     };
 
     const handleDeleteListAuthor = async () => {
-        const result = await deleteListAuthor(listAuthorToDelete);
-        if (result?.status) {
-            toast.error('Xóa thất bại');
-            return;
-        }
-
-        toast.success('Xóa thành công');
-        setListAuthorToDelete([]);
-        handleReload();
-    };
-
-    const handleFileChange = (file) => {
-        setSelectedFile(file);
-        return false;
-    };
-
-    useEffect(() => {
-        const filterAuthors = () => {
-            if (!searchTerm) {
-                setFilteredAuthors(authorList);
+        try {
+            const result = await deleteListAuthor(listAuthorToDelete);
+            if (!result || result.status === false) {
+                toast.error(result?.message || 'Xóa thất bại');
                 return;
             }
-
-            const lowercasedTerm = searchTerm.toLowerCase();
-            const filtered = authorList.filter((author) => {
-                if (filterOption === 'name') {
-                    return author.name.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'birthdate') {
-                    return moment(author.birthdate).format('DD/MM/YYYY').includes(lowercasedTerm);
-                } else if (filterOption === 'address') {
-                    return author.address?.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'pen_name') {
-                    return author.pen_name?.toLowerCase().includes(lowercasedTerm);
-                } else if (filterOption === 'biography') {
-                    return author.biography?.toLowerCase().includes(lowercasedTerm);
-                }
-                return false;
-            });
-            setFilteredAuthors(filtered);
-            setTotal(filtered.length);
-        };
-
-        filterAuthors();
-    }, [searchTerm, filterOption, authorList]);
+            toast.success('Xóa thành công');
+            setListAuthorToDelete([]);
+            fetchData();
+        } catch (error) {
+            console.error('Delete error:', error);
+            toast.error(error.response?.data?.message || 'Đã có lỗi xảy ra khi xóa');
+        }
+    };
 
     const columns = [
         {
             title: 'Tên tác giả',
             dataIndex: 'name',
-            key: 'author',
+            key: 'name',
+            align: 'center',
             ...getColumnSearchProps('Tên tác giả', 'name'),
-            sorter: (a, b) => a.name.localeCompare(b.name),
+            sorter: true
         },
         {
             title: 'Ngày sinh',
             dataIndex: 'birthdate',
             key: 'birthdate',
-            render: (text) => (text ? moment(text).format('DD/MM/YYYY') : 'Chưa xác định'), // Định dạng ngày sinh
+            align: 'center',
+            render: (text) => (text ? moment(text).format('DD/MM/YYYY') : 'Chưa xác định'),
+            sorter: true
         },
         {
             title: 'Địa chỉ',
             dataIndex: 'address',
             key: 'address',
+            align: 'center',
             ...getColumnSearchProps('Địa chỉ', 'address'),
-            sorter: (a, b) => a.address.localeCompare(b.address),
+            sorter: true
         },
         {
             title: 'Bút danh',
             dataIndex: 'pen_name',
             key: 'pen_name',
+            align: 'center',
             ...getColumnSearchProps('Bút danh', 'pen_name'),
         },
         {
             title: 'Tiểu sử',
             dataIndex: 'biography',
             key: 'biography',
+            align: 'center',
             render: (text) => (
                 <div
                     style={{
@@ -204,153 +270,174 @@ function ManageAuthor() {
         {
             title: 'Thao tác',
             key: 'action',
+            width: '20%',
             align: 'center',
             render: (text, record) => (
-                <div className="space-x-2">
+                <Space>
+                    <Tooltip title="Xem">
+                        <Button
+                            shape="circle"
+                            className="bg-blue-500"
+                            type="primary"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setAuthorInfo(record);
+                                setShowInfoModal(true);
+                            }}
+                        >
+                            <EyeOutlined className="text-white" />
+                        </Button>
+                    </Tooltip>
                     <Tooltip title="Sửa">
                         <Button
                             shape="circle"
                             className="bg-yellow-300"
                             type="primary"
-                            icon={<EditOutlined className="text-slate-900 font-[300]" />}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setAuthorInfo(record);
                                 setEditModalOpen(true);
                             }}
-                        />
+                        >
+                            <EditOutlined className="text-slate-900 font-[300]" />
+                        </Button>
                     </Tooltip>
                     <Tooltip title="Xóa">
                         <Button
                             shape="circle"
                             className="bg-red-500"
                             type="primary"
-                            icon={<DeleteOutlined className="text-white" />}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                modalDelete.confirm({
+                                modal.confirm({
                                     title: 'Xác nhận xoá',
                                     icon: <ExclamationCircleFilled />,
-                                    content: `Bạn có chắc chắn muốn xóa tác giả: ${record.name}`,
+                                    content: `Bạn có chắc chắn muốn xóa tác giả: ${record.name}?`,
                                     onOk() {
                                         handleDelete(record.id);
                                     },
                                     onCancel() {},
                                 });
                             }}
-                        />
+                        >
+                            <DeleteOutlined className="text-white" />
+                        </Button>
                     </Tooltip>
-                </div>
+                </Space>
             ),
-        },
+        }
     ];
 
-    return (
-        <div style={{ padding: '20px' }}>
-            <div className="flex justify-center">
-                <h1 className="text-2xl mt-[60px] py-6">Quản lý Tác giả</h1>
-            </div>
-
-            <div className="flex justify-between items-center">
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                    <Input
-                        placeholder="Nhập từ khóa tìm kiếm..."
-                        allowClear
-                        size="large"
-                        style={{ width: '400px', marginRight: '10px' }}
-                        onChange={(e) => {
-                            const searchValue = e.target.value;
-                            setSearchTerm(searchValue);
-
-                            if (!searchValue) {
-                                setFilteredAuthors(authorList);
-                                setTotal(authorList.length);
-                                return;
-                            }
-
-                            const lowercasedTerm = searchValue.toLowerCase();
-                            const filtered = authorList.filter((author) => {
-                                if (filterOption === 'name') {
-                                    return author.name.toLowerCase().includes(lowercasedTerm);
-                                } else if (filterOption === 'birthdate') {
-                                    return moment(author.birthdate).format('DD/MM/YYYY').includes(lowercasedTerm);
-                                } else if (filterOption === 'address') {
-                                    return author.address?.toLowerCase().includes(lowercasedTerm);
-                                } else if (filterOption === 'pen_name') {
-                                    return author.pen_name?.toLowerCase().includes(lowercasedTerm);
-                                } else if (filterOption === 'biography') {
-                                    return author.biography?.toLowerCase().includes(lowercasedTerm);
-                                }
-                                return false;
-                            });
-
-                            setFilteredAuthors(filtered);
-                            setTotal(filtered.length);
-                        }}
-                    />
-                    <label style={{ marginRight: '10px' }}>Lọc theo:</label>
-                    <Select
-                        value={filterOption}
-                        onChange={(value) => setFilterOption(value)}
-                        style={{ width: '200px' }}
-                    >
-                        <Select.Option value="name">Tên tác giả</Select.Option>
-                        <Select.Option value="birthdate">Ngày sinh</Select.Option>
-                        <Select.Option value="address">Địa chỉ</Select.Option>
-                        <Select.Option value="pen_name">Bút danh</Select.Option>
-                        <Select.Option value="biography">Tiểu sử</Select.Option>
-                    </Select>
-                </div>
-
-                <Flex gap={6} justify="center" align="center">
-                    <span style={{ fontWeight: 'bold' }}>Tổng số:</span>
-                    <Input
-                        style={{
-                            width: '60px',
-                            color: 'red',
-                            fontWeight: 'bold',
-                        }}
-                        value={total}
-                        readOnly
-                        disabled
-                    />
-                </Flex>
-            </div>
-            <Space className="mb-2">
-                <Button
-                    className="bg-[#28A745] shadow-none text-white border-none"
-                    onClick={() => setIsImportModalVisible(true)}
-                >
-                    <PlusCircleOutlined /> Import
-                </Button>
-                <Button type="primary" onClick={() => setCreateModalOpen(true)}>
-                    <PlusCircleOutlined />
-                    Tạo mới
-                </Button>
-                <Button
-                    type="primary"
-                    className="bg-red-500"
-                    disabled={listAuthorToDelete.length === 0}
-                    onClick={() => {
-                        modalDelete.confirm({
-                            title: 'Xác nhận xoá',
-                            icon: <ExclamationCircleFilled />,
-                            content: `Bạn có chắc muốn xoá ${listAuthorToDelete.length} tác giả đã chọn?`,
-                            onOk() {
-                                handleDeleteListAuthor();
-                            },
-                            onCancel() {},
+    const handleExport = async () => {
+        modal.confirm({
+            title: 'Xác nhận xuất file',
+            icon: <ExclamationCircleFilled />,
+            content: 'Bạn có chắc chắn muốn xuất danh sách tác giả?',
+            okText: 'Xuất file',
+            cancelText: 'Hủy',
+            onOk: async () => {
+                setExportLoading(true);
+                try {
+                    const response = await exportAuthors();
+                    if (response) {
+                        const currentDate = new Date().toISOString().split('T')[0];
+                        const blob = new Blob([response], {
+                            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                         });
-                    }}
-                >
-                    <DeleteOutlined />
-                    Xóa {listAuthorToDelete.length !== 0 ? listAuthorToDelete.length + ' tác giả' : ''}
-                </Button>
+                        
+                        if (blob.size === 0) {
+                            message.error('File xuất ra rỗng');
+                            return;
+                        }
+
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', `authors_${currentDate}.xlsx`);
+                        document.body.appendChild(link);
+                        link.click();
+                        link.parentNode.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        message.success('Xuất file thành công');
+                    }
+                } catch (error) {
+                    console.error('Export error:', error);
+                    message.error('Xuất file thất bại');
+                } finally {
+                    setExportLoading(false);
+                }
+            }
+        });
+    };
+
+    return (
+        <div className='py-20 px-4'>
+            <h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Tác giả</h1>
+            <Space className="flex my-2 justify-between">
+                <Space>
+                    <Button 
+                        type="primary" 
+                        icon={<PlusCircleOutlined />} 
+                        onClick={() => setCreateModalOpen(true)}>
+                        Thêm mới
+                    </Button>
+                    <Button 
+                        type="primary" 
+                        icon={<UploadOutlined />} 
+                        className="bg-green-500 text-white" 
+                        onClick={handleImportClick}
+                    >
+                        Import
+                    </Button>
+                    <Button
+                        type="primary"
+                        icon={<DownloadOutlined />}
+                        onClick={handleExport}
+                        loading={exportLoading}
+                        className="bg-blue-500 text-white"
+                    >
+                        Export
+                    </Button>
+                    <Button
+                        type="primary"
+                        className="bg-red-500"
+                        disabled={listAuthorToDelete.length === 0}
+                        onClick={() => {
+                            modal.confirm({
+                                title: 'Xác nhận xoá',
+                                icon: <ExclamationCircleFilled />,
+                                content: `Bạn có chắc muốn xoá ${listAuthorToDelete.length} tác giả đã chọn?`,
+                                onOk() {
+                                    handleDeleteListAuthor();
+                                },
+                                onCancel() {},
+                            });
+                        }}
+                    >
+                        <DeleteOutlined />
+                        Xóa {listAuthorToDelete.length !== 0 ? listAuthorToDelete.length + ' tác giả' : ''}
+                    </Button>
+                </Space>
+                <div className="flex justify-between items-center">
+                    <Flex gap={6} justify="center" align="center">
+                        <span style={{ fontWeight: 'bold' }}>Tổng số:</span>
+                        <Input
+                            style={{
+                                width: '60px',
+                                color: 'red',
+                                fontWeight: 'bold',
+                            }}
+                            value={total}
+                            readOnly
+                            disabled
+                        />
+                    </Flex>
+                </div>
             </Space>
             <div>
                 <Table
                     columns={columns}
-                    dataSource={filteredAuthors}
+                    dataSource={authorList} // Remove filtered logic
                     rowSelection={{
                         type: 'checkbox',
                         selectedRowKeys: listAuthorToDelete,
@@ -368,12 +455,7 @@ function ManageAuthor() {
                             setPageSize(newPageSize);
                         },
                     }}
-                    onRow={(record) => ({
-                        onClick: () => {
-                            setAuthorInfo(record);
-                            setShowInfoModal(true);
-                        },
-                    })}
+                    onChange={onTableChange}
                 />
             </div>
 
@@ -390,84 +472,19 @@ function ManageAuthor() {
 
             {contextHolder}
 
-            <Modal
-                title={
-                    <div className="flex items-center gap-2">
-                        <UploadOutlined className="text-blue-500" />
-                        <span>Import danh sách tác giả</span>
-                    </div>
-                }
-                open={isImportModalVisible}
-                onCancel={() => {
-                    setIsImportModalVisible(false);
-                    setSelectedFile(null);
-                }}
-                footer={null}
-                width={600}
-            >
-                <div className="flex flex-col gap-6 py-4">
-                    <div className="flex flex-col items-center gap-4">
-                        <div
-                            className={`w-full border-2 border-dashed rounded-lg p-8 text-center
-                ${selectedFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-blue-500'}
-                transition-all cursor-pointer`}
-                        >
-                            <Upload.Dragger
-                                beforeUpload={handleFileChange}
-                                showUploadList={false}
-                                accept=".xlsx,.xls"
-                                className="border-0 bg-transparent"
-                            >
-                                {selectedFile ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="text-green-500 text-xl">
-                                            <CheckCircleOutlined />
-                                        </div>
-                                        <Typography.Text className="text-green-600">
-                                            Đã chọn: {selectedFile.name}
-                                        </Typography.Text>
-                                        <Typography.Text className="text-gray-400 text-sm">
-                                            Click hoặc kéo thả để thay đổi file
-                                        </Typography.Text>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="text-blue-500 text-xl">
-                                            <UploadOutlined />
-                                        </div>
-                                        <Typography.Text className="text-gray-600">
-                                            Click hoặc kéo thả file vào đây
-                                        </Typography.Text>
-                                        <Typography.Text className="text-gray-400 text-sm">
-                                            Chỉ hỗ trợ file .xlsx, .xls
-                                        </Typography.Text>
-                                    </div>
-                                )}
-                            </Upload.Dragger>
-                        </div>
-                    </div>
+            <ImportAuthorModal
+                open={importModalOpen}
+                onClose={handleCloseImportModal}
+                onFileChange={handleFileChange}
+                onImport={handleImport}
+                selectedFile={selectedFile}
+            />
 
-                    {/* Action Buttons */}
-                    <div className="flex justify-end gap-3">
-                        <Button
-                            onClick={generateExcelTemplate}
-                            icon={<DownloadOutlined />}
-                            className="border-blue-500 text-blue-500 hover:text-blue-600"
-                        >
-                            Tải file mẫu
-                        </Button>
-                        <Button
-                            type="primary"
-                            onClick={handleImport}
-                            loading={isUploading}
-                            disabled={!selectedFile}
-                            icon={<ImportOutlined />}
-                        >
-                            Import Dữ Liệu
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
+            <ErrorModal
+                open={errorModalOpen}
+                onClose={() => setErrorModalOpen(false)}
+                errorMessages={errorMessages}
+            />
         </div>
     );
 }

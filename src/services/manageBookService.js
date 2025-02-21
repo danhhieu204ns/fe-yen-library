@@ -58,7 +58,7 @@ const useBookApi = () => {
     const deleteBook = async (id) => {
         try {
             const res = await httpPrivate.delete(`/book/delete/${id}`);
-            return res.data;
+            return res; // Trả về toàn bộ response, không chỉ data
         } catch (error) {
             console.log(error);
             return error?.response;
@@ -68,24 +68,72 @@ const useBookApi = () => {
     const deleteListBooks = async (listId) => {
         try {
             const res = await httpPrivate.delete('/book/delete-many', {
-                data: { list_id: listId }  // Đảm bảo rằng body chứa một object với key là book_ids
+                data: { ids: listId }  // Đảm bảo rằng body chứa một object với key là book_ids
             });
-            return res.data;
+            return res; // Trả về toàn bộ response
         } catch (error) {
             console.log(error);
             return error?.response;
         }
     };
-    const checkBook = async (formData) => {
+
+    const searchBook = async (search, page, page_size) => {
         try {
-            const res = await httpPrivate.post('/book/check', formData, {
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                }, });
-            return res.data;
+            const res = await httpPrivate.get(`/book/search?page=${page}&page_size=${page_size}`, 
+                { ...search}
+            );
+            return res?.data;
         } catch (error) {
             console.log(error);
-            return error;
+        }
+    };
+
+    const importBook = async (formData) => {
+        try {
+            const res = await httpPrivate.post('/book/import', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            });
+            // Return entire response để kiểm tra đầy đủ
+            return res;
+        } catch (error) {
+            console.log('Import error in service:', error);
+            // Return error response để kiểm tra lỗi
+            return error?.response;
+        }
+    };
+
+    const exportBook = async (file) => {
+        try {
+            const res = await httpPrivate.post('/book/export', file);
+            return res?.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const downloadTemplate = async () => {
+        try {
+            const res = await httpPrivate.get('/book/template', {
+                responseType: 'arraybuffer'
+            });
+            return res;
+        } catch (error) {
+            console.log(error);
+            return error?.response;
+        }
+    };
+
+    const exportBooks = async () => {
+        try {
+            const res = await httpPrivate.get('/book/export', {
+                responseType: 'blob'
+            });
+            return res;
+        } catch (error) {
+            console.log(error);
+            return error?.response;
         }
     };
 
@@ -97,7 +145,11 @@ const useBookApi = () => {
         editBook,
         deleteBook,
         deleteListBooks,
-        checkBook
+        searchBook,
+        importBook,
+        exportBook,
+        downloadTemplate,
+        exportBooks,
     };
 };
 

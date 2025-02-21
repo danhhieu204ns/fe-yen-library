@@ -1,8 +1,7 @@
-import { memo, useState } from 'react';
-import { Input, Typography, Col, Row, Modal } from 'antd';
-import useManageInfoApi from 'src/services/managePublisherService'; // Đổi sang dịch vụ quản lý nhà xuất bản
+import { useState, memo } from 'react';
+import { Input, Typography, Col, Row, Modal, Button } from 'antd';
+import useManagePublisherApi from 'src/services/managePublisherService';
 import { toast } from 'react-toastify';
-import ErrorMessage from 'src/utils/error/errorMessage';
 
 function CreatePublisher({ openModal, closeModal, handleReload }) {
     const [publisherInfo, setPublisherInfo] = useState({
@@ -13,7 +12,7 @@ function CreatePublisher({ openModal, closeModal, handleReload }) {
     });
     const [errorMessages, setErrorMessages] = useState('');
 
-    const { createPublisher } = useManageInfoApi();
+    const { createPublisher } = useManagePublisherApi();
 
     const handleCreatePublisher = async () => {
         const { name, phone_number, address, email } = publisherInfo;
@@ -28,17 +27,20 @@ function CreatePublisher({ openModal, closeModal, handleReload }) {
             return;
         }
 
-        if (!address || address.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập địa chỉ');
+        // Validate phone number format
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(phone_number)) {
+            setErrorMessages('Số điện thoại không hợp lệ');
             return;
         }
 
-        if (!email || email.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập email');
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email && !emailRegex.test(email)) {
+            setErrorMessages('Email không hợp lệ');
             return;
         }
 
-        // Gửi request tạo nhà xuất bản
         const result = await createPublisher({
             name: name.trim(),
             phone_number: phone_number.trim(),
@@ -51,22 +53,13 @@ function CreatePublisher({ openModal, closeModal, handleReload }) {
             return;
         }
 
-        if (result?.name === 'AxiosError') {
-            toast.error('Tạo nhà xuất bản thất bại. Vui lòng thử lại!');
-            return;
-        }
-
         if (result?.data) {
-            setPublisherInfo({
-                name: '',
-                phone_number: '',
-                address: '',
-                email: ''
-            });
-            setErrorMessages('');
+            resetForm();
             closeModal();
             handleReload();
             toast.success('Tạo nhà xuất bản thành công');
+        } else {
+            toast.error('Tạo nhà xuất bản thất bại');
         }
     };
 
@@ -78,58 +71,92 @@ function CreatePublisher({ openModal, closeModal, handleReload }) {
         setErrorMessages('');
     };
 
+    const resetForm = () => {
+        setPublisherInfo({
+            name: '',
+            phone_number: '',
+            address: '',
+            email: ''
+        });
+        setErrorMessages('');
+    };
+
     return (
         <Modal
-            title="Tạo nhà xuất bản"
+            title="Thêm nhà xuất bản"
             open={openModal}
             onCancel={() => {
-                setPublisherInfo({
-                    name: '',
-                    phone_number: '',
-                    address: '',
-                    email: ''
-                });
-                setErrorMessages('');
+                resetForm();
                 closeModal();
             }}
-            onOk={handleCreatePublisher}
+            footer={[
+                <Button key="back" onClick={closeModal}>
+                    Hủy
+                </Button>,
+                <Button key="submit" type="primary" onClick={handleCreatePublisher}>
+                    Thêm
+                </Button>,
+            ]}
             maskClosable={false}
+            centered
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
+                background: '#fff',
+            }}
         >
-            <Row gutter={[12, 12]}>
-                <Col span={24}>
-                    <Typography>Tên nhà xuất bản</Typography>
-                    <Input
-                        placeholder="Nhập tên nhà xuất bản"
-                        value={publisherInfo.name}
-                        onChange={(e) => handleChange('name', e.target.value)}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Số điện thoại</Typography>
-                    <Input
-                        placeholder="Nhập số điện thoại"
-                        value={publisherInfo.phone_number}
-                        onChange={(e) => handleChange('phone_number', e.target.value)}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Địa chỉ</Typography>
-                    <Input
-                        placeholder="Nhập địa chỉ"
-                        value={publisherInfo.address}
-                        onChange={(e) => handleChange('address', e.target.value)}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Email</Typography>
-                    <Input
-                        placeholder="Nhập email"
-                        value={publisherInfo.email}
-                        onChange={(e) => handleChange('email', e.target.value)}
-                    />
-                </Col>
-                <ErrorMessage message={errorMessages} />
-            </Row>
+            <div className="p-4">
+                <Row gutter={[0, 16]}>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Tên nhà xuất bản</Typography.Text>
+                            <span className="text-red-500 ml-1">*</span>
+                        </div>
+                        <Input
+                            placeholder="Nhập tên nhà xuất bản"
+                            value={publisherInfo.name}
+                            onChange={(e) => handleChange('name', e.target.value)}
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Số điện thoại</Typography.Text>
+                            <span className="text-red-500 ml-1">*</span>
+                        </div>
+                        <Input
+                            placeholder="Nhập số điện thoại"
+                            value={publisherInfo.phone_number}
+                            onChange={(e) => handleChange('phone_number', e.target.value)}
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Địa chỉ</Typography.Text>
+                        </div>
+                        <Input
+                            placeholder="Nhập địa chỉ"
+                            value={publisherInfo.address}
+                            onChange={(e) => handleChange('address', e.target.value)}
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Email</Typography.Text>
+                        </div>
+                        <Input
+                            placeholder="Nhập email"
+                            value={publisherInfo.email}
+                            onChange={(e) => handleChange('email', e.target.value)}
+                        />
+                    </Col>
+                    {errorMessages && (
+                        <Col span={24}>
+                            <div className="text-red-500">{errorMessages}</div>
+                        </Col>
+                    )}
+                </Row>
+            </div>
         </Modal>
     );
 }

@@ -1,245 +1,237 @@
-import { memo, useEffect, useState } from 'react';
-import { Modal, Select, Typography, Col, Row, Card, Alert, Input } from 'antd';
+import { useState, useEffect, memo } from 'react';
+import { Input, Typography, Col, Row, Modal, Select } from 'antd';
+import useManageBookApi from 'src/services/manageBookService';
+import useManageAuthorApi from 'src/services/manageAuthorService';
+import useManagePublisherApi from 'src/services/managePublisherService';
+import useManageCategoryApi from 'src/services/manageCategoryService';
 import { toast } from 'react-toastify';
-import useBookApi from 'src/services/manageBookService';
-import useAuthorApi from 'src/services/manageAuthorService';
-import usePublisherApi from 'src/services/managePublisherService';
-import useGenreApi from 'src/services/manageGenreService';
+import ErrorMessage from 'src/utils/error/errorMessage';
+
+const { TextArea } = Input;
 
 function CreateBook({ openModal, closeModal, handleReload }) {
-    const [formData, setFormData] = useState({
-        name: '',
-        status: '',
-        content: '',
-        author_id: '',
-        publisher_id: '',
-        genre_id: '',
-    });
+    const [name, setName] = useState('');
+    const [authorId, setAuthorId] = useState(null);
+    const [publisherId, setPublisherId] = useState(null);
+    const [categoryId, setCategoryId] = useState(null);
+    const [status, setStatus] = useState('');
+    const [content, setContent] = useState('');
+    const [errorMessages, setErrorMessages] = useState('');
+    const [loading, setLoading] = useState(false);
+
     const [authors, setAuthors] = useState([]);
     const [publishers, setPublishers] = useState([]);
-    const [genres, setGenres] = useState([]);
-    const [errorMessages, setErrorMessages] = useState('');
-    const [filteredAuthors, setFilteredAuthors] = useState([]);
-    const [filteredPublishers, setFilteredPublishers] = useState([]);
-    const [filteredGenres, setFilteredGenres] = useState([]);
+    const [categories, setCategories] = useState([]);
 
-    const { createBook } = useBookApi();
-    const { allAuthors } = useAuthorApi();
-    const { allPublishers } = usePublisherApi();
-    const { allGenres } = useGenreApi();
+    const { createBook } = useManageBookApi();
+    const { allAuthorNames } = useManageAuthorApi();
+    const { allPublisherNames } = useManagePublisherApi();
+    const { allCategories } = useManageCategoryApi();
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const authorsData = await allAuthors();
-                const publishersData = await allPublishers();
-                const genresData = await allGenres();
-                setAuthors(authorsData);
-                setFilteredAuthors(authorsData); // Khởi tạo bộ lọc
-                setPublishers(publishersData);
-                setFilteredPublishers(publishersData); // Khởi tạo bộ lọc
-                setGenres(genresData);
-                setFilteredGenres(genresData); // Khởi tạo bộ lọc
-            } catch (error) {
-                console.error('Error fetching data', error);
-            }
-        };
+        if (openModal) {
+            fetchDropdownData();
+        }
+    }, [openModal]);
 
-        fetchData();
-    }, []);
+    const fetchDropdownData = async () => {
+        try {
+            const [authorsRes, publishersRes, categoriesRes] = await Promise.all([
+                allAuthorNames(),
+                allPublisherNames(),
+                allCategories()
+            ]);
+            setAuthors(authorsRes.authors || []);
+            setPublishers(publishersRes.publishers || []);
+            setCategories(categoriesRes.categories || []);
+        } catch (error) {
+            toast.error('Lỗi khi tải dữ liệu!');
+        }
+    };
 
     const handleCreateBook = async () => {
-        const { name, status, content, author_id, publisher_id, genre_id } = formData;
-
         if (!name || name.trim().length === 0) {
             setErrorMessages('Vui lòng nhập tên sách');
             return;
         }
-        if (!status || status.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập tình trạng sách');
-            return;
-        }
-        if (!content || content.trim().length === 0) {
-            setErrorMessages('Vui lòng nhập nội dung sách');
-            return;
-        }
-        if (!author_id) {
+
+        if (!authorId) {
             setErrorMessages('Vui lòng chọn tác giả');
             return;
         }
-        if (!publisher_id) {
+
+        if (!publisherId) {
             setErrorMessages('Vui lòng chọn nhà xuất bản');
             return;
         }
-        if (!genre_id) {
+
+        if (!categoryId) {
             setErrorMessages('Vui lòng chọn thể loại');
             return;
         }
 
-        const result = await createBook(formData);
+        try {
+            setLoading(true);
+            const bookData = {
+                name: name.trim(),
+                author_id: authorId,
+                publisher_id: publisherId,
+                category_id: categoryId,
+                status: status.trim(),
+                content: content.trim(),
+            };
 
-        if (result?.status === 409) {
-            setErrorMessages('Sách đã tồn tại');
-            return;
+            const response = await createBook(bookData);
+            
+            if (response?.status === 201 || response?.status === 200) {
+                toast.success('Tạo mới thành công!');
+                resetForm();
+                closeModal();
+                handleReload();
+            } else {
+                toast.error('Tạo mới thất bại!');
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Tạo mới thất bại!');
+        } finally {
+            setLoading(false);
         }
-        if (result?.data) {
-            setFormData({
-                name: '',
-                status: '',
-                content: '',
-                author_id: '',
-                publisher_id: '',
-                genre_id: ''
-            });
-            setFilteredAuthors(authors)
-            setFilteredGenres(genres)
-            setFilteredPublishers(publishers)
-            setErrorMessages('');
-            toast.success('Tạo sách thành công');
-            handleReload();
-            closeModal();
-        }
     };
 
-    // Lọc theo input cho các trường Select
-    const handleAuthorSearch = (input) => {
-        const filtered = authors.filter((author) =>
-            author.name.toLowerCase().includes(input.toLowerCase())
-        );
-        setFilteredAuthors(filtered);
+    const resetForm = () => {
+        setName('');
+        setAuthorId(null);
+        setPublisherId(null);
+        setCategoryId(null);
+        setStatus('');
+        setContent('');
+        setErrorMessages('');
     };
 
-    const handlePublisherSearch = (input) => {
-        const filtered = publishers.filter((publisher) =>
-            publisher.name.toLowerCase().includes(input.toLowerCase())
-        );
-        setFilteredPublishers(filtered);
-    };
-
-    const handleGenreSearch = (input) => {
-        const filtered = genres.filter((genre) =>
-            genre.name.toLowerCase().includes(input.toLowerCase())
-        );
-        setFilteredGenres(filtered);
-    };
+    const filterOption = (input, option) =>
+        (option?.children ?? '').toLowerCase().includes(input.toLowerCase());
 
     return (
         <Modal
-            title="Tạo sách"
+            title={<div className="text-lg">Tạo mới sách</div>}
             open={openModal}
-            onCancel={closeModal}
+            onCancel={() => {
+                resetForm();
+                closeModal();
+            }}
             onOk={handleCreateBook}
+            confirmLoading={loading}
             maskClosable={false}
+            centered
+            width={600}
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
+                background: '#fff',
+            }}
         >
-            <div className="mx-6">
+            <div className="p-4">
                 <Row gutter={[0, 16]}>
                     <Col span={24}>
-                        {errorMessages && <Alert message="Lỗi" description={errorMessages} type="error" showIcon />}
-                    </Col>
-                    <Col span={24}>
-                        <Typography.Text className="text-base">Tên sách</Typography.Text>
+                        <Typography.Text strong className="text-base">Tên sách:</Typography.Text>
                         <Input
-                            size="large"
                             placeholder="Nhập tên sách"
-                            value={formData.name}
+                            value={name}
                             onChange={(e) => {
-                                setFormData({ ...formData, name: e.target.value });
+                                setName(e.target.value);
                                 setErrorMessages('');
                             }}
+                            className="mt-2"
                         />
                     </Col>
                     <Col span={24}>
-                        <Typography.Text className="text-base">Tình trạng</Typography.Text>
-                        <Input
-                            size="large"
-                            placeholder="Nhập tình trạng sách"
-                            value={formData.status}
-                            onChange={(e) => {
-                                setFormData({ ...formData, status: e.target.value });
-                                setErrorMessages('');
-                            }}
-                        />
-                    </Col>
-                    <Col span={24}>
-                        <Typography.Text className="text-base">Nội dung</Typography.Text>
-                        <Input
-                            size="large"
-                            placeholder="Nhập nội dung sách"
-                            value={formData.content}
-                            onChange={(e) => {
-                                setFormData({ ...formData, content: e.target.value });
-                                setErrorMessages('');
-                            }}
-                        />
-                    </Col>
-                    <Col span={24}>
-                        <Typography.Text className="text-base">Tác giả</Typography.Text>
+                        <Typography.Text strong className="text-base">Tác giả:</Typography.Text>
                         <Select
-                            size="large"
                             showSearch
                             style={{ width: '100%' }}
-                            placeholder="Chọn tác giả"
-                            value={formData.author_id}
-                            onSearch={handleAuthorSearch}
-                            filterOption={false}
+                            placeholder="Tìm kiếm hoặc chọn tác giả"
+                            optionFilterProp="children"
+                            value={authorId}
                             onChange={(value) => {
-                                setFormData({ ...formData, author_id: value });
+                                setAuthorId(value);
                                 setErrorMessages('');
                             }}
+                            filterOption={filterOption}
+                            className="mt-2"
                         >
-                            {filteredAuthors.map(author => (
+                            {authors.map(author => (
                                 <Select.Option key={author.id} value={author.id}>
                                     {author.name}
                                 </Select.Option>
                             ))}
                         </Select>
                     </Col>
-
                     <Col span={24}>
-                        <Typography.Text className="text-base">Nhà xuất bản</Typography.Text>
+                        <Typography.Text strong className="text-base">Nhà xuất bản:</Typography.Text>
                         <Select
-                            size="large"
                             showSearch
                             style={{ width: '100%' }}
-                            placeholder="Chọn nhà xuất bản"
-                            value={formData.publisher_id}
-                            onSearch={handlePublisherSearch}
-                            filterOption={false}
+                            placeholder="Tìm kiếm hoặc chọn nhà xuất bản"
+                            optionFilterProp="children"
+                            value={publisherId}
                             onChange={(value) => {
-                                setFormData({ ...formData, publisher_id: value });
+                                setPublisherId(value);
                                 setErrorMessages('');
                             }}
+                            filterOption={filterOption}
+                            className="mt-2"
                         >
-                            {filteredPublishers.map(publisher => (
+                            {publishers.map(publisher => (
                                 <Select.Option key={publisher.id} value={publisher.id}>
                                     {publisher.name}
                                 </Select.Option>
                             ))}
                         </Select>
                     </Col>
-
                     <Col span={24}>
-                        <Typography.Text className="text-base">Thể loại</Typography.Text>
+                        <Typography.Text strong className="text-base">Thể loại:</Typography.Text>
                         <Select
-                            size="large"
                             showSearch
                             style={{ width: '100%' }}
-                            placeholder="Chọn thể loại"
-                            value={formData.genre_id}
-                            onSearch={handleGenreSearch}
-                            filterOption={false}
+                            placeholder="Tìm kiếm hoặc chọn thể loại"
+                            optionFilterProp="children"
+                            value={categoryId}
                             onChange={(value) => {
-                                setFormData({ ...formData, genre_id: value });
+                                setCategoryId(value);
                                 setErrorMessages('');
                             }}
+                            filterOption={filterOption}
+                            className="mt-2"
                         >
-                            {filteredGenres.map(genre => (
-                                <Select.Option key={genre.id} value={genre.id}>
-                                    {genre.name}
+                            {categories.map(category => (
+                                <Select.Option key={category.id} value={category.id}>
+                                    {category.name}
                                 </Select.Option>
                             ))}
                         </Select>
                     </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Tình trạng:</Typography.Text>
+                        <Input
+                            placeholder="Nhập tình trạng sách"
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="mt-2"
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Nội dung:</Typography.Text>
+                        <TextArea
+                            placeholder="Nhập nội dung"
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            rows={4}
+                            className="mt-2"
+                            style={{ resize: 'none' }}
+                        />
+                    </Col>
+                    <ErrorMessage message={errorMessages} />
                 </Row>
             </div>
         </Modal>

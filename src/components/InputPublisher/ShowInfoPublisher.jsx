@@ -1,56 +1,68 @@
 import { memo } from 'react';
 import { Input, Typography, Col, Row, Modal } from 'antd';
+import moment from 'moment';
 
 function ShowInfoPublisher({ openModal, closeModal, data }) {
     return (
-        <Modal title="Thông tin nhà xuất bản" open={openModal} onCancel={closeModal} onOk={closeModal} maskClosable={false}>
-            <Row gutter={[12, 12]}>
-                <Col span={24}>
-                    <Typography>Tên nhà xuất bản</Typography>
-                    <Input
-                        placeholder="Tên nhà xuất bản"
-                        disabled
-                        value={data?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Số điện thoại</Typography>
-                    <Input
-                        placeholder="Số điện thoại"
-                        disabled
-                        value={data?.phone_number}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Địa chỉ</Typography>
-                    <Input
-                        placeholder="Địa chỉ"
-                        disabled
-                        value={data?.address}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Email</Typography>
-                    <Input
-                        placeholder="Email"
-                        disabled
-                        value={data?.email}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Ngày tạo</Typography> 
-                    <Input
-                        placeholder="Ngày tạo"
-                        disabled
-                        value={data?.created_at} // Giả sử bạn có thuộc tính createdAt
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-            </Row>
+        <Modal 
+            title="Thông tin nhà xuất bản" 
+            open={openModal} 
+            onCancel={closeModal} 
+            footer={null}
+            maskClosable={true}
+            centered
+            width={600}
+            style={{ 
+                top: 20,
+                padding: '20px',
+                borderRadius: '6px',
+                background: '#fff',
+            }}
+        >
+            <div className="p-4">
+                <Row gutter={[0, 16]}>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Tên nhà xuất bản</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.name || 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Số điện thoại</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.phone_number || 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Địa chỉ</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.address || 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Email</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.email || 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                    <Col span={24}>
+                        <div className="mb-2">
+                            <Typography.Text strong>Ngày tạo</Typography.Text>
+                        </div>
+                        <div className="border rounded px-3 py-[4px] bg-white">
+                            {data?.created_at ? moment(data.created_at).format('DD/MM/YYYY') : 'Chưa có thông tin'}
+                        </div>
+                    </Col>
+                </Row>
+            </div>
         </Modal>
     );
 }

@@ -19,7 +19,7 @@ import MyBookCart from './components/MyBookCart/MyBookCart';
 import ManageAuthor from './components/InputAuthor/ManageAuthor';
 import ManagePublisher from './components/InputPublisher/ManagePublisher';
 import ManageBook from './components/InputBook/ManageBook';
-import ManageGenre from './components/InputGenre/ManageGenre';
+import ManageGenre from './components/InputCategory/ManageCategory';
 
 import ManageBorrow from './components/ManageBorrow/ManageBorrow';
 

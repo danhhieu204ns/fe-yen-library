@@ -1,56 +1,42 @@
 import useHttpPrivate from 'src/hooks/useHttpPrivate';
 
-const usePublisherApi = () => {
+const useManagePublisherApi = () => {
     const httpPrivate = useHttpPrivate();
 
-    // Nhà xuất bản
-    const onePublisher = async (id) => {
+    const publisherData = async (page = 1, pageSize = 10) => {
         try {
-            const res = await httpPrivate.get(`/publisher/${id}`);
-            return res?.data;
+            const response = await httpPrivate.get(`/publisher/pageable?page=${page}&page_size=${pageSize}`);
+            return response.data;
         } catch (error) {
-            console.log(error);
+            console.error('Error fetching publisher data:', error);
+            return error;
         }
     };
 
-    const allPublishers = async () => {
+    const allPublisherNames = async () => {
         try {
-            const res = await httpPrivate.get('/publisher/all');
-            return res?.data;
+            const response = await httpPrivate.get('/publisher/name');
+            return response.data;
         } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const publisherData = async (page, pageSize) => {
-        try {
-            const res = await httpPrivate.get(`/publisher/pageable?page=${page}&page_size=${pageSize}`);
-            return res?.data;
-        } catch (error) {
-            console.log(error);
+            console.error('Error fetching publisher names:', error);
+            return error;
         }
     };
 
     const createPublisher = async (publisherInfo) => {
         try {
-            const res = await httpPrivate.post('/publisher/create', {
-                ...publisherInfo, // thông tin nhà xuất bản
-            });
+            const res = await httpPrivate.post('/publisher/create', publisherInfo);
             return res;
         } catch (error) {
-            console.log(error);
             return error;
         }
     };
 
     const editPublisher = async (id, publisherInfo) => {
         try {
-            const res = await httpPrivate.put(`/publisher/update/${id}`, {
-                ...publisherInfo,
-            });
+            const res = await httpPrivate.put(`/publisher/update/${id}`, publisherInfo);
             return res;
         } catch (error) {
-            console.log(error);
             return error;
         }
     };
@@ -60,32 +46,79 @@ const usePublisherApi = () => {
             const res = await httpPrivate.delete(`/publisher/delete/${id}`);
             return res.data;
         } catch (error) {
-            console.log(error);
             return error?.response;
         }
     };
 
-    const deleteListPublishers = async (listId) => {
+    const deleteListPublisher = async (listId) => {
         try {
-            const res = await httpPrivate.delete('/publisher/delete-many', {
-                data: { list_id: listId }  // Đảm bảo rằng body chứa một object với key là publisher_ids
+            const response = await httpPrivate.delete('/publisher/delete-many', {
+                data: { list_id: listId }
             });
-            return res.data;
+            return response.data;
         } catch (error) {
-            console.log(error);
-            return error?.response;
+            console.error('Error deleting publishers:', error);
+            throw error;
+        }
+    };
+
+    const importPublisher = async (formData) => {
+        try {
+            const response = await httpPrivate.post('/publisher/import', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            return error.response;
+        }
+    };
+
+    const exportPublishers = async () => {
+        try {
+            const res = await httpPrivate.get('/publisher/export', {
+                responseType: 'blob',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }
+            });
+            return res?.data;
+        } catch (error) {
+            console.error('Export error:', error);
+            return null;
+        }
+    };
+
+    const searchPublisher = async (searchBody, page = 1, pageSize = 10) => {
+        try {
+            const searchData = {
+                name: searchBody.name || '',
+                address: searchBody.address || '',
+                phone_number: searchBody.phone_number || '',
+                email: searchBody.email || '',
+            };
+            
+            const response = await httpPrivate.post(`/publisher/search?page=${page}&page_size=${pageSize}`, searchData);
+            return response.data;
+        } catch (error) {
+            console.error('Error searching publishers:', error);
+            return error;
         }
     };
 
     return {
-        onePublisher,
-        allPublishers,
         publisherData,
+        allPublisherNames, 
         createPublisher,
-        editPublisher,
+        editPublisher, 
         deletePublisher,
-        deleteListPublishers,
+        deleteListPublisher,
+        importPublisher,
+        exportPublishers,
+        searchPublisher,
     };
 };
 
-export default usePublisherApi;
+export default useManagePublisherApi;

@@ -1,77 +1,57 @@
 import { memo } from 'react';
-import { Input, Typography, Col, Row, Modal } from 'antd';
+import { Modal, Row, Col, Typography } from 'antd';
+import { modalStyle, contentStyle, valueStyle, labelStyle } from '../common/InfoModalStyle';
 
-function ShowInfoBook({ openModal, closeModal, data }) {
-    return (
-        <Modal title="Thông tin sách" open={openModal} onCancel={closeModal} onOk={closeModal} maskClosable={false}>
-            <Row gutter={[12, 12]}>
+const ShowInfoBook = ({ data, openModal, closeModal }) => {
+  return (
+    <Modal
+        title="Thông tin sách" // Fixed title
+        open={openModal}
+        onCancel={closeModal}
+        {...modalStyle}
+    >
+        <div style={contentStyle}>
+            <Row gutter={[0, 16]}>
                 <Col span={24}>
-                    <Typography>Tên sách</Typography>
-                    <Input
-                        placeholder="Tên sách"
-                        disabled
-                        value={data?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
+                    <Typography.Text style={labelStyle}>Tên sách</Typography.Text>
+                    <div style={valueStyle}>
+                        {data?.name || 'Chưa có thông tin'}
+                    </div>
                 </Col>
                 <Col span={24}>
-                    <Typography>Tình trạng</Typography>
-                    <Input
-                        placeholder="Tình trạng"
-                        disabled
-                        value={data?.status}
-                        className="disabled:bg-white disabled:text-black"
-                    />
+                    <Typography.Text style={labelStyle}>Tác giả</Typography.Text>
+                    <div style={valueStyle}>
+                        {data?.author?.name || 'Chưa có thông tin'}
+                    </div>
                 </Col>
                 <Col span={24}>
-                    <Typography>Nội dung</Typography>
-                    <Input.TextArea
-                        placeholder="Nội dung"
-                        disabled
-                        value={data?.content}
-                        className="disabled:bg-white disabled:text-black"
-                        rows={4}
-                    />
+                    <Typography.Text style={labelStyle}>Nhà xuất bản</Typography.Text>
+                    <div style={valueStyle}>
+                        {data?.publisher?.name || 'Chưa có thông tin'}
+                    </div>
                 </Col>
                 <Col span={24}>
-                    <Typography>Tác giả</Typography>
-                    <Input
-                        placeholder="Tác giả"
-                        disabled
-                        value={data?.author?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
+                    <Typography.Text style={labelStyle}>Thể loại</Typography.Text>
+                    <div style={valueStyle}>
+                        {data?.category?.name || 'Chưa có thông tin'}
+                    </div>
                 </Col>
                 <Col span={24}>
-                    <Typography>Nhà xuất bản</Typography>
-                    <Input
-                        placeholder="Nhà xuất bản"
-                        disabled
-                        value={data?.publisher?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
+                    <Typography.Text style={labelStyle}>Tình trạng</Typography.Text>
+                    <div style={valueStyle}>
+                        {data?.status || 'Chưa có thông tin'}
+                    </div>
                 </Col>
                 <Col span={24}>
-                    <Typography>Thể loại</Typography>
-                    <Input
-                        placeholder="Thể loại"
-                        disabled
-                        value={data?.genre?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Ngày tạo</Typography>
-                    <Input
-                        placeholder="Ngày tạo"
-                        disabled
-                        value={data?.created_at} // Giả sử bạn có thuộc tính createdAt
-                        className="disabled:bg-white disabled:text-black"
-                    />
+                    <Typography.Text style={labelStyle}>Nội dung</Typography.Text>
+                    <div style={valueStyle}>
+                        {data?.content || 'Chưa có thông tin'}
+                    </div>
                 </Col>
             </Row>
-        </Modal>
-    );
-}
+        </div>
+    </Modal>
+  );
+};
 
 export default memo(ShowInfoBook);
