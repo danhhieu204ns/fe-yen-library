@@ -81,19 +81,47 @@ function ManageAuthor() {
     const onTableChange = async (pagination, filters, sorter) => {
         const searchBody = {};
         
-        // Only add non-empty values to search body
+        // Handle filters
         Object.keys(filters).forEach(key => {
-            if (filters[key]?.[0]) {
-                searchBody[key] = filters[key][0];
+            if (filters[key]?.length) {
+                // Only add the search term if it's not empty
+                if (filters[key][0].trim() !== '') {
+                    searchBody[key] = filters[key][0].trim();
+                }
             }
         });
 
-        // If we have search terms, enter search mode
+        // Only set search mode if we have valid search criteria
         if (Object.keys(searchBody).length > 0) {
             setSearchMode(true);
             setFilterRequestBody(searchBody);
         } else {
             resetSearch();
+            fetchData();
+        }
+
+        // Xử lý sort sau khi có kết quả search hoặc data gốc
+        if (sorter.field && sorter.order) {
+            setTimeout(() => {
+                const dataToSort = [...authorList];
+                const sortedData = dataToSort.sort((a, b) => {
+                    let compareA = a[sorter.field];
+                    let compareB = b[sorter.field];
+
+                    if (sorter.field === 'birthdate') {
+                        compareA = compareA ? new Date(compareA).getTime() : 0;
+                        compareB = compareB ? new Date(compareB).getTime() : 0;
+                    }
+
+                    if (sorter.order === 'ascend') {
+                        return compareA > compareB ? 1 : -1;
+                    } else {
+                        return compareA < compareB ? 1 : -1;
+                    }
+                });
+                
+                setAuthorList(sortedData);
+            }, 100); // Đợi một chút để đảm bảo data đã được cập nhật
         }
     };
 
@@ -196,6 +224,7 @@ function ManageAuthor() {
             key: 'name',
             align: 'center',
             ...getColumnSearchProps('Tên tác giả', 'name'),
+            sorter: true
         },
         {
             title: 'Ngày sinh',
@@ -203,6 +232,7 @@ function ManageAuthor() {
             key: 'birthdate',
             align: 'center',
             render: (text) => (text ? moment(text).format('DD/MM/YYYY') : 'Chưa xác định'),
+            sorter: true
         },
         {
             title: 'Địa chỉ',
@@ -210,6 +240,7 @@ function ManageAuthor() {
             key: 'address',
             align: 'center',
             ...getColumnSearchProps('Địa chỉ', 'address'),
+            sorter: true
         },
         {
             title: 'Bút danh',
@@ -341,7 +372,7 @@ function ManageAuthor() {
 
     return (
         <div className='py-20 px-4'>
-<           h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Tác giả</h1>
+            <h1 className="flex justify-center text-xl font-semibold my-2">Quản lý Tác giả</h1>
             <Space className="flex my-2 justify-between">
                 <Space>
                     <Button 
