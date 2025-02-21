@@ -74,10 +74,7 @@ function ManagePublisher() {
     };
 
     const onTableChange = (pagination, filters, sorter) => {
-        console.log('Raw filters received:', filters);
-        
         const searchBody = {};
-
         // Handle filters properly regardless of whether they're null or array
         Object.entries(filters).forEach(([key, value]) => {
             // For array values (like phone_number)
@@ -89,8 +86,6 @@ function ManagePublisher() {
                 searchBody[key] = value.trim();
             }
         });
-
-        console.log('Processed searchBody:', searchBody);
 
         if (Object.keys(searchBody).length > 0) {
             setSearchMode(true);
