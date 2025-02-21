@@ -374,6 +374,15 @@ function ManagePublisher() {
                         setSelectedRows(selectedRowKeys);
                     },
                 }}
+                pagination={{
+                    current: page,
+                    pageSize: pageSize,
+                    total: totalData,
+                    onChange: (newPage, newPageSize) => {
+                        setPage(newPage);
+                        setPageSize(newPageSize);
+                    },
+                }}
                 rowKey={(record) => record.id}
                 onChange={onTableChange}
             />
