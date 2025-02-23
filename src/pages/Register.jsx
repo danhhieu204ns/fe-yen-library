@@ -19,7 +19,7 @@ function Register({ closeModal }) {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const { createUser } = useUserApi();
+    const { registerUser } = useUserApi();
 
     const validateForm = () => {
         const { username, password, full_name, birthdate, address, phone_number } = formData;
@@ -35,7 +35,7 @@ function Register({ closeModal }) {
         e.preventDefault();
         if (!validateForm()) return;
         setLoading(true);
-        const result = await createUser(formData);
+        const result = await registerUser(formData);
         console.log(result);
         setLoading(false);
         if (result?.message) {

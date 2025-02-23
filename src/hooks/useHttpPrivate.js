@@ -7,26 +7,28 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-
 const useHttpPrivate = () => {
     const accessToken = useSelector(selectCurrentToken);
     const expirationTime = useSelector(selectCurrentExpirationTime);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    const checkTokenAndLogout = () => {
+        if (expirationTime && new Date().getTime() > expirationTime) {
+            dispatch(logOut());
+            navigate("/");
+            toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+            return true;
+        }
+        return false;
+    };
+
     useEffect(() => {
-        // Hàm kiểm tra thời hạn token
-        const checkTokenExpiration = () => {
-            if (expirationTime && new Date().getTime() > new Date(expirationTime)) {
-                dispatch(logOut())
-                navigate("/")
-                toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-            }
-        };
-
-        checkTokenExpiration();
-
         const requestIntercept = httpRequestPrivate.interceptors.request.use(
             (config) => {
+                if (checkTokenAndLogout()) {
+                    return Promise.reject("Token expired");
+                }
                 if (!config.headers['Authorization']) {
                     config.headers['Authorization'] = `Bearer ${accessToken}`;
                 }
@@ -40,9 +42,9 @@ const useHttpPrivate = () => {
             async (error) => {
                 const statusCode = error?.response?.status;
                 if (statusCode === 501 || statusCode === 403) {
-                    // handle logout
                     dispatch(logOut());
-                    navigate('/login');
+                    navigate('/');
+                    toast.error("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
                 }
                 return Promise.reject(error);
             }
@@ -52,7 +54,7 @@ const useHttpPrivate = () => {
             httpRequestPrivate.interceptors.request.eject(requestIntercept);
             httpRequestPrivate.interceptors.response.eject(responseIntercept);
         };
-    }, [accessToken]);
+    }, [accessToken, expirationTime]);
 
     return httpRequestPrivate;
 };

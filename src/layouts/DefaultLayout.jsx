@@ -24,6 +24,7 @@ function DefaultLayout() {
     const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
 
     const findKeyByPath = (path) => {
+        if (path.includes('manage/user')) return 'manage_user';
         if (path.includes('search')) return 'search';
         if (path.includes('volunteer')) return 'volunteer';
         if (path.includes('schedule')) return 'schedule';
@@ -31,7 +32,6 @@ function DefaultLayout() {
         if (path.includes('manage')) return 'manage_library';
         if (path.includes('analize')) return 'analize';
         if (path.includes('mybookcart')) return 'my_book_cart';
-        if (path.includes('manage/user')) return 'manage_user';
     };
 
     const defaultSelectedKeys = [findKeyByPath(currentPath)];
