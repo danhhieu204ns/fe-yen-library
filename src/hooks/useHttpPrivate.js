@@ -16,7 +16,7 @@ const useHttpPrivate = () => {
     const checkTokenAndLogout = () => {
         if (expirationTime && new Date().getTime() > expirationTime) {
             dispatch(logOut());
-            navigate("/login");
+            navigate("/");
             toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
             return true;
         }
@@ -43,7 +43,7 @@ const useHttpPrivate = () => {
                 const statusCode = error?.response?.status;
                 if (statusCode === 501 || statusCode === 403) {
                     dispatch(logOut());
-                    navigate('/login');
+                    navigate('/');
                     toast.error("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
                 }
                 return Promise.reject(error);
