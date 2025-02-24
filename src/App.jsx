@@ -19,7 +19,7 @@ import MyBookCart from './components/MyBookCart/MyBookCart';
 import ManageAuthor from './components/InputAuthor/ManageAuthor';
 import ManagePublisher from './components/InputPublisher/ManagePublisher';
 import ManageBook from './components/InputBook/ManageBook';
-import ManageGenre from './components/InputCategory/ManageCategory';
+import ManageCategory from './components/InputCategory/ManageCategory';
 import ManageBookshelf from './components/ManageBookshelf/ManageBookshelf';
 import ManageBookCopy from './components/ManageBookCopy/ManageBookCopy';
 
@@ -53,7 +53,7 @@ export default function App() {
                         {/* manage_library */}
                         <Route path="/manage/author" element={<ManageAuthor />} />
                         <Route path="/manage/publisher" element={<ManagePublisher />} />
-                        <Route path="/manage/genre" element={<ManageGenre />} />
+                        <Route path="/manage/category" element={<ManageCategory />} />
                         <Route path="/manage/book" element={<ManageBook />} />
                         <Route path="/manage/bookshelf" element={<ManageBookshelf />} />
                         <Route path="/manage/bookcopy" element={<ManageBookCopy />} />
