@@ -45,7 +45,7 @@ const ShowInfoBook = ({ data, openModal, closeModal }) => {
                 <Col span={24}>
                     <Typography.Text style={labelStyle}>Nội dung</Typography.Text>
                     <div style={valueStyle}>
-                        {data?.content || 'Chưa có thông tin'}
+                        {data?.summary || 'Chưa có thông tin'}
                     </div>
                 </Col>
             </Row>

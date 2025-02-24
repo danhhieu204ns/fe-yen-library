@@ -34,7 +34,6 @@ function ManageAuthor() {
     const { authorData, deleteAuthor, deleteListAuthor, importAuthor, exportAuthors, searchAuthor } = useManageAuthorApi();
 
     const [modal, contextHolder] = Modal.useModal(); // Keep only one modal instance
-    const [total, setTotal] = useState(0); // Thêm state total
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
@@ -44,7 +43,6 @@ function ManageAuthor() {
             const results = await authorData(page, pageSize);
             setAuthorList(results?.authors || []);
             setTotalData(results?.total_data || 0);
-            setTotal(results?.total_data || 0); // Thêm dòng này
         };
         if (!searchMode) fetchData();
     }, [page, pageSize, reloadToggle, searchMode]);
@@ -58,7 +56,6 @@ function ManageAuthor() {
                 if (res?.authors) {
                     setAuthorList(res.authors);
                     setTotalData(res.total_data);
-                    setTotal(res.total_data);
                 } else {
                     message.error('Lỗi tìm kiếm');
                     resetSearch();
@@ -428,7 +425,7 @@ function ManageAuthor() {
                                 color: 'red',
                                 fontWeight: 'bold',
                             }}
-                            value={total}
+                            value={totalData}
                             readOnly
                             disabled
                         />

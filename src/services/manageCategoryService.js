@@ -47,7 +47,7 @@ const useCategoryApi = () => {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            return res.data;
+            return res;
         } catch (error) {
             return error.response;
         }

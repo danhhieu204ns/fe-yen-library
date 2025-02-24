@@ -63,7 +63,7 @@ const MenuItems = () => {
                 },
                 {
                     key: 'genre',
-                    label: <Link to="/manage/genre">Quản lý Thể loại sách</Link>,
+                    label: <Link to="/manage/category">Quản lý Thể loại sách</Link>,
                 },
                 {
                     key: 'bookshelf',

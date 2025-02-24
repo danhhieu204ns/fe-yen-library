@@ -188,13 +188,13 @@ function ManageCategory() {
         }
     };
 
-    const handleFileChange = (info) => {
-        const isExcel = info.file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || info.file.type === 'application/vnd.ms-excel';
+    const handleFileChange = (file) => {
+        const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || info.file.type === 'application/vnd.ms-excel';
         if (!isExcel) {
             message.error('Chỉ chấp nhận file Excel!');
             return;
         }
-        setSelectedFile(info.file);
+        setSelectedFile(file);
     };
 
     const handleImport = async () => {
@@ -206,12 +206,12 @@ function ManageCategory() {
             const formData = new FormData();
             formData.append('file', selectedFile);
             const response = await importCategory(formData);
-            if (response.status === 200) {
+            if (response.status === 201) {
                 message.success(`${selectedFile.name} file uploaded successfully`);
                 handleReload();
                 handleCloseImportModal();
             } else {
-                const errorMessages = response.errors.map(error => `Dòng ${error.Dòng}: ${error.Lỗi}`);
+                const errorMessages = response.data.errors.map(error => `Dòng ${error.Dòng}: ${error.Lỗi}`);
                 setErrorMessages(errorMessages);
                 setErrorModalOpen(true);
             }
