@@ -66,12 +66,16 @@ const MenuItems = () => {
                     label: <Link to="/manage/genre">Quản lý Thể loại sách</Link>,
                 },
                 {
+                    key: 'bookshelf',
+                    label: <Link to="/manage/bookshelf">Quản lý Kệ sách</Link>,
+                },
+                {
                     key: 'book',
                     label: <Link to="/manage/book">Quản lý Sách</Link>,
                 },
                 {
-                    key: 'bookshelf',
-                    label: <Link to="/manage/bookshelf">Quản lý Kệ sách</Link>,
+                    key: 'bookcopy',
+                    label: <Link to="/manage/bookcopy">Quản lý Bản sao sách</Link>,
                 },
                 // {
                 //     key: 'borrow',
