@@ -55,19 +55,23 @@ const MenuItems = () => {
             children: [
                 {
                     key: 'author',
-                    label: <Link to="/manage/author">Nhập Tác giả</Link>,
+                    label: <Link to="/manage/author">Quản lý Tác giả</Link>,
                 },
                 {
                     key: 'publisher',
-                    label: <Link to="/manage/publisher">Nhập Nhà xuất bản</Link>,
+                    label: <Link to="/manage/publisher">Quản lý Nhà xuất bản</Link>,
                 },
                 {
                     key: 'genre',
-                    label: <Link to="/manage/genre">Nhập Thể loại sách</Link>,
+                    label: <Link to="/manage/genre">Quản lý Thể loại sách</Link>,
                 },
                 {
                     key: 'book',
-                    label: <Link to="/manage/book">Nhập Sách</Link>,
+                    label: <Link to="/manage/book">Quản lý Sách</Link>,
+                },
+                {
+                    key: 'bookshelf',
+                    label: <Link to="/manage/bookshelf">Quản lý Kệ sách</Link>,
                 },
                 // {
                 //     key: 'borrow',

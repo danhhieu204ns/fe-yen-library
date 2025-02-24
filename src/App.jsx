@@ -20,6 +20,7 @@ import ManageAuthor from './components/InputAuthor/ManageAuthor';
 import ManagePublisher from './components/InputPublisher/ManagePublisher';
 import ManageBook from './components/InputBook/ManageBook';
 import ManageGenre from './components/InputCategory/ManageCategory';
+import ManageBookshelf from './components/ManageBookshelf/ManageBookshelf';
 
 import ManageBorrow from './components/ManageBorrow/ManageBorrow';
 
@@ -53,6 +54,7 @@ export default function App() {
                         <Route path="/manage/publisher" element={<ManagePublisher />} />
                         <Route path="/manage/genre" element={<ManageGenre />} />
                         <Route path="/manage/book" element={<ManageBook />} />
+                        <Route path="/manage/bookshelf" element={<ManageBookshelf />} />
                         <Route path="/manage/borrow" element={<ManageBorrow />} />
                         <Route path="/manage/user" element={<ManageUser />} />
 
