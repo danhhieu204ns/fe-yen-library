@@ -138,13 +138,12 @@ function ManageAuthor() {
             const formData = new FormData();
             formData.append('file', selectedFile);
             const response = await importAuthor(formData);
-            console.log('response', response);
-            if (response.status === 200) {
+            if (response.status === 201) {
                 message.success(`${selectedFile.name} file uploaded successfully`);
                 handleReload();
                 handleCloseImportModal();
             } else {
-                const errorMessages = response.errors.map(error => `Dòng ${error.Dòng}: ${error.Lỗi}`);
+                const errorMessages = response.data.errors.map(error => `Dòng ${error.Dòng}: ${error.Lỗi}`);
                 setErrorMessages(errorMessages);
                 setErrorModalOpen(true);
             }
@@ -240,6 +239,7 @@ function ManageAuthor() {
             key: 'address',
             align: 'center',
             ...getColumnSearchProps('Địa chỉ', 'address'),
+            render: (text) => (text ? text : 'Chưa xác định'),
             sorter: true
         },
         {
@@ -248,6 +248,7 @@ function ManageAuthor() {
             key: 'pen_name',
             align: 'center',
             ...getColumnSearchProps('Bút danh', 'pen_name'),
+            render: (text) => (text ? text : 'Chưa xác định'),
         },
         {
             title: 'Tiểu sử',

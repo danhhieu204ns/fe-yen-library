@@ -31,6 +31,15 @@ const useBookApi = () => {
         }
     };
 
+    const bookName = async () => {
+        try {   
+            const res = await httpPrivate.get('/book/name');
+            return res;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const createBook = async (bookInfo) => {
         try {
             const res = await httpPrivate.post('/book/create', {
@@ -141,6 +150,7 @@ const useBookApi = () => {
         oneBook,
         getAllBooks,
         bookData,
+        bookName,
         createBook,
         editBook,
         deleteBook,

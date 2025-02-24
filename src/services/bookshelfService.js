@@ -34,6 +34,16 @@ export const useBookshelfApi = () => {
         }
     }
 
+    const bookshelfName = async () => {
+        try {
+            const res = await httpPrivate.get('/bookshelf/name');
+            return res;
+        } catch (error) {
+            console.error('Get roles error:', error);
+            return [];
+        }
+    }
+
     const createBookshelf = async (bookshelf) => {
         try {
             const res = await httpPrivate.post('/bookshelf/create', {
@@ -123,6 +133,7 @@ export const useBookshelfApi = () => {
         getAllBookshelfs, 
         getBookshelf, 
         getBookshelfByPage,
+        bookshelfName, 
         createBookshelf,
         updateBookshelf,
         deleteBookshelf,
