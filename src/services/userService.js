@@ -3,9 +3,19 @@ import useHttpPrivate from 'src/hooks/useHttpPrivate';
 export const useUserApi = () => {
     const httpPrivate = useHttpPrivate();
 
+    const getAdminName = async () => {
+        try {
+            const res = await httpPrivate.get('/user/admin-name');
+            return res.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const getAllUser = async () => {
         try {
             const res = await httpPrivate.get('/user/all');
+            console.log(res.data);
             return res.data;
         } catch (error) {
             console.log(error);
@@ -30,6 +40,15 @@ export const useUserApi = () => {
         }
     };
 
+    const getUserFullName = async () => {
+        try {
+            const res = await httpPrivate.get(`/user/full-name`);
+            return res.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const searchUser = async (body, page, pageSize) => {
         try {
             const res = await httpPrivate.post(`/user/search?page=${page}&page_size=${pageSize}`, body);
@@ -43,13 +62,9 @@ export const useUserApi = () => {
     const updateUserById = async (id, body) => {
         try {
             const res = await httpPrivate.put(`/user/update/${id}`, body);
-            if (res.status != 200){
-                throw(res.data);
-            }
-            return true;
+            return res;
         } catch (error) {
             console.log(error);
-            return false;
         }
     }
 
@@ -73,7 +88,6 @@ export const useUserApi = () => {
 
     const deleteUser = async (id) => {
         try {
-            console.log(id);
             const res = await httpPrivate.delete(`/user/delete/${id}`);
             if (res.status != 200){
                 throw(res.data);
@@ -169,9 +183,11 @@ export const useUserApi = () => {
     }
 
     let userService = {
+        getAdminName,
         getUser,
         getAllUser,
         getAllUserByPage,
+        getUserFullName, 
         registerUser,
         createUser,
         updateUserById,

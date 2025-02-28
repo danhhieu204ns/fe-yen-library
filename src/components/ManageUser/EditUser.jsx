@@ -23,15 +23,14 @@ const EditUser = ({ data, openModal, closeModal, handleReload }) => {
     const handleSubmit = async () => {
         try {
             const values = await form.validateFields();
-            const success = await updateUserById(data.id, values);
-            
-            if (success) {
-                message.success('Cập nhật thông tin thành công!');
+            const res = await updateUserById(data.id, values);
+            if (res.status === 200) {
+                message.success('Cập nhật thông tin người dùng thành công');
                 closeModal();
                 handleReload();
-                form.resetFields();
-            } else {
-                message.error('Cập nhật thông tin thất bại!');
+            }
+            else {
+                message.error('Cập nhật thông tin người dùng thất bại');
             }
         } catch (error) {
             console.error('Validation failed:', error);
@@ -72,7 +71,6 @@ const EditUser = ({ data, openModal, closeModal, handleReload }) => {
                 <Form.Item
                     name="username"
                     label="Tên đăng nhập"
-                    rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
                 >
                     <Input disabled />
                 </Form.Item>
@@ -116,16 +114,8 @@ const EditUser = ({ data, openModal, closeModal, handleReload }) => {
                 <Form.Item
                     name="roles"
                     label="Vai trò"
-                    rules={[{ required: true, message: 'Vui lòng chọn vai trò!' }]}
                 >
-                    <Select
-                        mode="multiple"
-                        placeholder="Chọn vai trò"
-                        options={[
-                            { value: 'admin', label: 'Admin' },
-                            { value: 'user', label: 'User' }
-                        ]}
-                    />
+                    <Input disabled />
                 </Form.Item>
             </Form>
         </Modal>
