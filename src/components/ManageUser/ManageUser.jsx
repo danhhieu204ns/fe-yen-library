@@ -33,7 +33,6 @@ function ManageUser() {
     const [currentFilters, setCurrentFilters] = useState({});
     const [searchMode, setSearchMode] = useState(false);
     const [filterRequestBody, setFilterRequestBody] = useState({});
-    const [roleOptions, setRoleOptions] = useState([]);
 
     const [modal, contextHolder] = Modal.useModal();
 
@@ -146,27 +145,6 @@ function ManageUser() {
             fetchFilteredData();
         }
     }, [searchMode, page, pageSize, filterRequestBody]); // Add filterRequestBody back
-
-    // Add useEffect to fetch roles
-    useEffect(() => {
-        const fetchRoles = async () => {
-            try {
-                const roles = await getRoleNames();
-                if (Array.isArray(roles)) {
-                    const options = roles.map(role => ({
-                        label: role.name?.toUpperCase() || role.role_name?.toUpperCase(),
-                        value: role.id?.toString()
-                    }));
-                    setRoleOptions(options);
-                }
-            } catch (error) {
-                console.error('Error fetching roles:', error);
-                setRoleOptions([]); // Set empty array on error
-            }
-        };
-
-        fetchRoles();
-    }, []);
 
     const handleImport = async () => {
         try {

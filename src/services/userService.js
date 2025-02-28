@@ -3,9 +3,19 @@ import useHttpPrivate from 'src/hooks/useHttpPrivate';
 export const useUserApi = () => {
     const httpPrivate = useHttpPrivate();
 
+    const getAdminName = async () => {
+        try {
+            const res = await httpPrivate.get('/user/admin-name');
+            return res.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const getAllUser = async () => {
         try {
             const res = await httpPrivate.get('/user/all');
+            console.log(res.data);
             return res.data;
         } catch (error) {
             console.log(error);
@@ -24,6 +34,15 @@ export const useUserApi = () => {
     const getUser = async (id) => {
         try {
             const res = await httpPrivate.get(`/user/${id}`);
+            return res.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const getUserFullName = async () => {
+        try {
+            const res = await httpPrivate.get(`/user/full-name`);
             return res.data;
         } catch (error) {
             console.log(error);
@@ -164,9 +183,11 @@ export const useUserApi = () => {
     }
 
     let userService = {
+        getAdminName,
         getUser,
         getAllUser,
         getAllUserByPage,
+        getUserFullName, 
         registerUser,
         createUser,
         updateUserById,
