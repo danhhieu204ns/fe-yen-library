@@ -9,7 +9,7 @@ import App from './App';
 
 
 createRoot(document.getElementById('root')).render(
-    // <StrictMode>
+    <StrictMode>
         <ConfigProvider theme={{ token: { colorPrimary: '#f37423' } }}>
             <Provider store={store}>
                 <PersistGate loading={null} persistor={persistor}>
@@ -17,5 +17,5 @@ createRoot(document.getElementById('root')).render(
                 </PersistGate>
             </Provider>
         </ConfigProvider>
-    // </StrictMode>
+    </StrictMode>
 );

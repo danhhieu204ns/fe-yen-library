@@ -77,10 +77,10 @@ const MenuItems = () => {
                     key: 'bookcopy',
                     label: <Link to="/manage/bookcopy">Quản lý Bản sao sách</Link>,
                 },
-                // {
-                //     key: 'borrow',
-                //     label: <Link to="/manage/borrow">Quản lý Mượn sách</Link>,
-                // },
+                {
+                    key: 'borrow',
+                    label: <Link to="/manage/borrow">Quản lý Mượn sách</Link>,
+                },
             ],
         },
         // {
