@@ -1,157 +1,186 @@
-import React, { memo, useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Modal, Form, Select, Input, Button, Spin } from 'antd';
 import { toast } from 'react-toastify';
-import { Input, Typography, Col, Row, Modal, Select, Button } from 'antd';
-import { useSelector } from 'react-redux';
-import { selectedCurrentUser } from 'src/redux/auth/authSlice';
 import { useUserApi } from 'src/services/userService';
 import useManageBorrowApi from 'src/services/manageBorrowService';
-import useManageBookApi from 'src/services/manageBookService';
+import useBookApi from 'src/services/manageBookService';
 
 function CreateBorrow({ openModal, closeModal, handleReload }) {
-    const [borrowInfo, setBorrowInfo] = useState({
-        book_id: '',
-        user_id: '',
-        staff_id: '',
-        duration: '',
-    });
-    const [allBooks, setAllBooks] = useState([]);
-    const [allUsers, setAllUsers] = useState([]);
-    const [filteredBooks, setFilteredBooks] = useState([]);
-    const [filteredUsers, setFilteredUsers] = useState([]);
-    const staff = useSelector(selectedCurrentUser);
-
+    const [form] = Form.useForm();
     const { createBorrow } = useManageBorrowApi();
-    const { getAllBooks } = useManageBookApi();
-    const { getAllUser } = useUserApi();
+    const { getUserFullName, getAdminName } = useUserApi();
+    const { bookName } = useBookApi();
+
+    const [users, setUsers] = useState([]);
+    const [staffs, setStaffs] = useState([]);
+    const [books, setBooks] = useState([]);
+    
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredBooks, setFilteredBooks] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        getAllBooks().then((books) => {
-            setAllBooks(books);
-            setFilteredBooks(books);
-        });
-        getAllUser().then((users) => {
-            setAllUsers(users);
-            setFilteredUsers(users);
-        });
-    }, []);
+        if (openModal) {
+            setLoading(true);
+            const fetchData = async () => {
+                try {
+                    const userData = await getUserFullName();
+                    setUsers(userData?.users || []);
 
-    const handleSearchBooks = (value) => {
-        const filtered = allBooks.filter((book) =>
-            book.name.toLowerCase().includes(value.toLowerCase())
-        );
-        setFilteredBooks(filtered);
-        handleChange('book_id', value);
+                    const staffData = await getAdminName();
+                    setStaffs(staffData?.users || []);
+
+                    const bookData = await bookName();
+                    setBooks(bookData?.data?.books || []);
+                    setFilteredBooks(bookData?.data?.books || []);
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchData();
+        }
+    }, [openModal]);
+
+    useEffect(() => {
+        if (books?.length > 0 && searchTerm) {
+            const filtered = books.filter(book => 
+                book.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFilteredBooks(filtered);
+        } else {
+            setFilteredBooks(books || []);
+        }
+    }, [searchTerm, books]);
+
+    const handleSearch = (value) => {
+        setSearchTerm(value);
     };
 
-    const handleSearchUsers = (value) => {
-        const filtered = allUsers.filter((user) =>
-            user.name.toLowerCase().includes(value.toLowerCase())
-        );
-        setFilteredUsers(filtered);
-        handleChange('user_id', value);
-    };
-
-    const handleCreateBorrow = async () => {
-        const { book_id, user_id, duration } = borrowInfo;
-        if (!book_id || !user_id || !duration) {
-            toast.error('Vui lòng nhập đầy đủ thông tin');
-            return;
-        }
-        const result = await createBorrow({
-            book_id,
-            user_id,
-            staff_id: staff.id,
-            duration: Number(duration),
-        });
-        if (result?.detail) {
-            toast.error(result.detail);
-            return;
-        }
-        else {
-            setBorrowInfo({
-                book_id: '',
-                user_id: '',
-                staff_id: '',
-                duration: '',
+    const handleSubmit = async () => {
+        try {
+            const values = await form.validateFields();
+            const result = await createBorrow({
+                user_id: values.user_id,
+                book_id: values.book_id,
+                staff_id: values.staff_id,
+                duration: values.duration
             });
-            closeModal();
-            handleReload();
-            toast.success('Tạo thông tin mượn sách thành công');
+
+            if (result.status === 201) {
+                toast.success('Tạo thông tin mượn sách thành công');
+                handleReload();
+                form.resetFields();
+                closeModal();
+            } else {            
+                toast.error(`Tạo thông tin mượn sách thất bại. ${result.data.detail}`);
+            }
+
+        } catch (error) {
+            console.error("Validation failed:", error);
         }
     };
 
-    const handleChange = (key, value) => {
-        setBorrowInfo({
-            ...borrowInfo,
-            [key]: value
-        });
+    const handleCancel = () => {
+        form.resetFields();
+        closeModal();
     };
 
     return (
         <Modal
             title="Tạo thông tin mượn sách"
             open={openModal}
-            onCancel={() => {
-                setBorrowInfo({
-                    book_id: '',
-                    user_id: '',
-                    staff_id: '',
-                    duration: '',
-                });
-                closeModal();
-            }}
-            onOk={handleCreateBorrow}
-            maskClosable={false}
+            onCancel={handleCancel}
+            footer={[
+                <Button key="back" onClick={handleCancel}>
+                    Hủy
+                </Button>,
+                <Button key="submit" type="primary" onClick={handleSubmit}>
+                    Tạo
+                </Button>,
+            ]}
         >
-            <Row gutter={[12, 12]} className="p-4">
-                <Col span={24}>
-                    <Typography.Text className="font-semibold">Tên sách</Typography.Text>
-                    <Select
-                        showSearch
-                        className="w-full"
-                        placeholder="Nhập tên sách hoặc chọn"
-                        value={borrowInfo.book_id}
-                        onSearch={handleSearchBooks}
-                        onChange={(value) => handleChange('book_id', value)}
-                        filterOption={false}
-                        options={filteredBooks.map((book) => ({ label: book.name, value: book.id }))}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography.Text className="font-semibold">Tên người dùng</Typography.Text>
-                    <Select
-                        showSearch
-                        className="w-full"
-                        placeholder="Nhập tên người dùng hoặc chọn"
-                        value={borrowInfo.user_id}
-                        onSearch={handleSearchUsers}
-                        onChange={(value) => handleChange('user_id', value)}
-                        filterOption={false}
-                        options={filteredUsers?.map((user) => ({ label: user.name, value: user.id }))}
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Tên nhân viên</Typography>
-                    <div style={{ 
-                        border: '1px solid #d9d9d9', // Viền mỏng
-                        padding: '8px',             // Khoảng cách bên trong
-                        borderRadius: '4px'         // Bo góc
-                    }}>
-                        <Typography.Text>{staff.name}</Typography.Text> {/* Hiển thị tên nhân viên */}
-                    </div>
-                </Col>
-                <Col span={24}>
-                    <Typography.Text className="font-semibold">Thời hạn (ngày)</Typography.Text>
-                    <Input
-                        className="w-full"
-                        placeholder="Nhập thời hạn"
-                        value={borrowInfo.duration}
-                        onChange={(e) => handleChange('duration', e.target.value)}
-                    />
-                </Col>
-            </Row>
+            <Spin spinning={loading}>
+                <Form
+                    form={form}
+                    layout="vertical"
+                    name="create_borrow"
+                    initialValues={{ duration: 7 }}
+                >
+                    <Form.Item
+                        name="book_id"
+                        label="Sách"
+                        rules={[{ required: true, message: 'Vui lòng chọn sách!' }]}
+                    >
+                        <Select
+                            showSearch
+                            placeholder="Chọn sách"
+                            optionFilterProp="children"
+                            onSearch={handleSearch}
+                            filterOption={false}
+                        >
+                            {Array.isArray(filteredBooks) && filteredBooks.map(book => (
+                                <Select.Option key={book.id} value={book.id}>
+                                    {book.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="user_id"
+                        label="Người dùng"
+                        rules={[{ required: true, message: 'Vui lòng chọn người dùng!' }]}
+                    >
+                        <Select
+                            showSearch
+                            placeholder="Chọn người dùng"
+                            optionFilterProp="children"
+                            filterOption={(input, option) => 
+                                (option?.children || '').toLowerCase().includes(input.toLowerCase())
+                            }
+                        >
+                            {Array.isArray(users) && users.map(user => (
+                                <Select.Option key={user.id} value={user.id}>
+                                    {user.full_name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="staff_id"
+                        label="Nhân viên"
+                        rules={[{ required: true, message: 'Vui lòng chọn nhân viên!' }]}
+                    >
+                        <Select
+                            showSearch
+                            placeholder="Chọn nhân viên"
+                            optionFilterProp="children"
+                            filterOption={(input, option) => 
+                                (option?.children || '').toLowerCase().includes(input.toLowerCase())
+                            }
+                        >
+                            {Array.isArray(staffs) && staffs.map(staff => (
+                                <Select.Option key={staff.id} value={staff.id}>
+                                    {staff.full_name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="duration"
+                        label="Thời hạn (ngày)"
+                        rules={[{ required: true, message: 'Vui lòng nhập thời hạn!' }]}
+                    >
+                        <Input type="number" min={1} />
+                    </Form.Item>
+                </Form>
+            </Spin>
         </Modal>
     );
 }
 
-export default memo(CreateBorrow);
+export default CreateBorrow;

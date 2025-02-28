@@ -4,6 +4,24 @@ const useBorrowApi = () => {
     const httpPrivate = useHttpPrivate();
 
     // Mượn sách
+    const allBorrows = async () => {
+        try {
+            const res = await httpPrivate.get('/borrow/all');
+            return res?.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const borrowData = async (page, pageSize) => {
+        try {
+            const res = await httpPrivate.get(`/borrow/pageable?page=${page}&page_size=${pageSize}`);
+            return res?.data;
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const oneBorrow = async (id) => {
         try {
             const res = await httpPrivate.get(`/borrow/${id}`);
@@ -40,43 +58,13 @@ const useBorrowApi = () => {
         }
     };
 
-    const allBorrows = async () => {
-        try {
-            const res = await httpPrivate.get('/borrow/all');
-            return res?.data;
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const borrowData = async (page, pageSize) => {
-        try {
-            const res = await httpPrivate.get(`/borrow/pageable?page=${page}&page_size=${pageSize}`);
-            return res?.data;
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const createBorrowByUser = async (borrowInfo) => {
-        try {
-            const res = await httpPrivate.post('/borrow/create/by_user', {
-                ...borrowInfo,
-            });
-            return res.data;
-        } catch (error) {
-            console.log(error);
-            return error;
-        }
-    };
-
 
     const createBorrow = async (borrowInfo) => {
         try {
-            const res = await httpPrivate.post('/borrow/create/by_admin', {
+            const res = await httpPrivate.post('/borrow/create', {
                 ...borrowInfo,
             });
-            return res.data;
+            return res;
         } catch (error) {
             console.log(error);
             return error;
@@ -88,26 +76,6 @@ const useBorrowApi = () => {
             const res = await httpPrivate.put(`/borrow/update/${id}`, {
                 ...borrowInfo,
             });
-            return res;
-        } catch (error) {
-            console.log(error);
-            return error;
-        }
-    };
-
-    const cancelBorrow = async (id) => {
-        try {
-            const res = await httpPrivate.put(`/borrow/cancel/${id}`);
-            return res;
-        } catch (error) {
-            console.log(error);
-            return error;
-        }
-    };
-    
-    const returnBorrow = async (id) => {
-        try {
-            const res = await httpPrivate.put(`/borrow/return/${id}`);
             return res;
         } catch (error) {
             console.log(error);
@@ -128,9 +96,9 @@ const useBorrowApi = () => {
     const deleteListBorrow = async (listId) => {
         try {
             const res = await httpPrivate.delete('/borrow/delete-many', {
-                data: { list_id: listId }  // Đảm bảo rằng body chứa một object với key là borrow_ids
+                data: { ids: listId },
             });
-            return res.data;
+            return res;
         } catch (error) {
             console.log(error);
             return error?.response;
@@ -144,11 +112,8 @@ const useBorrowApi = () => {
         getBorrowsWithUserID,
         getBorrowsWithUserIDAndBookID,
         borrowData,
-        createBorrowByUser, 
         createBorrow,
-        editBorrow,
-        cancelBorrow,
-        returnBorrow,
+        editBorrow, 
         deleteBorrow,
         deleteListBorrow,
     };

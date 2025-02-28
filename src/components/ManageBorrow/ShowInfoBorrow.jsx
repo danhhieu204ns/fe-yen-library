@@ -1,67 +1,71 @@
-import { memo } from 'react';
-import { Input, Typography, Col, Row, Modal } from 'antd';
+import React from 'react';
+import { Modal, Button, Descriptions, Typography, Space, Tag } from 'antd';
 
-function ShowInfoBorrow({ openModal, closeModal, data }) {
+function ShowInfoBorrow({ data, openModal, closeModal }) {
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN');
+    };
+
+    const getStatusTag = (status) => {
+        switch (status) {
+          case 'Đang chờ xác nhận':
+            return <Tag color="warning">Đang chờ xác nhận</Tag>;
+          case 'Đang mượn':
+            return <Tag color="processing">Đang mượn</Tag>;
+          case 'Đã trả':
+            return <Tag color="success">Đã trả</Tag>;
+          case 'Đã quá hạn':
+            return <Tag color="error">Đã quá hạn</Tag>;
+          case 'Đã hủy':
+            return <Tag color="default">Đã hủy</Tag>;
+          default:
+            return <Tag>{status}</Tag>;
+        }
+    };
+
     return (
-        <Modal title="Thông tin mượn sách" open={openModal} onCancel={closeModal} onOk={closeModal} maskClosable={false}>
-            <Row gutter={[12, 12]}>
-                <Col span={24}>
-                    <Typography>Tên sách</Typography>
-                    <Input
-                        placeholder="Tên sách"
-                        disabled
-                        value={data?.book?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Tên người dùng</Typography>
-                    <Input
-                        placeholder="Tên người dùng"
-                        disabled
-                        value={data?.user?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Tên nhân viên</Typography>
-                    <Input
-                        placeholder="Tên nhân viên"
-                        disabled
-                        value={data?.staff?.name}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Thời hạn (ngày)</Typography>
-                    <Input
-                        placeholder="Thời hạn"
-                        disabled
-                        value={data?.duration}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Trạng thái</Typography>
-                    <Input
-                        placeholder="Trạng thái"
-                        disabled
-                        value={data?.status}
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-                <Col span={24}>
-                    <Typography>Ngày tạo</Typography>
-                    <Input
-                        placeholder="Ngày tạo"
-                        disabled
-                        value={data?.created_at} // Giả sử bạn có thuộc tính created_at
-                        className="disabled:bg-white disabled:text-black"
-                    />
-                </Col>
-            </Row>
+        <Modal
+            title="Chi tiết thông tin mượn sách"
+            open={openModal}
+            onCancel={closeModal}
+            footer={[
+                <Button key="close" type="primary" onClick={closeModal}>
+                    Đóng
+                </Button>,
+            ]}
+            width={600}
+        >
+            {data && Object.keys(data).length > 0 ? (
+                <Descriptions bordered column={1} labelStyle={{ fontWeight: 'bold' }}>
+                    <Descriptions.Item label="Mã mượn sách">
+                        {data.id}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Tên sách">
+                        {data.book_copy.book?.name || 'Không có tên sách'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Người mượn">
+                        {data.user?.full_name || 'Không có tên người mượn'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Nhân viên phụ trách">
+                        {data.staff?.full_name || 'Không có tên nhân viên'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Thời hạn">
+                        {data.duration} ngày
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Trạng thái">
+                        {getStatusTag(data.status)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Ngày tạo">
+                        {formatDate(data.created_at)}
+                    </Descriptions.Item>
+                </Descriptions>
+            ) : (
+                <Typography.Text>Không có dữ liệu</Typography.Text>
+            )}
         </Modal>
     );
 }
 
-export default memo(ShowInfoBorrow);
+export default ShowInfoBorrow;
