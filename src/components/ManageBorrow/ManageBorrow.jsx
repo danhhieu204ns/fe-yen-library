@@ -444,8 +444,6 @@ function ManageBorrow() {
                         current: page,
                         pageSize: pageSize,
                         total: totalData,
-                        pageSizeOptions: ['10', '20', '50'],
-                        showSizeChanger: true,
                     }}
                     onChange={onTableChange}
                     onRow={(record) => ({
