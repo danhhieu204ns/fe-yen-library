@@ -43,7 +43,7 @@ function ManageBook() {
                     sortOrder: sortConfig.order
                 });
                 if (response?.books) {
-                    setBookList(response.books);
+                    // setBookList(response.books);
                     setFilteredBooks(response.books);
                     setTotalData(response.total_data);
                 }
@@ -252,7 +252,6 @@ function ManageBook() {
             title: 'Tình trạng',
             dataIndex: 'status',
             key: 'status',
-            sorter: (a, b) => (a.status || '').localeCompare(b.status || ''),
             ...getColumnSearchProps('status'),
             render: (text) => text || 'Chưa rõ tình trạng'
         },
@@ -260,7 +259,6 @@ function ManageBook() {
             title: 'Nội dung',
             dataIndex: 'summary',
             key: 'summary',
-            sorter: (a, b) => (a.summary || '').localeCompare(b.summary || ''),
             ...getColumnSearchProps('summary'),
             render: (text) => (
                 <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
