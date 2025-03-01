@@ -228,7 +228,6 @@ function ManageAuthor() {
             key: 'birthdate',
             align: 'center',
             render: (text) => (text ? moment(text).format('DD/MM/YYYY') : 'Chưa xác định'),
-            sorter: true
         },
         {
             title: 'Địa chỉ',
@@ -237,7 +236,6 @@ function ManageAuthor() {
             align: 'center',
             ...getColumnSearchProps('Địa chỉ', 'address'),
             render: (text) => (text ? text : 'Chưa xác định'),
-            sorter: true
         },
         {
             title: 'Bút danh',
