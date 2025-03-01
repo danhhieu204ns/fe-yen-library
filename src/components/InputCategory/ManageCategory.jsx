@@ -280,7 +280,6 @@ function ManageCategory() {
             align: 'center',
             width: '30%',
             ...getColumnSearchProps('Mô tả', 'description'),
-            sorter: true, // thêm dòng này
             render: (text) => (
                 <div style={{ 
                     whiteSpace: 'nowrap',
