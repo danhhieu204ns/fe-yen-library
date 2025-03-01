@@ -167,12 +167,16 @@ function CreateBookCopy({ openModal, closeModal, handleReload }) {
                     </Col>
                     <Col span={24}>
                         <Typography.Text strong className="text-base">Tình trạng:</Typography.Text>
-                        <Input
-                            placeholder="Nhập tình trạng Bản sao sách"
+                        <Select
+                            placeholder="Chọn tình trạng Bản sao sách"
                             value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="mt-2"
-                        />
+                            onChange={(value) => setStatus(value)}
+                            className="mt-2 w-full"
+                        >
+                            <Select.Option value="Chưa mượn">Chưa mượn</Select.Option>
+                            <Select.Option value="Đã mượn">Đã mượn</Select.Option>
+                            <Select.Option value="Đã mất">Đã mất</Select.Option>
+                        </Select>
                     </Col>
                     <ErrorMessage message={errorMessages} />
                 </Row>

@@ -1,76 +1,70 @@
 import { useState, useEffect, memo } from 'react';
-import { Input, Typography, Col, Row, Modal, Select } from 'antd';
+import { Input, Typography, Modal, Select, Form, Spin } from 'antd';
 import useBookCopyApi from 'src/services/manageBookCopyService';
 import useBookshelfApi from 'src/services/bookshelfService';
 import { toast } from 'react-toastify';
-import ErrorMessage from 'src/utils/error/errorMessage';
 
 function EditBookCopy({ openModal, closeModal, handleReload, data }) {
-    const [status, setStatus] = useState('');
-    const [bookshelfId, setBookshelfId] = useState(null);
-    const [bookshelfs, setBookshelfs] = useState([]);
-    const [errorMessages, setErrorMessages] = useState('');
+    const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(false);
+    const [bookshelfs, setBookshelfs] = useState([]);
 
     const { updateBookCopy } = useBookCopyApi();
     const { bookshelfName } = useBookshelfApi();
-
+    
+    // Reset form and fetch data when modal opens
     useEffect(() => {
-        if (data) {
-            setStatus(data.status || '');
-            setBookshelfId(data.bookshelf?.id || null);
-        }
-    }, [data]);
-
-    useEffect(() => {
-        if (openModal) {
+        if (openModal && data) {
+            // Set form values from data
+            form.setFieldsValue({
+                book_name: data?.book?.name || '',
+                bookshelf_id: data?.bookshelf?.id || null,
+                bookshelf_name: data?.bookshelf?.name || '',
+                status: data?.status || ''
+            });
+            
+            // Fetch complete list of bookshelves
+            setDataLoading(true);
             const fetchData = async () => {
                 try {
                     const response = await bookshelfName();
-
-                    let processedData = [];
+                    let shelves = [];
+                    
                     if (response?.status === 200) {
                         if (Array.isArray(response.data)) {
-                            processedData = response.data;
+                            shelves = response.data;
                         } else if (Array.isArray(response.data?.bookshelfs)) {
-                            processedData = response.data.bookshelfs;
+                            shelves = response.data.bookshelfs;
                         } else if (typeof response.data === 'object') {
-                            // If it's an object with direct key-value pairs
-                            processedData = Object.values(response.data);
+                            shelves = Object.values(response.data);
                         }
                     }
-
-                    if (!Array.isArray(processedData)) {
-                        console.error('Processed data is not an array:', processedData);
-                        processedData = [];
-                    }
-
-                    setBookshelfs(processedData);
+                    setBookshelfs(shelves);
                 } catch (error) {
                     console.error('Error fetching bookshelves:', error);
-                    setBookshelfs([]);
                     toast.error('Lỗi khi tải danh sách kệ sách');
+                } finally {
+                    setDataLoading(false);
                 }
             };
+            
             fetchData();
         }
-    }, [openModal]);
+    }, [openModal, data, form]);
 
-    const handleEditBookCopy = async () => {
-        if (!validateForm()) return;
-
+    const handleFinish = async (values) => {
         try {
             setLoading(true);
             const updatedData = {
-                status: status.trim(),
-                bookshelf_id: bookshelfId
+                status: values.status.trim(),
+                bookshelf_id: values.bookshelf_id
             };
 
             const response = await updateBookCopy(data.id, updatedData);
             
             if (response?.status === 200) {
                 toast.success('Cập nhật thành công!');
-                resetForm();
                 closeModal();
                 handleReload();
             } else {
@@ -83,32 +77,13 @@ function EditBookCopy({ openModal, closeModal, handleReload, data }) {
         }
     };
 
-    const validateForm = () => {
-        if (!bookshelfId) {
-            setErrorMessages('Vui lòng chọn kệ sách');
-            return false;
-        }
-        return true;
-    };
-
-    const resetForm = () => {
-        setBookshelfId(null);
-        setStatus('');
-        setErrorMessages('');
-    };
-
-    const filterOption = (input, option) =>
-        (option?.children ?? '').toLowerCase().includes(input.toLowerCase());
-
     return (
         <Modal
             title={<div className="text-lg">Sửa thông tin Bản sao sách</div>}
             open={openModal}
-            onCancel={() => {
-                resetForm();
-                closeModal();
-            }}
-            onOk={handleEditBookCopy}
+            onCancel={closeModal}
+            onOk={() => form.submit()}
+            confirmLoading={loading}
             maskClosable={false}
             centered
             width={600}
@@ -120,40 +95,49 @@ function EditBookCopy({ openModal, closeModal, handleReload, data }) {
             }}
         >
             <div className="p-4">
-                <Row gutter={[0, 16]}>
-                    <Col span={24}>
-                        <Typography.Text strong className="text-base">Kệ sách:</Typography.Text>
-                        <Select
-                            showSearch
-                            style={{ width: '100%' }}
-                            placeholder="Tìm kiếm hoặc chọn kệ sách"
-                            optionFilterProp="children"
-                            value={data?.bookshelf?.name}
-                            onChange={(value) => {
-                                setBookshelfId(value);
-                                setErrorMessages('');
-                            }}
-                            filterOption={filterOption}
-                            className="mt-2"
+                <Spin spinning={dataLoading} tip="Đang tải dữ liệu...">
+                    <Form form={form} layout="vertical" onFinish={handleFinish}>
+                        <Form.Item
+                            label={<Typography.Text strong className="text-base">Tên sách:</Typography.Text>}
+                            name="book_name"
                         >
-                            {bookshelfs.map(bookshelf => (
-                                <Select.Option key={bookshelf.id} value={bookshelf.id}>
-                                    {bookshelf.name}
-                                </Select.Option>
-                            ))}
-                        </Select>
-                    </Col>
-                    <Col span={24}>
-                        <Typography.Text strong className="text-base">Tình trạng:</Typography.Text>
-                        <Input
-                            placeholder="Nhập tình trạng sách"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="mt-2"
-                        />
-                    </Col>
-                    <ErrorMessage message={errorMessages} />
-                </Row>
+                            <Input disabled className="w-full" />
+                        </Form.Item>
+                        
+                        <Form.Item
+                            label={<Typography.Text strong className="text-base">Kệ sách:</Typography.Text>}
+                            name="bookshelf_id"
+                            rules={[{ required: true, message: 'Vui lòng chọn kệ sách' }]}
+                        >
+                            <Select
+                                showSearch
+                                placeholder="Chọn kệ sách"
+                                filterOption={(input, option) => 
+                                    (option?.children?.toLowerCase() || '').includes(input.toLowerCase())
+                                }
+                                loading={dataLoading}
+                            >
+                                {bookshelfs.map(bookshelf => (
+                                    <Select.Option key={bookshelf.id} value={bookshelf.id}>
+                                        {bookshelf.name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        
+                        <Form.Item
+                            label={<Typography.Text strong className="text-base">Tình trạng:</Typography.Text>}
+                            name="status"
+                            rules={[{ required: true, message: 'Vui lòng chọn tình trạng' }]}
+                        >
+                            <Select placeholder="Chọn tình trạng sách">
+                                <Select.Option value="Chưa mượn">Chưa mượn</Select.Option>
+                                <Select.Option value="Đã mượn">Đã mượn</Select.Option>
+                                <Select.Option value="Đã mất">Đã mất</Select.Option>
+                            </Select>
+                        </Form.Item>
+                    </Form>
+                </Spin>
             </div>
         </Modal>
     );

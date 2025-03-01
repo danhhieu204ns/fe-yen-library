@@ -253,7 +253,6 @@ function ManageBookCopy() {
             title: 'Tình trạng',
             dataIndex: 'status',
             key: 'status',
-            sorter: (a, b) => (a.status || '').localeCompare(b.status || ''),
             ...getColumnSearchProps('status'),
             render: (text) => text || 'Chưa rõ tình trạng'
         },
