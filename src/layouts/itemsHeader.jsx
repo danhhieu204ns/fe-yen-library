@@ -79,7 +79,7 @@ const MenuItems = () => {
                 },
                 {
                     key: 'borrow',
-                    label: <Link to="/manage/borrow">Quản lý Mượn sách</Link>,
+                    label: <Link to="/manage/borrow">Quản lý Mượn - Trả sách</Link>,
                 },
             ],
         },
@@ -100,26 +100,26 @@ const MenuItems = () => {
                     key: 'books',
                     label: <Link to="/stats/books">Thống kê Sách</Link>,
                 },
-                {
-                    key: 'borrowing',
-                    label: <Link to="/stats/borrowing">Thống kê Mượn trả</Link>,
-                },
-                {
-                    key: 'monthly',
-                    label: <Link to="/stats/monthly">Thống kê</Link>,
-                },
-                {
-                    key: 'reports',
-                    label: <Link to="/stats/reports">Báo cáo</Link>,
-                },
-                {
-                    key: 'users',
-                    label: <Link to="/stats/users">Thống kê Người dùng</Link>,
-                },
-                {
-                    key: 'top_books',
-                    label: <Link to="/stats/top-books">Thống kê</Link>,
-                },
+                // {
+                //     key: 'borrowing',
+                //     label: <Link to="/stats/borrowing">Thống kê Mượn trả</Link>,
+                // },
+                // {
+                //     key: 'monthly',
+                //     label: <Link to="/stats/monthly">Thống kê</Link>,
+                // },
+                // {
+                //     key: 'reports',
+                //     label: <Link to="/stats/reports">Báo cáo</Link>,
+                // },
+                // {
+                //     key: 'users',
+                //     label: <Link to="/stats/users">Thống kê Người dùng</Link>,
+                // },
+                // {
+                //     key: 'top_books',
+                //     label: <Link to="/stats/top-books">Thống kê</Link>,
+                // },
             ],
         },
         {
