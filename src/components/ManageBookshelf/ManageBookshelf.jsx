@@ -29,9 +29,14 @@ function ManageBookshelf() {
     const searchInput = useRef(null);
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
+    const [tableLoading, setTableLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [importLoading, setImportLoading] = useState(false);
+    const [exportLoading, setExportLoading] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
+            setTableLoading(true);
             try {
                 const response = await getBookshelfByPage(page, pageSize);
                 if (response?.bookshelfs) {
@@ -42,6 +47,8 @@ function ManageBookshelf() {
             } catch (error) {
                 console.error('Error details:', error);
                 toast.error('Lỗi khi tải danh sách sách');
+            } finally {
+                setTableLoading(false);
             }
         };
         fetchData();
@@ -70,6 +77,7 @@ function ManageBookshelf() {
     }, []);
 
     const handleDelete = async (id) => {
+        setDeleteLoading(true);
         try {
             const response = await deleteBookshelf(id);
             if (response?.message) {
@@ -80,10 +88,13 @@ function ManageBookshelf() {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Xóa thất bại');
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
     const handleDeleteListBookshelf = async () => {
+        setDeleteLoading(true);
         try {
             const response = await deleteListBookshelf(listBookshelfToDelete);
             if (response?.message) {
@@ -95,6 +106,8 @@ function ManageBookshelf() {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Xóa thất bại');
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
@@ -108,6 +121,7 @@ function ManageBookshelf() {
             return;
         }
 
+        setImportLoading(true);
         try {
             const formData = new FormData();
             formData.append('file', selectedFile);
@@ -159,6 +173,8 @@ function ManageBookshelf() {
                 content: 'Import dữ liệu thất bại!',
                 width: 600,
             });
+        } finally {
+            setImportLoading(false);
         }
     };
 
@@ -172,6 +188,7 @@ function ManageBookshelf() {
             icon: <ExclamationCircleFilled />,
             content: 'Bạn có chắc chắn muốn export danh sách kệ sách?',
             onOk: async () => {
+                setExportLoading(true);
                 try {
                     const response = await exportBookshelf();
                     
@@ -191,6 +208,8 @@ function ManageBookshelf() {
                 } catch (error) {
                     console.error('Export error:', error);
                     toast.error('Export dữ liệu thất bại!');
+                } finally {
+                    setExportLoading(false);
                 }
             },
             onCancel() {},
@@ -268,6 +287,7 @@ function ManageBookshelf() {
             title: 'Tên kệ sách',
             dataIndex: 'name',
             key: 'name',
+            align: 'center',
             sorter: (a, b) => a.name.localeCompare(b.name),
             ...getColumnSearchProps('name'),
         },
@@ -275,6 +295,7 @@ function ManageBookshelf() {
             title: 'Tình trạng',
             dataIndex: 'status',
             key: 'status',
+            align: 'center',
             ...getColumnSearchProps('status'),
             render: (text) => text || 'Chưa rõ tình trạng'
         },
@@ -349,6 +370,7 @@ function ManageBookshelf() {
                         icon={<UploadOutlined />}
                         className="bg-green-500"
                         onClick={handleOpenImport}
+                        loading={importLoading}
                     >
                         Import
                     </Button>
@@ -357,6 +379,7 @@ function ManageBookshelf() {
                         icon={<DownloadOutlined />}
                         className="bg-blue-500"
                         onClick={handleExport}
+                        loading={exportLoading}
                     >
                         Export
                     </Button>
@@ -364,6 +387,7 @@ function ManageBookshelf() {
                         type="primary"
                         className="bg-red-500"
                         disabled={listBookshelfToDelete.length === 0}
+                        loading={deleteLoading}
                         onClick={() => {
                             modalDelete.confirm({
                                 title: 'Xác nhận xoá',
@@ -398,6 +422,7 @@ function ManageBookshelf() {
             </Space>
             <div>
                 <Table
+                    loading={tableLoading}
                     columns={columns}
                     dataSource={filteredBookshelfs}
                     rowSelection={{
@@ -451,6 +476,7 @@ function ManageBookshelf() {
                 onFileChange={handleFileChange}
                 onImport={handleImport}
                 selectedFile={selectedFile}
+                loading={importLoading}
             />
 
             {contextHolder}
