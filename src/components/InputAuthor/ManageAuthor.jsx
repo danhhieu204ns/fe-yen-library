@@ -20,6 +20,7 @@ function ManageAuthor() {
     const [pageSize, setPageSize] = useState(10);
     const [totalData, setTotalData] = useState(0);
     const [reloadToggle, setReloadToggle] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [currentFilters, setCurrentFilters] = useState({});
     const [searchMode, setSearchMode] = useState(false);
@@ -40,9 +41,17 @@ function ManageAuthor() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const results = await authorData(page, pageSize);
-            setAuthorList(results?.authors || []);
-            setTotalData(results?.total_data || 0);
+            setLoading(true);
+            try {
+                const results = await authorData(page, pageSize);
+                setAuthorList(results?.authors || []);
+                setTotalData(results?.total_data || 0);
+            } catch (error) {
+                console.error('Error fetching author data:', error);
+                message.error('Không thể tải dữ liệu tác giả');
+            } finally {
+                setLoading(false);
+            }
         };
         if (!searchMode) fetchData();
     }, [page, pageSize, reloadToggle, searchMode]);
@@ -51,6 +60,7 @@ function ManageAuthor() {
         const fetchFilteredData = async () => {
             if (!filterRequestBody) return;
             
+            setLoading(true);
             try {
                 const res = await searchAuthor(filterRequestBody, page, pageSize);
                 if (res?.authors) {
@@ -63,6 +73,8 @@ function ManageAuthor() {
             } catch (error) {
                 message.error('Lỗi tìm kiếm');
                 resetSearch();
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -155,9 +167,17 @@ function ManageAuthor() {
     };
 
     const fetchData = async () => {
-        const results = await authorData(page, pageSize);
-        setAuthorList(results?.authors || []);
-        setTotalData(results?.total_data || 0);
+        setLoading(true);
+        try {
+            const results = await authorData(page, pageSize);
+            setAuthorList(results?.authors || []);
+            setTotalData(results?.total_data || 0);
+        } catch (error) {
+            console.error('Error fetching author data:', error);
+            message.error('Không thể tải dữ liệu tác giả');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -432,6 +452,7 @@ function ManageAuthor() {
             </Space>
             <div>
                 <Table
+                    loading={loading}
                     columns={columns}
                     dataSource={authorList} // Remove filtered logic
                     rowSelection={{
