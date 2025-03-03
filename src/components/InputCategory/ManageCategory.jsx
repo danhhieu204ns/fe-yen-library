@@ -310,7 +310,7 @@ function ManageCategory() {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                 }}>
-                    {text || 'Chưa có mô tả'}
+                    {text || 'Chưa rõ mô tả'}
                 </div>
             ),
         },
@@ -327,7 +327,7 @@ function ManageCategory() {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                 }}>
-                    {text || 'Chưa có giới hạn tuổi'}
+                    {text || 'Chưa rõ giới hạn tuổi'}
                 </div>
             ),
         },

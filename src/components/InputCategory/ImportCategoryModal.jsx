@@ -1,6 +1,6 @@
 import React from 'react';
-import { Modal, Button, Upload, message } from 'antd';
-import { UploadOutlined, InboxOutlined } from '@ant-design/icons';
+import { Modal, Button, Upload } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
 
 const ImportCategoryModal = ({ open, onClose, onFileChange, onImport, selectedFile, loading }) => {
   const { Dragger } = Upload;
