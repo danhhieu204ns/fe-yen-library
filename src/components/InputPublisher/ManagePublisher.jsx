@@ -18,6 +18,13 @@ function ManagePublisher() {
     const [totalData, setTotalData] = useState(0);
     const [reloadToggle, setReloadToggle] = useState(false);
 
+    // Add loading states
+    const [tableLoading, setTableLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteListLoading, setDeleteListLoading] = useState(false);
+    const [importLoading, setImportLoading] = useState(false);
+    const [exportLoading, setExportLoading] = useState(false);
+    
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [editModalOpen, setEditModalOpen] = useState(false);
@@ -25,7 +32,6 @@ function ManagePublisher() {
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorMessages, setErrorMessages] = useState([]);
     const [selectedFile, setSelectedFile] = useState(null);
-    const [exportLoading, setExportLoading] = useState(false);
     
     const [filteredPublishers, setFilteredPublishers] = useState([]);
     const [currentFilters, setCurrentFilters] = useState({});
@@ -38,9 +44,17 @@ function ManagePublisher() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const results = await publisherData(page, pageSize);
-            setPublisherList(results?.publishers || []);
-            setTotalData(results?.total_data || 0);
+            setTableLoading(true);
+            try {
+                const results = await publisherData(page, pageSize);
+                setPublisherList(results?.publishers || []);
+                setTotalData(results?.total_data || 0);
+            } catch (error) {
+                message.error('Lỗi khi tải dữ liệu');
+                console.error('Fetch error:', error);
+            } finally {
+                setTableLoading(false);
+            }
         };
         if (!searchMode) fetchData();
     }, [page, pageSize, reloadToggle, searchMode]);
@@ -49,6 +63,7 @@ function ManagePublisher() {
         const fetchFilteredData = async () => {
             if (!filterRequestBody) return;
             
+            setTableLoading(true);
             try {
                 const res = await searchPublisher(filterRequestBody, page, pageSize);
                 if (res?.publishers) {
@@ -61,6 +76,8 @@ function ManagePublisher() {
             } catch (error) {
                 message.error('Lỗi tìm kiếm');
                 resetSearch();
+            } finally {
+                setTableLoading(false);
             }
         }
 
@@ -100,10 +117,10 @@ function ManagePublisher() {
             title: 'Tên nhà xuất bản',
             dataIndex: 'name',
             key: 'name',
-            width: '25%',
             align: 'center',
             ...getColumnSearchProps('tên nhà xuất bản', 'name'),
             sorter: (a, b) => a.name.localeCompare(b.name),
+
         },
         {
             title: 'Số điện thoại',
@@ -111,22 +128,38 @@ function ManagePublisher() {
             key: 'phone_number',
             width: '25%',
             align: 'center',
-            ...getColumnSearchProps('số điện thoại', 'phone_number'), // Đơn giản hóa, bỏ options
-            filterSearch: true, // Add this to ensure filter value is properly passed
+            ...getColumnSearchProps('số điện thoại', 'phone_number'),
+            filterSearch: true, 
+            render: (text) => (
+                <div style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                }}>
+                    {text || 'Chưa có số điện thoại'}
+                </div>
+            ),
         },
         {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
-            width: '25%',
             align: 'center',
             ...getColumnSearchProps('email', 'email'),
+            render: (text) => (
+                <div style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                }}>
+                    {text || 'Chưa có email'}
+                </div>
+            ),
         },
         {
             title: 'Địa chỉ',
             dataIndex: 'address',
             key: 'address',
-            width: '25%',
             align: 'center',
             ...getColumnSearchProps('địa chỉ', 'address'),
             render: (text) => (
@@ -142,7 +175,6 @@ function ManagePublisher() {
         {
             title: 'Thao tác',
             key: 'action',
-            width: '20%',
             align: 'center',
             render: (text, record) => (
                 <Space>
@@ -201,6 +233,7 @@ function ManagePublisher() {
     ];
 
     const handleDelete = async (record) => {
+        setDeleteLoading(true);
         try {
             const result = await deletePublisher(record.id);
             if (result) {
@@ -212,10 +245,13 @@ function ManagePublisher() {
         } catch (error) {
             console.error('Delete error:', error);
             message.error('Đã có lỗi xảy ra khi xóa');
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
     const handleDeleteList = async () => {
+        setDeleteListLoading(true);
         try {
             const result = await deleteListPublisher(selectedRows);
             if (result) {
@@ -228,6 +264,8 @@ function ManagePublisher() {
         } catch (error) {
             console.error('Delete list error:', error);
             message.error('Đã có lỗi xảy ra khi xóa');
+        } finally {
+            setDeleteListLoading(false);
         }
     };
 
@@ -236,6 +274,7 @@ function ManagePublisher() {
             message.error('Vui lòng chọn file để import!');
             return;
         }
+        setImportLoading(true);
         try {
             const formData = new FormData();
             formData.append('file', selectedFile);
@@ -255,6 +294,8 @@ function ManagePublisher() {
         } catch (error) {
             console.error('Import error:', error);
             message.error(`${selectedFile.name} file upload failed.`);
+        } finally {
+            setImportLoading(false);
         }
     };
 
@@ -317,6 +358,7 @@ function ManagePublisher() {
                         icon={<UploadOutlined />} 
                         className="bg-green-500 text-white" 
                         onClick={() => setImportModalOpen(true)}
+                        loading={importLoading}
                     >
                         Import
                     </Button>
@@ -333,6 +375,7 @@ function ManagePublisher() {
                         type="primary"
                         className="bg-red-500"
                         disabled={selectedRows.length === 0}
+                        loading={deleteListLoading}
                         onClick={() => {
                             modal.confirm({
                                 title: 'Xác nhận xoá',
@@ -380,6 +423,7 @@ function ManagePublisher() {
                 }}
                 rowKey={(record) => record.id}
                 onChange={onTableChange}
+                loading={tableLoading}
             />
 
             <CreatePublisher
@@ -416,6 +460,7 @@ function ManagePublisher() {
                 onFileChange={setSelectedFile}
                 onImport={handleImport}
                 selectedFile={selectedFile}
+                loading={importLoading}
             />
 
             <ErrorModal
