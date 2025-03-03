@@ -10,7 +10,6 @@ import ImportBookshelf from './ImportBookshelf';
 
 function ManageBookshelf() {
     const { getBookshelfByPage, deleteBookshelf, deleteListBookshelf, importBookshelf, exportBookshelf } = useBookshelfApi();
-    const [bookshelfList, setBookshelfList] = useState([]);
     const [listBookshelfToDelete, setListBookshelfToDelete] = useState([]);
     const [bookshelfInfo, setBookshelfInfo] = useState({});
     const [page, setPage] = useState(1);
@@ -27,8 +26,6 @@ function ManageBookshelf() {
     const [filteredBookshelfs, setFilteredBookshelfs] = useState([]); // Dữ liệu sau khi lọc
     const [selectedFile, setSelectedFile] = useState(null);
     const searchInput = useRef(null);
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
     const [tableLoading, setTableLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [importLoading, setImportLoading] = useState(false);
@@ -40,7 +37,6 @@ function ManageBookshelf() {
             try {
                 const response = await getBookshelfByPage(page, pageSize);
                 if (response?.bookshelfs) {
-                    setBookshelfList(response.bookshelfs);
                     setFilteredBookshelfs(response.bookshelfs);
                     setTotalData(response.total_data);
                 }
@@ -216,16 +212,13 @@ function ManageBookshelf() {
         });
     };
 
-    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    const handleSearch = (selectedKeys, confirm) => {
         confirm();
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
         setPage(1); // Reset về trang 1 khi search
     };
 
     const handleReset = (clearFilters, confirm, dataIndex) => {
         clearFilters();
-        setSearchText('');
         confirm();
         handleSearch('', confirm, dataIndex);
     };

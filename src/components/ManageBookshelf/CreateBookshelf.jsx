@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, memo } from 'react';
 import { Input, Typography, Col, Row, Modal, Select } from 'antd';
 import useBookshelfApi from 'src/services/bookshelfService';
 import { toast } from 'react-toastify';
