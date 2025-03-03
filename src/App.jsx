@@ -22,8 +22,15 @@ import ManageBook from './components/InputBook/ManageBook';
 import ManageCategory from './components/InputCategory/ManageCategory';
 import ManageBookshelf from './components/ManageBookshelf/ManageBookshelf';
 import ManageBookCopy from './components/ManageBookCopy/ManageBookCopy';
-
 import ManageBorrow from './components/ManageBorrow/ManageBorrow';
+
+import Dashboard from './components/stats/Dashboard';
+import BookStats from './components/stats/BookStats';
+import BorrowingStats from './components/stats/BorrowingStats';
+import MonthlyStats from './components/stats/MonthlyStats';
+import Reports from './components/stats/Reports';
+import UserStats from './components/stats/UserStats';
+import TopBooks from './components/stats/TopBooks';
 
 
 export default function App() {
@@ -59,6 +66,15 @@ export default function App() {
                         <Route path="/manage/bookcopy" element={<ManageBookCopy />} />
                         <Route path="/manage/borrow" element={<ManageBorrow />} />
                         <Route path="/manage/user" element={<ManageUser />} />
+
+                        {/* stats */}
+                        <Route path="/stats/dashboard" element={<Dashboard />} />
+                        <Route path="/stats/books" element={<BookStats />} />
+                        <Route path="/stats/borrowing" element={<BorrowingStats />} />
+                        <Route path="/stats/monthly" element={<MonthlyStats />} />
+                        <Route path="/stats/reports" element={<Reports />} />
+                        <Route path="/stats/users" element={<UserStats />} />
+                        <Route path="/stats/top-books" element={<TopBooks />} />
 
                         {/* me */}
                         <Route path="/change-password" element={<ChangePassword />} />
