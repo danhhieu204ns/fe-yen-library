@@ -25,7 +25,6 @@ export const useStatsApi = () => {
     const getTopBorrowedBooks = async () => {
         try {
             const res = await httpPrivate.get('/stats/top-books');
-            console.log(res);
             return res;
         } catch (error) {
             console.log(error);
@@ -35,15 +34,6 @@ export const useStatsApi = () => {
     const getBookByCategory = async () => {
         try {
             const res = await httpPrivate.get('/stats/books/by-category');
-            return res;
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    const getBookMostBorrowed = async () => {
-        try {
-            const res = await httpPrivate.get('/stats/books/most-borrowed');
             return res;
         } catch (error) {
             console.log(error);
@@ -64,7 +54,6 @@ export const useStatsApi = () => {
         getMonthlyBorrowingStats, 
         getTopBorrowedBooks,
         getBookByCategory,
-        getBookMostBorrowed,
         getBookStatus
     };
 

@@ -11,13 +11,13 @@ const BookStats = () => {
   const [error, setError] = useState(null);
   const [chartKey, setChartKey] = useState(0);
   
-  const { getBookByCategory, getBookMostBorrowed, getBookStatus } = useStatsApi();
+  const { getBookByCategory, getTopBorrowedBooks, getBookStatus } = useStatsApi();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const categoryRes = await getBookByCategory();
-        const topBooksRes = await getBookMostBorrowed();
+        const topBooksRes = await getTopBorrowedBooks();
         const statusRes = await getBookStatus();
 
         let formattedCategories = [];
@@ -91,6 +91,7 @@ const BookStats = () => {
   const hasCategoryData = booksByCategory && booksByCategory.length > 0;
   const hasTopBooksData = topBooks && topBooks.length > 0;
   const hasStatusData = bookStatus && bookStatus.length > 0;
+
 
 return (
     <div className="container mx-auto px-4 py-8 pt-24 bg-white shadow rounded-lg text-center">      
