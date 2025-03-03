@@ -1,66 +1,42 @@
 import { useState, useEffect, memo } from 'react';
-import { Input, Typography, Modal, Select, Form, Spin } from 'antd';
+import { Input, Typography, Modal, Select, Row, Col } from 'antd';
 import useBookCopyApi from 'src/services/manageBookCopyService';
 import useBookshelfApi from 'src/services/bookshelfService';
 import { toast } from 'react-toastify';
 
 function EditBookCopy({ openModal, closeModal, handleReload, data }) {
-    const [form] = Form.useForm();
+    const [bookshelfId, setBookshelfId] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [dataLoading, setDataLoading] = useState(false);
     const [bookshelfs, setBookshelfs] = useState([]);
 
     const { updateBookCopy } = useBookCopyApi();
     const { bookshelfName } = useBookshelfApi();
     
-    // Reset form and fetch data when modal opens
     useEffect(() => {
-        if (openModal && data) {
-            // Set form values from data
-            form.setFieldsValue({
-                book_name: data?.book?.name || '',
-                bookshelf_id: data?.bookshelf?.id || null,
-                bookshelf_name: data?.bookshelf?.name || '',
-                status: data?.status || ''
-            });
-            
-            // Fetch complete list of bookshelves
-            setDataLoading(true);
+        if (openModal) {
+            if (data) {
+                setBookshelfId(data?.bookshelf?.id);
+            }
             const fetchData = async () => {
                 try {
-                    const response = await bookshelfName();
-                    let shelves = [];
-                    
-                    if (response?.status === 200) {
-                        if (Array.isArray(response.data)) {
-                            shelves = response.data;
-                        } else if (Array.isArray(response.data?.bookshelfs)) {
-                            shelves = response.data.bookshelfs;
-                        } else if (typeof response.data === 'object') {
-                            shelves = Object.values(response.data);
-                        }
-                    }
-                    setBookshelfs(shelves);
+                    const response = await bookshelfName();     
+                    setBookshelfs(response.data.bookshelfs || []); 
                 } catch (error) {
                     console.error('Error fetching bookshelves:', error);
                     toast.error('Lỗi khi tải danh sách kệ sách');
-                } finally {
-                    setDataLoading(false);
                 }
             };
             
             fetchData();
         }
-    }, [openModal, data, form]);
+    }, [openModal, data]);
 
-    const handleFinish = async (values) => {
+    const handleFinish = async () => {
         try {
             setLoading(true);
             const updatedData = {
-                status: values.status.trim(),
-                bookshelf_id: values.bookshelf_id
+                bookshelf_id: bookshelfId
             };
-
             const response = await updateBookCopy(data.id, updatedData);
             
             if (response?.status === 200) {
@@ -82,7 +58,7 @@ function EditBookCopy({ openModal, closeModal, handleReload, data }) {
             title={<div className="text-lg">Sửa thông tin Bản sao sách</div>}
             open={openModal}
             onCancel={closeModal}
-            onOk={() => form.submit()}
+            onOk={handleFinish}
             confirmLoading={loading}
             maskClosable={false}
             centered
@@ -95,49 +71,36 @@ function EditBookCopy({ openModal, closeModal, handleReload, data }) {
             }}
         >
             <div className="p-4">
-                <Spin spinning={dataLoading} tip="Đang tải dữ liệu...">
-                    <Form form={form} layout="vertical" onFinish={handleFinish}>
-                        <Form.Item
-                            label={<Typography.Text strong className="text-base">Tên sách:</Typography.Text>}
-                            name="book_name"
+                <Row gutter={[0, 16]}>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Tên sách:</Typography.Text>
+                        <Input disabled className="w-full" value={data?.book?.name}/>
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Kệ sách:</Typography.Text>
+                        <Select
+                            showSearch
+                            style={{ width: '100%' }}
+                            placeholder="Tìm kiếm hoặc chọn kệ sách"
+                            optionFilterProp="children"
+                            value={bookshelfId}
+                            onChange={(value) => {
+                                setBookshelfId(value);
+                            }}
+                            className="mt-2"
                         >
-                            <Input disabled className="w-full" />
-                        </Form.Item>
-                        
-                        <Form.Item
-                            label={<Typography.Text strong className="text-base">Kệ sách:</Typography.Text>}
-                            name="bookshelf_id"
-                            rules={[{ required: true, message: 'Vui lòng chọn kệ sách' }]}
-                        >
-                            <Select
-                                showSearch
-                                placeholder="Chọn kệ sách"
-                                filterOption={(input, option) => 
-                                    (option?.children?.toLowerCase() || '').includes(input.toLowerCase())
-                                }
-                                loading={dataLoading}
-                            >
-                                {bookshelfs.map(bookshelf => (
-                                    <Select.Option key={bookshelf.id} value={bookshelf.id}>
-                                        {bookshelf.name}
-                                    </Select.Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                        
-                        <Form.Item
-                            label={<Typography.Text strong className="text-base">Tình trạng:</Typography.Text>}
-                            name="status"
-                            rules={[{ required: true, message: 'Vui lòng chọn tình trạng' }]}
-                        >
-                            <Select placeholder="Chọn tình trạng sách">
-                                <Select.Option value="Chưa mượn">Chưa mượn</Select.Option>
-                                <Select.Option value="Đã mượn">Đã mượn</Select.Option>
-                                <Select.Option value="Đã mất">Đã mất</Select.Option>
-                            </Select>
-                        </Form.Item>
-                    </Form>
-                </Spin>
+                            {bookshelfs.map(bookshelf => (
+                                <Select.Option key={bookshelf.id} value={bookshelf.id}>
+                                    {bookshelf.name}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Tình trạng:</Typography.Text>
+                        <Input disabled className="w-full" value={data.status}/>
+                    </Col>
+                </Row>
             </div>
         </Modal>
     );
