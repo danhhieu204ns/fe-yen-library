@@ -8,13 +8,18 @@ function EditBorrow({ data, openModal, closeModal, handleReload }) {
     const { editBorrow } = useManageBorrowApi();
     const [loading, setLoading] = useState(false);
 
-    // Pre-fill form with data when modal opens
+    const [currentStatus, setCurrentStatus] = useState('');
+    
+    useEffect(() => {
+        if (data?.status) {
+            setCurrentStatus(data.status);
+        }
+    }, [data]);
+
     useEffect(() => {
         if (openModal && data) {
-            // Reset form first
             form.resetFields();
             
-            // Set values for all fields
             form.setFieldsValue({
                 book_name: data?.book_copy?.book?.name || '',
                 user_name: data?.user?.full_name || '',
@@ -55,6 +60,34 @@ function EditBorrow({ data, openModal, closeModal, handleReload }) {
         closeModal();
     };
 
+    // Get available status options based on current status
+    const getStatusOptions = () => {
+        if (currentStatus === "Đang chờ xác nhận") {
+            return [
+                <Select.Option key="waiting" value="Đang chờ xác nhận">Đang chờ xác nhận</Select.Option>,
+                <Select.Option key="borrowing" value="Đang mượn">Đang mượn</Select.Option>,
+                <Select.Option key="cancelled" value="Đã hủy">Đã hủy</Select.Option>
+            ];
+        } else if (currentStatus === "Đang mượn") {
+            return [
+                <Select.Option key="borrowing" value="Đang mượn">Đang mượn</Select.Option>,
+                <Select.Option key="returned" value="Đã trả">Đã trả</Select.Option>
+            ];
+        } else {
+            // For other statuses, return just the current one (read-only)
+            return [
+                <Select.Option key={currentStatus} value={currentStatus}>{currentStatus}</Select.Option>
+            ];
+        }
+    };
+
+    // Handle status change in the form
+    const handleStatusChange = (value) => {
+        setCurrentStatus(value);
+    };
+
+    const isFormDisabled = currentStatus === "Đã hủy";
+
     return (
         <Modal
             title="Chỉnh sửa thông tin mượn sách"
@@ -64,7 +97,13 @@ function EditBorrow({ data, openModal, closeModal, handleReload }) {
                 <Button key="back" onClick={handleCancel}>
                     Hủy
                 </Button>,
-                <Button key="submit" type="primary" onClick={handleSubmit} loading={loading}>
+                <Button 
+                    key="submit" 
+                    type="primary" 
+                    onClick={handleSubmit} 
+                    loading={loading}
+                    disabled={isFormDisabled}
+                >
                     Cập nhật
                 </Button>,
             ]}
@@ -74,6 +113,7 @@ function EditBorrow({ data, openModal, closeModal, handleReload }) {
                     form={form}
                     layout="vertical"
                     name="edit_borrow"
+                    disabled={isFormDisabled}
                 >
                     <Form.Item
                         name="book_name"
@@ -109,12 +149,8 @@ function EditBorrow({ data, openModal, closeModal, handleReload }) {
                         label="Trạng thái"
                         rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
                     >
-                        <Select>
-                            <Select.Option value="Đang chờ xác nhận">Đang chờ xác nhận</Select.Option>
-                            <Select.Option value="Đang mượn">Đang mượn</Select.Option>
-                            <Select.Option value="Đã trả">Đã trả</Select.Option>
-                            <Select.Option value="Đã quá hạn">Đã quá hạn</Select.Option>
-                            <Select.Option value="Đã hủy">Đã hủy</Select.Option>
+                        <Select onChange={handleStatusChange}>
+                            {getStatusOptions()}
                         </Select>
                     </Form.Item>
                 </Form>

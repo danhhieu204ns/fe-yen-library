@@ -1,10 +1,11 @@
 import { memo } from 'react';
-import { Modal, Upload, Button, Typography } from 'antd';
+import { Modal, Upload, Button, Typography, message } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
+import PropTypes from 'prop-types';
 
 const { Dragger } = Upload;
 
-function ImportBookCopy({ openModal: open, closeModal: onClose, onFileChange, onImport, selectedFile }) {
+function ImportBookCopy({ openModal: open, closeModal: onClose, onFileChange, onImport, selectedFile, loading }) {
     const props = {
         name: 'file',
         maxCount: 1,
@@ -40,6 +41,7 @@ function ImportBookCopy({ openModal: open, closeModal: onClose, onFileChange, on
                     type="primary"
                     onClick={onImport}
                     disabled={!selectedFile}
+                    loading={loading}
                 >
                     Import
                 </Button>
@@ -75,5 +77,18 @@ function ImportBookCopy({ openModal: open, closeModal: onClose, onFileChange, on
         </Modal>
     );
 }
+
+ImportBookCopy.propTypes = {
+    openModal: PropTypes.bool.isRequired,
+    closeModal: PropTypes.func.isRequired,
+    onFileChange: PropTypes.func.isRequired,
+    onImport: PropTypes.func.isRequired,
+    selectedFile: PropTypes.object,
+    loading: PropTypes.bool,
+};
+
+ImportBookCopy.defaultProps = {
+    loading: false,
+};
 
 export default memo(ImportBookCopy);

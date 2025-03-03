@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Input, Typography, Col, Row, Modal, Divider } from 'antd';
+import moment from 'moment';
 
 function ShowInfoCategory({ openModal, closeModal, data }) {
     return (
@@ -43,6 +44,14 @@ function ShowInfoCategory({ openModal, closeModal, data }) {
                             value={data?.description}
                             className="mt-1 disabled:bg-white disabled:text-black"
                             rows={3}
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong>Ngày tạo</Typography.Text>
+                        <Input
+                            disabled
+                            value={data?.created_at ? moment(data.created_at).format('DD/MM/YYYY') : 'Chưa có thông tin'}
+                            className="mt-1 disabled:bg-white disabled:text-black"
                         />
                     </Col>
                 </Row>

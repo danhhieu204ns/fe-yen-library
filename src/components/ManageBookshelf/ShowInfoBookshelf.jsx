@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Modal, Row, Col, Typography } from 'antd';
 import { modalStyle, contentStyle, valueStyle, labelStyle } from '../common/InfoModalStyle';
+import moment from 'moment';
 
 const ShowInfoBookshelf = ({ data, openModal, closeModal }) => {
   return (
@@ -22,6 +23,12 @@ const ShowInfoBookshelf = ({ data, openModal, closeModal }) => {
                     <Typography.Text style={labelStyle}>Tình trạng</Typography.Text>
                     <div style={valueStyle}>
                         {data?.status || 'Chưa có thông tin'}
+                    </div>
+                </Col>
+                <Col span={24}>
+                    <Typography.Text style={labelStyle}>Ngày tạo</Typography.Text>
+                    <div style={valueStyle}>
+                        {data?.created_at ? moment(data.created_at).format('DD/MM/YYYY') : 'Chưa có thông tin'}
                     </div>
                 </Col>
             </Row>

@@ -20,8 +20,8 @@ function ManageAuthor() {
     const [pageSize, setPageSize] = useState(10);
     const [totalData, setTotalData] = useState(0);
     const [reloadToggle, setReloadToggle] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const [currentFilters, setCurrentFilters] = useState({});
     const [searchMode, setSearchMode] = useState(false);
     const [filterRequestBody, setFilterRequestBody] = useState({});
 
@@ -40,9 +40,17 @@ function ManageAuthor() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const results = await authorData(page, pageSize);
-            setAuthorList(results?.authors || []);
-            setTotalData(results?.total_data || 0);
+            setLoading(true);
+            try {
+                const results = await authorData(page, pageSize);
+                setAuthorList(results?.authors || []);
+                setTotalData(results?.total_data || 0);
+            } catch (error) {
+                console.error('Error fetching author data:', error);
+                message.error('Không thể tải dữ liệu tác giả');
+            } finally {
+                setLoading(false);
+            }
         };
         if (!searchMode) fetchData();
     }, [page, pageSize, reloadToggle, searchMode]);
@@ -51,6 +59,7 @@ function ManageAuthor() {
         const fetchFilteredData = async () => {
             if (!filterRequestBody) return;
             
+            setLoading(true);
             try {
                 const res = await searchAuthor(filterRequestBody, page, pageSize);
                 if (res?.authors) {
@@ -63,6 +72,8 @@ function ManageAuthor() {
             } catch (error) {
                 message.error('Lỗi tìm kiếm');
                 resetSearch();
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -71,7 +82,6 @@ function ManageAuthor() {
 
     const resetSearch = () => {
         setSearchMode(false);
-        setCurrentFilters({});
         setFilterRequestBody({});
     };
 
@@ -154,16 +164,6 @@ function ManageAuthor() {
         }
     };
 
-    const fetchData = async () => {
-        const results = await authorData(page, pageSize);
-        setAuthorList(results?.authors || []);
-        setTotalData(results?.total_data || 0);
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, [page, pageSize, reloadToggle]);
-
     const handleReload = useCallback(() => {
         setReloadToggle(!reloadToggle);
     }, [reloadToggle]);
@@ -228,7 +228,6 @@ function ManageAuthor() {
             key: 'birthdate',
             align: 'center',
             render: (text) => (text ? moment(text).format('DD/MM/YYYY') : 'Chưa xác định'),
-            sorter: true
         },
         {
             title: 'Địa chỉ',
@@ -237,7 +236,6 @@ function ManageAuthor() {
             align: 'center',
             ...getColumnSearchProps('Địa chỉ', 'address'),
             render: (text) => (text ? text : 'Chưa xác định'),
-            sorter: true
         },
         {
             title: 'Bút danh',
@@ -261,7 +259,7 @@ function ManageAuthor() {
                         maxWidth: '200px', // Bạn có thể điều chỉnh độ rộng cột tại đây
                     }}
                 >
-                    {text || 'Chưa có tiểu sử'}
+                    {text || 'Chưa rõ tiểu sử'}
                 </div>
             ),
         },
@@ -434,6 +432,7 @@ function ManageAuthor() {
             </Space>
             <div>
                 <Table
+                    loading={loading}
                     columns={columns}
                     dataSource={authorList} // Remove filtered logic
                     rowSelection={{

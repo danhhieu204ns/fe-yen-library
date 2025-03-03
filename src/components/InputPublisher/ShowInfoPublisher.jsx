@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Input, Typography, Col, Row, Modal } from 'antd';
+import { Typography, Col, Row, Modal } from 'antd';
 import moment from 'moment';
 
 function ShowInfoPublisher({ openModal, closeModal, data }) {

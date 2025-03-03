@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Button, Table, Tooltip, Modal, Space, Input, Select, Flex, Upload } from 'antd';
+import { Button, Table, Tooltip, Modal, Space, Input, Flex } from 'antd';
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EyeOutlined, UploadOutlined, DownloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import useBookCopyApi from 'src/services/manageBookCopyService';
@@ -10,13 +10,19 @@ import ImportBookCopy from './ImportBookCopy';
 
 function ManageBookCopy() {
     const { getBookCopyByPage, deleteBookCopy, deleteListBookCopy, importBookCopy, exportBookCopy } = useBookCopyApi();
-    const [bookList, setBookList] = useState([]);
     const [listBookToDelete, setListBookToDelete] = useState([]);
     const [bookInfo, setBookInfo] = useState({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [totalData, setTotalData] = useState(0);
     const [reloadToggle, setReloadToggle] = useState(false);
+
+    // Loading states
+    const [tableLoading, setTableLoading] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+    const [deletingMultiple, setDeletingMultiple] = useState(false);
+    const [importingLoading, setImportingLoading] = useState(false);
+    const [exportingLoading, setExportingLoading] = useState(false);
 
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
@@ -25,35 +31,27 @@ function ManageBookCopy() {
     const [modalDelete, contextHolder] = Modal.useModal();
 
     const [filteredBooks, setFilteredBooks] = useState([]); // Dữ liệu sau khi lọc
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterOption, setFilterOption] = useState('name'); // Mặc định lọc theo tên nhom sach
     const [selectedFile, setSelectedFile] = useState(null);
-    const [sortConfig, setSortConfig] = useState({ field: null, order: null });
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef(null);
 
     useEffect(() => {
         const fetchData = async () => {
+            setTableLoading(true);
             try {
-                const response = await getBookCopyByPage(page, pageSize, {
-                    searchTerm,
-                    filterOption,
-                    sortField: sortConfig.field,
-                    sortOrder: sortConfig.order
-                });
+                const response = await getBookCopyByPage(page, pageSize);
                 if (response?.book_copies) {
-                    setBookList(response.book_copies);
                     setFilteredBooks(response.book_copies);
                     setTotalData(response.total_data);
                 }
             } catch (error) {
                 console.error('Error details:', error);
                 toast.error('Lỗi khi tải danh sách sách');
+            } finally {
+                setTableLoading(false);
             }
         };
         fetchData();
-    }, [page, pageSize, reloadToggle, searchTerm, filterOption, sortConfig]);
+    }, [page, pageSize, reloadToggle]);
 
     const handleReload = useCallback(() => {
         setReloadToggle(!reloadToggle);
@@ -78,6 +76,7 @@ function ManageBookCopy() {
     }, []);
 
     const handleDelete = async (id) => {
+        setDeletingId(id);
         try {
             const response = await deleteBookCopy(id);
             if (response?.status === 200 || response?.data?.status === 200) {
@@ -88,10 +87,13 @@ function ManageBookCopy() {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Xóa thất bại');
+        } finally {
+            setDeletingId(null);
         }
     };
 
     const handleDeleteListBook = async () => {
+        setDeletingMultiple(true);
         try {
             const response = await deleteListBookCopy(listBookToDelete);
             if (response?.status === 200 || response?.data?.status === 200) {
@@ -103,6 +105,8 @@ function ManageBookCopy() {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Xóa thất bại');
+        } finally {
+            setDeletingMultiple(false);
         }
     };
 
@@ -116,26 +120,27 @@ function ManageBookCopy() {
             return;
         }
 
+        setImportingLoading(true);
         try {
             const formData = new FormData();
             formData.append('file', selectedFile);
 
             const response = await importBookCopy(formData);
             
-            // Kiểm tra cả status và data.status
             if (response?.status === 200 || response?.status === 201 || response?.data?.status === 200) {
                 toast.success('Import dữ liệu thành công!');
                 setSelectedFile(null);
                 handleCloseImportModal();
                 handleReload();
             } else {
-                // Log response để debug
                 console.log('Import response:', response);
                 toast.error(response?.data?.message || 'Import dữ liệu thất bại!');
             }
         } catch (error) {
             console.error('Import error:', error);
             toast.error(error.response?.data?.message || 'Import dữ liệu thất bại!');
+        } finally {
+            setImportingLoading(false);
         }
     };
 
@@ -149,6 +154,7 @@ function ManageBookCopy() {
             icon: <ExclamationCircleFilled />,
             content: 'Bạn có chắc chắn muốn export danh sách bản sao sách?',
             onOk: async () => {
+                setExportingLoading(true);
                 try {
                     const response = await exportBookCopy();
                     
@@ -168,22 +174,21 @@ function ManageBookCopy() {
                 } catch (error) {
                     console.error('Export error:', error);
                     toast.error('Export dữ liệu thất bại!');
+                } finally {
+                    setExportingLoading(false);
                 }
             },
             onCancel() {},
         });
     };
 
-    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    const handleSearch = (selectedKeys, confirm) => {
         confirm();
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
         setPage(1); // Reset về trang 1 khi search
     };
 
     const handleReset = (clearFilters, confirm, dataIndex) => {
         clearFilters();
-        setSearchText('');
         confirm();
         handleSearch('', confirm, dataIndex);
     };
@@ -245,6 +250,7 @@ function ManageBookCopy() {
             title: 'Tên sách',
             dataIndex: ['book', 'name'],
             key: 'bookName',
+            width: '25%',
             sorter: (a, b) => a.book?.name.localeCompare(b.book?.name),
             ...getColumnSearchProps('book', 'name'),
             render: (text, record) => record.book?.name || 'Chưa có sách'
@@ -253,7 +259,6 @@ function ManageBookCopy() {
             title: 'Tình trạng',
             dataIndex: 'status',
             key: 'status',
-            sorter: (a, b) => (a.status || '').localeCompare(b.status || ''),
             ...getColumnSearchProps('status'),
             render: (text) => text || 'Chưa rõ tình trạng'
         },
@@ -303,6 +308,7 @@ function ManageBookCopy() {
                             className="bg-red-500"
                             type="primary"
                             icon={<DeleteOutlined className="text-white" />}
+                            loading={deletingId === record.id}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 modalDelete.confirm({
@@ -336,6 +342,7 @@ function ManageBookCopy() {
                         icon={<UploadOutlined />}
                         className="bg-green-500"
                         onClick={handleOpenImport}
+                        loading={importingLoading}
                     >
                         Import
                     </Button>
@@ -344,6 +351,7 @@ function ManageBookCopy() {
                         icon={<DownloadOutlined />}
                         className="bg-blue-500"
                         onClick={handleExport}
+                        loading={exportingLoading}
                     >
                         Export
                     </Button>
@@ -351,6 +359,7 @@ function ManageBookCopy() {
                         type="primary"
                         className="bg-red-500"
                         disabled={listBookToDelete.length === 0}
+                        loading={deletingMultiple}
                         onClick={() => {
                             modalDelete.confirm({
                                 title: 'Xác nhận xoá',
@@ -386,6 +395,7 @@ function ManageBookCopy() {
             <div>
                 <Table
                     columns={columns}
+                    loading={tableLoading}
                     dataSource={filteredBooks}
                     rowSelection={{
                         type: 'checkbox',
@@ -438,6 +448,7 @@ function ManageBookCopy() {
                 onFileChange={handleFileChange}
                 onImport={handleImport}
                 selectedFile={selectedFile}
+                loading={importingLoading}
             />
 
             {contextHolder}

@@ -14,8 +14,9 @@ function CreateBook({ openModal, closeModal, handleReload }) {
     const [authorId, setAuthorId] = useState(null);
     const [publisherId, setPublisherId] = useState(null);
     const [categoryId, setCategoryId] = useState(null);
-    const [status, setStatus] = useState('');
-    const [content, setContent] = useState('');
+    const [summary, setSummary] = useState('');
+    const [pages, setPages] = useState('');
+    const [language, setLanguage] = useState('');
     const [errorMessages, setErrorMessages] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -54,17 +55,14 @@ function CreateBook({ openModal, closeModal, handleReload }) {
             setErrorMessages('Vui lòng nhập tên sách');
             return;
         }
-
         if (!authorId) {
             setErrorMessages('Vui lòng chọn tác giả');
             return;
         }
-
         if (!publisherId) {
             setErrorMessages('Vui lòng chọn nhà xuất bản');
             return;
         }
-
         if (!categoryId) {
             setErrorMessages('Vui lòng chọn thể loại');
             return;
@@ -77,8 +75,9 @@ function CreateBook({ openModal, closeModal, handleReload }) {
                 author_id: authorId,
                 publisher_id: publisherId,
                 category_id: categoryId,
-                status: status.trim(),
-                content: content.trim(),
+                summary: summary.trim(),
+                pages: pages.trim(),
+                language: language.trim()
             };
 
             const response = await createBook(bookData);
@@ -103,8 +102,9 @@ function CreateBook({ openModal, closeModal, handleReload }) {
         setAuthorId(null);
         setPublisherId(null);
         setCategoryId(null);
-        setStatus('');
-        setContent('');
+        setSummary('');
+        setPages('');
+        setLanguage('');
         setErrorMessages('');
     };
 
@@ -212,23 +212,32 @@ function CreateBook({ openModal, closeModal, handleReload }) {
                         </Select>
                     </Col>
                     <Col span={24}>
-                        <Typography.Text strong className="text-base">Tình trạng:</Typography.Text>
+                        <Typography.Text strong className="text-base">Tóm tắt:</Typography.Text>
+                        <TextArea
+                            placeholder="Nhập tóm tắt nội dung sách"
+                            value={summary}
+                            onChange={(e) => setSummary(e.target.value)}
+                            rows={4}
+                            className="mt-2"
+                            style={{ resize: 'none' }}
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <Typography.Text strong className="text-base">Số trang:</Typography.Text>
                         <Input
-                            placeholder="Nhập tình trạng sách"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
+                            placeholder="Nhập số trang"
+                            value={pages}
+                            onChange={(e) => setPages(e.target.value)}
                             className="mt-2"
                         />
                     </Col>
                     <Col span={24}>
-                        <Typography.Text strong className="text-base">Nội dung:</Typography.Text>
-                        <TextArea
-                            placeholder="Nhập nội dung"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            rows={4}
+                        <Typography.Text strong className="text-base">Ngôn ngữ:</Typography.Text>
+                        <Input
+                            placeholder="Nhập ngôn ngữ"
+                            value={language}
+                            onChange={(e) => setLanguage(e.target.value)}
                             className="mt-2"
-                            style={{ resize: 'none' }}
                         />
                     </Col>
                     <ErrorMessage message={errorMessages} />

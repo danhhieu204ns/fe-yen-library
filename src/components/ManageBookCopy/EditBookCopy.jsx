@@ -1,76 +1,46 @@
 import { useState, useEffect, memo } from 'react';
-import { Input, Typography, Col, Row, Modal, Select } from 'antd';
+import { Input, Typography, Modal, Select, Row, Col } from 'antd';
 import useBookCopyApi from 'src/services/manageBookCopyService';
 import useBookshelfApi from 'src/services/bookshelfService';
 import { toast } from 'react-toastify';
-import ErrorMessage from 'src/utils/error/errorMessage';
 
 function EditBookCopy({ openModal, closeModal, handleReload, data }) {
-    const [status, setStatus] = useState('');
     const [bookshelfId, setBookshelfId] = useState(null);
-    const [bookshelfs, setBookshelfs] = useState([]);
-    const [errorMessages, setErrorMessages] = useState('');
     const [loading, setLoading] = useState(false);
+    const [bookshelfs, setBookshelfs] = useState([]);
 
     const { updateBookCopy } = useBookCopyApi();
     const { bookshelfName } = useBookshelfApi();
-
-    useEffect(() => {
-        if (data) {
-            setStatus(data.status || '');
-            setBookshelfId(data.bookshelf?.id || null);
-        }
-    }, [data]);
-
+    
     useEffect(() => {
         if (openModal) {
+            if (data) {
+                setBookshelfId(data?.bookshelf?.id);
+            }
             const fetchData = async () => {
                 try {
-                    const response = await bookshelfName();
-
-                    let processedData = [];
-                    if (response?.status === 200) {
-                        if (Array.isArray(response.data)) {
-                            processedData = response.data;
-                        } else if (Array.isArray(response.data?.bookshelfs)) {
-                            processedData = response.data.bookshelfs;
-                        } else if (typeof response.data === 'object') {
-                            // If it's an object with direct key-value pairs
-                            processedData = Object.values(response.data);
-                        }
-                    }
-
-                    if (!Array.isArray(processedData)) {
-                        console.error('Processed data is not an array:', processedData);
-                        processedData = [];
-                    }
-
-                    setBookshelfs(processedData);
+                    const response = await bookshelfName();     
+                    setBookshelfs(response.data.bookshelfs || []); 
                 } catch (error) {
                     console.error('Error fetching bookshelves:', error);
-                    setBookshelfs([]);
                     toast.error('Lỗi khi tải danh sách kệ sách');
                 }
             };
+            
             fetchData();
         }
-    }, [openModal]);
+    }, [openModal, data]);
 
-    const handleEditBookCopy = async () => {
-        if (!validateForm()) return;
-
+    const handleFinish = async () => {
         try {
             setLoading(true);
             const updatedData = {
-                status: status.trim(),
                 bookshelf_id: bookshelfId
             };
-
             const response = await updateBookCopy(data.id, updatedData);
             
             if (response?.status === 200) {
                 toast.success('Cập nhật thành công!');
-                resetForm();
                 closeModal();
                 handleReload();
             } else {
@@ -83,32 +53,13 @@ function EditBookCopy({ openModal, closeModal, handleReload, data }) {
         }
     };
 
-    const validateForm = () => {
-        if (!bookshelfId) {
-            setErrorMessages('Vui lòng chọn kệ sách');
-            return false;
-        }
-        return true;
-    };
-
-    const resetForm = () => {
-        setBookshelfId(null);
-        setStatus('');
-        setErrorMessages('');
-    };
-
-    const filterOption = (input, option) =>
-        (option?.children ?? '').toLowerCase().includes(input.toLowerCase());
-
     return (
         <Modal
             title={<div className="text-lg">Sửa thông tin Bản sao sách</div>}
             open={openModal}
-            onCancel={() => {
-                resetForm();
-                closeModal();
-            }}
-            onOk={handleEditBookCopy}
+            onCancel={closeModal}
+            onOk={handleFinish}
+            confirmLoading={loading}
             maskClosable={false}
             centered
             width={600}
@@ -122,18 +73,20 @@ function EditBookCopy({ openModal, closeModal, handleReload, data }) {
             <div className="p-4">
                 <Row gutter={[0, 16]}>
                     <Col span={24}>
+                        <Typography.Text strong className="text-base">Tên sách:</Typography.Text>
+                        <Input disabled className="w-full" value={data?.book?.name}/>
+                    </Col>
+                    <Col span={24}>
                         <Typography.Text strong className="text-base">Kệ sách:</Typography.Text>
                         <Select
                             showSearch
                             style={{ width: '100%' }}
                             placeholder="Tìm kiếm hoặc chọn kệ sách"
                             optionFilterProp="children"
-                            value={data?.bookshelf?.name}
+                            value={bookshelfId}
                             onChange={(value) => {
                                 setBookshelfId(value);
-                                setErrorMessages('');
                             }}
-                            filterOption={filterOption}
                             className="mt-2"
                         >
                             {bookshelfs.map(bookshelf => (
@@ -145,14 +98,8 @@ function EditBookCopy({ openModal, closeModal, handleReload, data }) {
                     </Col>
                     <Col span={24}>
                         <Typography.Text strong className="text-base">Tình trạng:</Typography.Text>
-                        <Input
-                            placeholder="Nhập tình trạng sách"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="mt-2"
-                        />
+                        <Input disabled className="w-full" value={data.status}/>
                     </Col>
-                    <ErrorMessage message={errorMessages} />
                 </Row>
             </div>
         </Modal>

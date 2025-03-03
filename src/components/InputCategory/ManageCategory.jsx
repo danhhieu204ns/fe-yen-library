@@ -26,6 +26,9 @@ function ManageCategory() {
     const [errorMessages, setErrorMessages] = useState([]);
     const [selectedFile, setSelectedFile] = useState(null);
     const [exportLoading, setExportLoading] = useState(false);
+    const [tableLoading, setTableLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [importLoading, setImportLoading] = useState(false);
 
     const [currentFilters, setCurrentFilters] = useState();
     const [searchMode, setSearchMode] = useState(false);
@@ -36,18 +39,28 @@ function ManageCategory() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const results = await getAllCategoryByPage(page, pageSize);
-            setCategoryList(results?.categories);
-            setTotalData(results?.total_data);
+            setTableLoading(true);
+            try {
+                const results = await getAllCategoryByPage(page, pageSize);
+                setCategoryList(results?.categories);
+                setTotalData(results?.total_data);
+            } finally {
+                setTableLoading(false);
+            }
         };
         if (!searchMode) fetchData();
     }, [page, pageSize, reloadToggle, searchMode]);
 
     useEffect(() => {
         const fetchFilteredData = async () => {
-            let res = await searchCategory(filterRequestBody, page, pageSize);
-            setCategoryList(res?.categories);
-            setTotalData(res?.total_data);
+            setTableLoading(true);
+            try {
+                let res = await searchCategory(filterRequestBody, page, pageSize);
+                setCategoryList(res?.categories);
+                setTotalData(res?.total_data);
+            } finally {
+                setTableLoading(false);
+            }
         }
 
         if (searchMode) fetchFilteredData(); // Chỉ chạy khi trong search mode
@@ -102,36 +115,46 @@ function ManageCategory() {
     }, []);
 
     const handleDelete = async (data) => {
-        const result = await deleteCategory(data.id);
+        setDeleteLoading(true);
+        try {
+            const result = await deleteCategory(data.id);
 
-        if (result) {
-            handleReload();
-            modal.success({
-                title: 'Xoá thành công',
-                content: `Đã xoá tác giả: ${data?.name}`,
-            });
-        } else {
-            modal.error({
-                title: 'Xoá thất bại',
-                content: `Xoá tác giả: ${data?.name} không thành công`,
-            });
+            if (result) {
+                handleReload();
+                modal.success({
+                    title: 'Xoá thành công',
+                    content: `Đã xoá tác giả: ${data?.name}`,
+                });
+            } else {
+                modal.error({
+                    title: 'Xoá thất bại',
+                    content: `Xoá tác giả: ${data?.name} không thành công`,
+                });
+            }
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
     const handleDeleteList = async () => {
-        const result = await deleteCategoryList(selectedRows);
+        setDeleteLoading(true);
+        try {
+            const result = await deleteCategoryList(selectedRows);
 
-        if (result) {
-            handleReload();
-            modal.success({
-                title: 'Xoá thành công',
-                content: `Đã xoá ${selectedRows.length} tác giả`,
-            });
-        } else {
-            modal.error({
-                title: 'Xoá thất bại',
-                content: `Xoá ${selectedRows.length} tác giả không thành công`,
-            });
+            if (result) {
+                handleReload();
+                modal.success({
+                    title: 'Xoá thành công',
+                    content: `Đã xoá ${selectedRows.length} tác giả`,
+                });
+            } else {
+                modal.error({
+                    title: 'Xoá thất bại',
+                    content: `Xoá ${selectedRows.length} tác giả không thành công`,
+                });
+            }
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
@@ -202,6 +225,7 @@ function ManageCategory() {
             message.error('Vui lòng chọn file để import!');
             return;
         }
+        setImportLoading(true);
         try {
             const formData = new FormData();
             formData.append('file', selectedFile);
@@ -217,6 +241,8 @@ function ManageCategory() {
             }
         } catch (error) {
             message.error(`${selectedFile.name} file upload failed.`);
+        } finally {
+            setImportLoading(false);
         }
     };
 
@@ -269,25 +295,22 @@ function ManageCategory() {
             dataIndex: 'name',
             key: 'name',
             align: 'center',
-            width: '30%',
             ...getColumnSearchProps('Tên thể loại', 'name'),
-            sorter: true, // thêm dòng này
+            sorter: true,
         },
         {
             title: 'Mô tả',
             dataIndex: 'description',
             key: 'description',
             align: 'center',
-            width: '30%',
             ...getColumnSearchProps('Mô tả', 'description'),
-            sorter: true, // thêm dòng này
             render: (text) => (
                 <div style={{ 
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                 }}>
-                    {text || 'Chưa có mô tả'}
+                    {text || 'Chưa rõ mô tả'}
                 </div>
             ),
         },
@@ -295,15 +318,22 @@ function ManageCategory() {
             title: 'Giới hạn tuổi',
             dataIndex: 'age_limit',
             key: 'age_limit',
-            width: '20%',
             align: 'center',
             ...getColumnSearchProps('giới hạn tuổi', 'age_limit'),
-            sorter: true, // thêm dòng này
+            sorter: true, 
+            render: (text) => (
+                <div style={{ 
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                }}>
+                    {text || 'Chưa rõ giới hạn tuổi'}
+                </div>
+            ),
         },
         {
             title: 'Thao tác',
             key: 'action',
-            width: '20%',
             align: 'center',
             render: (text, record) => (
                 <Space>
@@ -375,6 +405,7 @@ function ManageCategory() {
                         icon={<UploadOutlined />} 
                         className="bg-green-500 text-white" 
                         onClick={() => setImportModalOpen(true)}
+                        loading={importLoading}
                     >
                         Import
                     </Button>
@@ -390,11 +421,12 @@ function ManageCategory() {
                     <Button
                         icon={<DeleteOutlined />}
                         disabled={selectedRows.length == 0}
+                        loading={deleteLoading}
                         onClick={() => {
                             modal.confirm({
                                 title: 'Xác nhận xoá',
                                 icon: <ExclamationCircleFilled />,
-                                content: `Bạn có chắc chắn muốn xóa ${selectedRows.length} tác giả đã chọn?`,
+                                content: `Bạn có chắc chắn muốn xóa ${selectedRows.length} thể loại đã chọn?`,
                                 onOk() {
                                     handleDeleteList();
                                     setSelectedRows([]);
@@ -405,7 +437,7 @@ function ManageCategory() {
                         type="primary"
                         className={selectedRows.length > 0 ? 'bg-red-500 text-white' : ''}
                     >
-                        Xoá {selectedRows.length != 0 ? selectedRows.length + ' tác giả' : ''}
+                        Xoá {selectedRows.length != 0 ? selectedRows.length + ' thể loại?' : ''}
                     </Button>    
                 </Space>
                 <Space>
@@ -414,6 +446,7 @@ function ManageCategory() {
                 </Space>
             </Space>
             <Table
+                loading={tableLoading}
                 columns={columns}
                 dataSource={categoryList}
                 onChange={onTableChange}
@@ -422,7 +455,7 @@ function ManageCategory() {
                     type: 'checkbox',
                     selectedRowKeys: selectedRows,
                     onChange: (selectedRowKeys, selectedRows) => {
-                        setSelectedRows(selectedRowKeys); // get Id of selected rows to delete
+                        setSelectedRows(selectedRowKeys);
                     },
                 }}
                 pagination={{
@@ -437,7 +470,6 @@ function ManageCategory() {
                 onRow={(record) => {
                     return {
                         onClick: () => {
-                            // Removed the code to show modal on row click
                         },
                     };
                 }}
@@ -464,6 +496,7 @@ function ManageCategory() {
                 onFileChange={handleFileChange}
                 onImport={handleImport}
                 selectedFile={selectedFile}
+                loading={importLoading}
             />
 
             <ErrorModal

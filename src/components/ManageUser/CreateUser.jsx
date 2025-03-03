@@ -1,48 +1,62 @@
-import { Modal, Form, Input, Select, message } from 'antd';
-import PropTypes from 'prop-types';
+import React, { useState } from 'react';
+import { Modal, Form, Input, Button } from 'antd';
 import { useUserApi } from 'src/services/userService';
+import PropTypes from 'prop-types';
 
-const CreateUser = ({ openModal, closeModal, handleReload }) => {
+function CreateUser({ openModal, closeModal, handleReload, setLoading }) {
     const [form] = Form.useForm();
+    const [submitLoading, setSubmitLoading] = useState(false);
+    
     const { createUser } = useUserApi();
 
     const handleSubmit = async () => {
         try {
-            const values = await form.validateFields();
-            const response = await createUser(values);
+            setSubmitLoading(true);
+            if (setLoading) setLoading(true);
             
-            if (response?.message) {
-                message.success('Tạo tài khoản thành công!');
+            const values = await form.validateFields();
+            const userData = {
+                ...values,
+            };
+            
+            const response = await createUser(userData);
+            if (response && response.id) {
                 closeModal();
-                handleReload();
                 form.resetFields();
-            } else {
-                message.error(response?.detail || 'Tạo tài khoản thất bại!');
+                handleReload();
             }
         } catch (error) {
             console.error('Submit error:', error);
-            message.error('Vui lòng kiểm tra lại thông tin!');
+        } finally {
+            setSubmitLoading(false);
+            if (setLoading) setLoading(false);
         }
     };
 
     return (
         <Modal
-            title="Tạo tài khoản mới"
+            title="Thêm Người dùng"
             open={openModal}
             onCancel={() => {
-                closeModal();
                 form.resetFields();
+                closeModal();
             }}
-            onOk={handleSubmit}
-            okText="Tạo"
-            cancelText="Hủy"
-            width={600}
-            style={{ 
-                top: 20,
-                padding: '20px',
-                borderRadius: '6px',
-                background: '#fff',
-            }}
+            footer={[
+                <Button key="back" onClick={() => {
+                    form.resetFields();
+                    closeModal();
+                }}>
+                    Hủy
+                </Button>,
+                <Button
+                    key="submit"
+                    type="primary"
+                    loading={submitLoading}
+                    onClick={handleSubmit}
+                >
+                    Tạo mới
+                </Button>,
+            ]}
         >
             <Form
                 form={form}
@@ -98,12 +112,13 @@ const CreateUser = ({ openModal, closeModal, handleReload }) => {
             </Form>
         </Modal>
     );
-};
+}
 
 CreateUser.propTypes = {
     openModal: PropTypes.bool.isRequired,
     closeModal: PropTypes.func.isRequired,
-    handleReload: PropTypes.func.isRequired
+    handleReload: PropTypes.func.isRequired,
+    setLoading: PropTypes.func,
 };
 
 export default CreateUser;

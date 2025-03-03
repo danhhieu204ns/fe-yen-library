@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from 'react';
-import { Input, Typography, Col, Row, Modal, Select } from 'antd';
+import { Typography, Col, Row, Modal, Select } from 'antd';
 import useBookCopyApi from 'src/services/manageBookCopyService';
 import useBookApi from 'src/services/manageBookService';
 import useBookshelfApi from 'src/services/bookshelfService';
@@ -167,12 +167,15 @@ function CreateBookCopy({ openModal, closeModal, handleReload }) {
                     </Col>
                     <Col span={24}>
                         <Typography.Text strong className="text-base">Tình trạng:</Typography.Text>
-                        <Input
-                            placeholder="Nhập tình trạng Bản sao sách"
+                        <Select
+                            placeholder="Chọn tình trạng Bản sao sách"
                             value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="mt-2"
-                        />
+                            onChange={(value) => setStatus(value)}
+                            className="mt-2 w-full"
+                        >
+                            <Select.Option value="Có sẵn">Có sẵn</Select.Option>
+                            <Select.Option value="Đã mượn">Đã mượn</Select.Option>
+                        </Select>
                     </Col>
                     <ErrorMessage message={errorMessages} />
                 </Row>

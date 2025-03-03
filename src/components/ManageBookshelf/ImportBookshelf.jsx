@@ -1,10 +1,10 @@
-import { memo } from 'react';
+import React, { memo } from 'react';
 import { Modal, Upload, Button, Typography } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 
 const { Dragger } = Upload;
 
-function ImportBookshelf({ openModal: open, closeModal: onClose, onFileChange, onImport, selectedFile }) {
+function ImportBookshelf({ openModal: open, closeModal: onClose, onFileChange, onImport, selectedFile, loading }) {
     const props = {
         name: 'file',
         maxCount: 1,
@@ -23,7 +23,8 @@ function ImportBookshelf({ openModal: open, closeModal: onClose, onFileChange, o
         },
         onRemove: () => {
             onFileChange(null);
-        }
+        },
+        fileList: selectedFile ? [selectedFile] : []
     };
 
     return (
@@ -40,6 +41,7 @@ function ImportBookshelf({ openModal: open, closeModal: onClose, onFileChange, o
                     type="primary"
                     onClick={onImport}
                     disabled={!selectedFile}
+                    loading={loading}
                 >
                     Import
                 </Button>
@@ -59,7 +61,7 @@ function ImportBookshelf({ openModal: open, closeModal: onClose, onFileChange, o
                     File phải có định dạng .xlsx hoặc .xls
                 </Typography.Text>
                 <div className="mt-4">
-                    <Dragger {...props} fileList={selectedFile ? [selectedFile] : []}>
+                    <Dragger {...props}>
                         <p className="ant-upload-drag-icon">
                             <InboxOutlined />
                         </p>

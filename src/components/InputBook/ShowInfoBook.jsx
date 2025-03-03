@@ -5,7 +5,7 @@ import { modalStyle, contentStyle, valueStyle, labelStyle } from '../common/Info
 const ShowInfoBook = ({ data, openModal, closeModal }) => {
   return (
     <Modal
-        title="Thông tin sách" // Fixed title
+        title="Thông tin sách"
         open={openModal}
         onCancel={closeModal}
         {...modalStyle}
@@ -37,15 +37,21 @@ const ShowInfoBook = ({ data, openModal, closeModal }) => {
                     </div>
                 </Col>
                 <Col span={24}>
-                    <Typography.Text style={labelStyle}>Tình trạng</Typography.Text>
+                    <Typography.Text style={labelStyle}>Tóm tắt</Typography.Text>
                     <div style={valueStyle}>
-                        {data?.status || 'Chưa có thông tin'}
+                        {data?.summary || 'Chưa có thông tin'}
                     </div>
                 </Col>
                 <Col span={24}>
-                    <Typography.Text style={labelStyle}>Nội dung</Typography.Text>
+                    <Typography.Text style={labelStyle}>Số trang</Typography.Text>
                     <div style={valueStyle}>
-                        {data?.summary || 'Chưa có thông tin'}
+                        {data?.pages || 'Chưa có thông tin'}
+                    </div>
+                </Col>
+                <Col span={24}>
+                    <Typography.Text style={labelStyle}>Ngôn ngữ</Typography.Text>
+                    <div style={valueStyle}>
+                        {data?.language || 'Chưa có thông tin'}
                     </div>
                 </Col>
             </Row>

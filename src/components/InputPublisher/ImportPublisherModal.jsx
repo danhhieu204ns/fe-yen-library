@@ -1,9 +1,9 @@
 import { memo } from 'react';
-import { Modal, Upload, Button, Typography } from 'antd';
+import { Modal, Upload, Button, Typography, message } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 const { Dragger } = Upload;
 
-function ImportPublisherModal({ open, onClose, onFileChange, onImport, selectedFile }) {
+function ImportPublisherModal({ open, onClose, onFileChange, onImport, selectedFile, loading }) {
     const props = {
         name: 'file',
         maxCount: 1,
@@ -39,6 +39,7 @@ function ImportPublisherModal({ open, onClose, onFileChange, onImport, selectedF
                     type="primary"
                     onClick={onImport}
                     disabled={!selectedFile}
+                    loading={loading}
                 >
                     Import
                 </Button>

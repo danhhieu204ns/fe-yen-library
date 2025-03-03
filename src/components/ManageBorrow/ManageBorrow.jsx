@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Button, Table, Tooltip, Modal, Space, Input, Flex, Typography } from 'antd';
+import { Button, Table, Tooltip, Modal, Space, Input, Flex } from 'antd';
 import { 
     EditOutlined, 
     DeleteOutlined, 
@@ -16,8 +16,6 @@ import CreateBorrow from './CreateBorrow';
 import EditBorrow from './EditBorrow';
 import ShowInfoBorrow from './ShowInfoBorrow';
 import Highlighter from 'react-highlight-words';
-
-const { Text } = Typography;
 
 function ManageBorrow() {
     // Basic state declarations
@@ -444,8 +442,6 @@ function ManageBorrow() {
                         current: page,
                         pageSize: pageSize,
                         total: totalData,
-                        pageSizeOptions: ['10', '20', '50'],
-                        showSizeChanger: true,
                     }}
                     onChange={onTableChange}
                     onRow={(record) => ({

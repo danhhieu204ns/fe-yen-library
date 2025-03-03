@@ -79,41 +79,49 @@ const MenuItems = () => {
                 },
                 {
                     key: 'borrow',
-                    label: <Link to="/manage/borrow">Quản lý Mượn sách</Link>,
+                    label: <Link to="/manage/borrow">Quản lý Mượn - Trả sách</Link>,
                 },
             ],
         },
-        // {
-        //     key: 'analize',
-        //     label: (
-        //         <div className="flex items-center space-x-2">
-        //             <span>Thống kê số liệu</span>
-        //             <DownOutlined />
-        //         </div>
-        //     ),
-        //     children: [
-        //         {
-        //             key: '1',
-        //             label: <Link to="/k/1">Thống kê</Link>,
-        //         },
-        //         {
-        //             key: '2',
-        //             label: <Link to="/k/2">Thống kê</Link>,
-        //         },
-        //         {
-        //             key: '3',
-        //             label: <Link to="/k/3">Thống kê</Link>,
-        //         },
-        //         {
-        //             key: '4',
-        //             label: <Link to="/k/4">Thống kê</Link>,
-        //         },
-        //         {
-        //             key: '6',
-        //             label: <Link to="/k/5">Thống kê</Link>,
-        //         },
-        //     ],
-        // },
+        {
+            key: 'stats',
+            label: (
+                <div className="flex items-center space-x-2">
+                    <span>Thống kê số liệu</span>
+                    <DownOutlined />
+                </div>
+            ),
+            children: [
+                {
+                    key: 'dashboard',
+                    label: <Link to="/stats/dashboard">Dashboard</Link>,
+                },
+                {
+                    key: 'books',
+                    label: <Link to="/stats/books">Thống kê Sách</Link>,
+                },
+                // {
+                //     key: 'borrowing',
+                //     label: <Link to="/stats/borrowing">Thống kê Mượn trả</Link>,
+                // },
+                // {
+                //     key: 'monthly',
+                //     label: <Link to="/stats/monthly">Thống kê</Link>,
+                // },
+                // {
+                //     key: 'reports',
+                //     label: <Link to="/stats/reports">Báo cáo</Link>,
+                // },
+                // {
+                //     key: 'users',
+                //     label: <Link to="/stats/users">Thống kê Người dùng</Link>,
+                // },
+                // {
+                //     key: 'top_books',
+                //     label: <Link to="/stats/top-books">Thống kê</Link>,
+                // },
+            ],
+        },
         {
             key: 'manage_user',
             label: (
