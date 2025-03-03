@@ -43,6 +43,12 @@ function ShowInfoAuthor({ openModal, closeModal, data }) {
                             {data?.biography || 'Chưa có thông tin'}
                         </div>
                     </Col>
+                    <Col span={24}>
+                        <Typography.Text style={labelStyle}>Ngày tạo</Typography.Text>
+                        <div style={valueStyle}>
+                            {data?.created_at ? moment(data.created_at).format('DD/MM/YYYY') : 'Chưa có thông tin'}
+                        </div>
+                    </Col>
                 </Row>
             </div>
         </Modal>

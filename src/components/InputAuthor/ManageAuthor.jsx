@@ -22,7 +22,6 @@ function ManageAuthor() {
     const [reloadToggle, setReloadToggle] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const [currentFilters, setCurrentFilters] = useState({});
     const [searchMode, setSearchMode] = useState(false);
     const [filterRequestBody, setFilterRequestBody] = useState({});
 
@@ -83,7 +82,6 @@ function ManageAuthor() {
 
     const resetSearch = () => {
         setSearchMode(false);
-        setCurrentFilters({});
         setFilterRequestBody({});
     };
 
@@ -165,24 +163,6 @@ function ManageAuthor() {
             setSelectedFile(file);
         }
     };
-
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            const results = await authorData(page, pageSize);
-            setAuthorList(results?.authors || []);
-            setTotalData(results?.total_data || 0);
-        } catch (error) {
-            console.error('Error fetching author data:', error);
-            message.error('Không thể tải dữ liệu tác giả');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, [page, pageSize, reloadToggle]);
 
     const handleReload = useCallback(() => {
         setReloadToggle(!reloadToggle);
@@ -279,7 +259,7 @@ function ManageAuthor() {
                         maxWidth: '200px', // Bạn có thể điều chỉnh độ rộng cột tại đây
                     }}
                 >
-                    {text || 'Chưa có tiểu sử'}
+                    {text || 'Chưa rõ tiểu sử'}
                 </div>
             ),
         },
