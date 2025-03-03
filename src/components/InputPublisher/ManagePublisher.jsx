@@ -20,7 +20,6 @@ function ManagePublisher() {
 
     // Add loading states
     const [tableLoading, setTableLoading] = useState(false);
-    const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteListLoading, setDeleteListLoading] = useState(false);
     const [importLoading, setImportLoading] = useState(false);
     const [exportLoading, setExportLoading] = useState(false);
@@ -33,8 +32,6 @@ function ManagePublisher() {
     const [errorMessages, setErrorMessages] = useState([]);
     const [selectedFile, setSelectedFile] = useState(null);
     
-    const [filteredPublishers, setFilteredPublishers] = useState([]);
-    const [currentFilters, setCurrentFilters] = useState({});
     const [searchMode, setSearchMode] = useState(false);
     const [filterRequestBody, setFilterRequestBody] = useState({});
 
@@ -86,11 +83,10 @@ function ManagePublisher() {
 
     const resetSearch = () => {
         setSearchMode(false);
-        setCurrentFilters({});
         setFilterRequestBody({});
     };
 
-    const onTableChange = (pagination, filters, sorter) => {
+    const onTableChange = (filters) => {
         const searchBody = {};
         // Handle filters properly regardless of whether they're null or array
         Object.entries(filters).forEach(([key, value]) => {
@@ -233,7 +229,6 @@ function ManagePublisher() {
     ];
 
     const handleDelete = async (record) => {
-        setDeleteLoading(true);
         try {
             const result = await deletePublisher(record.id);
             if (result) {
@@ -245,8 +240,6 @@ function ManagePublisher() {
         } catch (error) {
             console.error('Delete error:', error);
             message.error('Đã có lỗi xảy ra khi xóa');
-        } finally {
-            setDeleteLoading(false);
         }
     };
 
@@ -404,7 +397,7 @@ function ManagePublisher() {
 
             <Table
                 columns={columns}
-                dataSource={filteredPublishers.length > 0 ? filteredPublishers : publisherList}
+                dataSource={publisherList}
                 rowSelection={{
                     type: 'checkbox',
                     selectedRowKeys: selectedRows,
