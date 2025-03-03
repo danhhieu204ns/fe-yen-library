@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Button, Descriptions, Typography, Space, Tag } from 'antd';
+import { Modal, Button, Descriptions, Typography, Tag } from 'antd';
 
 function ShowInfoBorrow({ data, openModal, closeModal }) {
     const formatDate = (dateString) => {
