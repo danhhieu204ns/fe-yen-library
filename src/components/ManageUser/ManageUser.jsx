@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Space, Button, Modal, Typography, Input, Table, Tooltip, message } from 'antd';
-import { DeleteOutlined, ExclamationCircleFilled, PlusCircleOutlined, EditOutlined, EyeOutlined, UploadOutlined, DownloadOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
+import { ExclamationCircleFilled, PlusCircleOutlined, EditOutlined, EyeOutlined, UploadOutlined, DownloadOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import { useUserApi } from 'src/services/userService';
-import { useRoleApi } from 'src/services/roleService';
 import { getColumnSearchProps } from 'src/utils/searchByApi';
 import CreateUser from './CreateUser';
 import EditUser from './EditUser';
@@ -29,6 +28,11 @@ function ManageUser() {
 
     const [selectedFile, setSelectedFile] = useState(null);
     const [exportLoading, setExportLoading] = useState(false);
+    const [tableLoading, setTableLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [importLoading, setImportLoading] = useState(false);
+    const [activationLoading, setActivationLoading] = useState(null); // Will store user ID being processed
+    const [searchLoading, setSearchLoading] = useState(false);
     
     const [currentFilters, setCurrentFilters] = useState({});
     const [searchMode, setSearchMode] = useState(false);
@@ -47,8 +51,6 @@ function ManageUser() {
         deactivateUser,
     } = useUserApi();
 
-    const { getRoleNames } = useRoleApi();
-
     const handleReload = useCallback(() => {
         setReloadToggle(prev => !prev);
         setSelectedRows([]);
@@ -59,13 +61,20 @@ function ManageUser() {
         }
     }, [searchMode]);
 
+    const [createLoading, setCreateLoading] = useState(false);
+    const [editLoading, setEditLoading] = useState(false);
+    const [resetSearchLoading, setResetSearchLoading] = useState(false);
+    const [deleteUserLoading, setDeleteUserLoading] = useState(null); // For individual user deletion
+
     const resetSearch = useCallback(async () => {
+        setResetSearchLoading(true);
         setSearchMode(false);
         setFilterRequestBody({});
         setCurrentFilters({});
         
         // Reload all data when search is reset
         try {
+            setTableLoading(true);
             const results = await getAllUserByPage(page, pageSize);
             setUserList(results?.users || []);
             setTotalData(results?.total_data || 0);
@@ -73,6 +82,9 @@ function ManageUser() {
             message.error('Có lỗi xảy ra khi tải dữ liệu!');
             setUserList([]);
             setTotalData(0);
+        } finally {
+            setTableLoading(false);
+            setResetSearchLoading(false);
         }
     }, [page, pageSize, getAllUserByPage]);
 
@@ -104,6 +116,7 @@ function ManageUser() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setTableLoading(true);
                 const results = await getAllUserByPage(page, pageSize);
                 setUserList(results?.users || []);
                 setTotalData(results?.total_data || 0);
@@ -111,6 +124,8 @@ function ManageUser() {
                 message.error('Có lỗi xảy ra khi tải dữ liệu!');
                 setUserList([]);
                 setTotalData(0);
+            } finally {
+                setTableLoading(false);
             }
         };
         if (!searchMode) fetchData();
@@ -121,6 +136,7 @@ function ManageUser() {
             if (!filterRequestBody || Object.keys(filterRequestBody).length === 0) return;
             
             try {
+                setSearchLoading(true);
                 console.log('Searching with filter:', filterRequestBody); // Debug log
                 const res = await searchUser(filterRequestBody, page, pageSize);
                 if (res?.users) {
@@ -138,6 +154,8 @@ function ManageUser() {
                     message.error('Lỗi tìm kiếm');
                 }
                 resetSearch();
+            } finally {
+                setSearchLoading(false);
             }
         };
 
@@ -153,6 +171,7 @@ function ManageUser() {
                 return;
             }
 
+            setImportLoading(true);
             const formData = new FormData();
             formData.append('file', selectedFile);
 
@@ -183,6 +202,8 @@ function ManageUser() {
             setErrorModalOpen(true);
             setImportModalOpen(false);
             setSelectedFile(null);
+        } finally {
+            setImportLoading(false);
         }
     };
 
@@ -217,6 +238,7 @@ function ManageUser() {
 
     const handleToggleActivation = async (userId, isActive) => {
         try {
+            setActivationLoading(userId);
             const success = isActive 
                 ? await deactivateUser(userId)
                 : await activateUser(userId);
@@ -229,11 +251,14 @@ function ManageUser() {
             }
         } catch (error) {
             message.error('Có lỗi xảy ra!');
+        } finally {
+            setActivationLoading(null);
         }
     };
 
     const handleDelete = async (id) => {
         try {
+            setDeleteUserLoading(id);
             const success = await deleteUser(id);
             if (success) {
                 message.success('Xóa người dùng thành công!');
@@ -243,11 +268,14 @@ function ManageUser() {
             }
         } catch (error) {
             message.error('Có lỗi xảy ra khi xóa người dùng!');
+        } finally {
+            setDeleteUserLoading(null);
         }
     };
 
     const handleDeleteList = async () => {
         try {
+            setDeleteLoading(true);
             // Pass array of IDs directly
             const success = await deleteListUsers(selectedRows);
             if (success) {
@@ -259,6 +287,8 @@ function ManageUser() {
         } catch (error) {
             console.error('Delete error:', error);
             message.error('Có lỗi xảy ra khi xóa danh sách người dùng!');
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
@@ -351,13 +381,14 @@ function ManageUser() {
                             shape="circle"
                             className="bg-yellow-300"
                             type="primary"
+                            loading={editLoading && userInfo.id === record.id}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setUserInfo(record);
                                 setEditModalOpen(true);
                             }}
                         >
-                            <EditOutlined className="text-slate-900 font-[300]" />
+                            {!(editLoading && userInfo.id === record.id) && <EditOutlined className="text-slate-900 font-[300]" />}
                         </Button>
                     </Tooltip>
                     <Tooltip title={record.is_active ? "Khóa tài khoản" : "Kích hoạt tài khoản"}>
@@ -365,6 +396,7 @@ function ManageUser() {
                             shape="circle"
                             className={record.is_active ? "bg-orange-500" : "bg-green-500"}
                             type="primary"
+                            loading={activationLoading === record.id}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 modal.confirm({
@@ -377,14 +409,15 @@ function ManageUser() {
                                 });
                             }}
                         >
-                            {record.is_active ? <LockOutlined className="text-white" /> : <UnlockOutlined className="text-white" />}
+                            {activationLoading !== record.id && (record.is_active ? <LockOutlined className="text-white" /> : <UnlockOutlined className="text-white" />)}
                         </Button>
                     </Tooltip>
-                    <Tooltip title="Xóa">
+                    {/* <Tooltip title="Xóa">
                         <Button
                             shape="circle"
                             className="bg-red-500"
                             type="primary"
+                            loading={deleteLoading}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 modal.confirm({
@@ -397,9 +430,9 @@ function ManageUser() {
                                 });
                             }}
                         >
-                            <DeleteOutlined className="text-white" />
+                            {!deleteLoading && <DeleteOutlined className="text-white" />}
                         </Button>
-                    </Tooltip>
+                    </Tooltip> */}
                 </Space>
             ),
         }
@@ -413,13 +446,15 @@ function ManageUser() {
                     <Button 
                         type="primary" 
                         icon={<PlusCircleOutlined />} 
-                        onClick={() => setCreateModalOpen(true)}>
+                        onClick={() => setCreateModalOpen(true)}
+                        loading={createLoading}>
                         Thêm mới
                     </Button>
                     <Button 
                         type="primary" 
                         icon={<UploadOutlined />} 
                         className="bg-green-500 text-white" 
+                        loading={importLoading}
                         onClick={() => setImportModalOpen(true)}>
                         Import
                     </Button>
@@ -431,10 +466,11 @@ function ManageUser() {
                         loading={exportLoading}>
                         Export
                     </Button>
-                    <Button
+                    {/* <Button
                         type="primary"
                         className="bg-red-500"
                         disabled={selectedRows.length === 0}
+                        loading={deleteLoading}
                         onClick={() => {
                             modal.confirm({
                                 title: 'Xác nhận xoá',
@@ -447,9 +483,18 @@ function ManageUser() {
                             });
                         }}
                     >
-                        <DeleteOutlined />
+                        {!deleteLoading && <DeleteOutlined />}
                         Xóa {selectedRows.length !== 0 ? selectedRows.length + ' người dùng' : ''}
-                    </Button>
+                    </Button> */}
+                    {searchMode && (
+                        <Button
+                            type="default"
+                            onClick={resetSearch}
+                            loading={resetSearchLoading}
+                        >
+                            Xóa bộ lọc
+                        </Button>
+                    )}
                 </Space>
                 <Space>
                     <Typography className='font-bold'>Tổng số: </Typography>
@@ -462,6 +507,7 @@ function ManageUser() {
             </Space>
 
             <Table
+                loading={tableLoading || searchLoading}
                 columns={columns}
                 dataSource={userList}
                 rowSelection={{
@@ -488,6 +534,7 @@ function ManageUser() {
                 openModal={createModalOpen}
                 closeModal={() => setCreateModalOpen(false)}
                 handleReload={handleReload}
+                setLoading={setCreateLoading}
             />
 
             <EditUser
@@ -498,6 +545,7 @@ function ManageUser() {
                     setUserInfo({});
                 }}
                 handleReload={handleReload}
+                setLoading={setEditLoading}
             />
 
             <ShowInfoUser
@@ -518,6 +566,7 @@ function ManageUser() {
                 onFileChange={setSelectedFile}
                 onImport={handleImport}
                 selectedFile={selectedFile}
+                loading={importLoading}
             />
 
             <ErrorModal
