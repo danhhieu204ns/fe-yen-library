@@ -88,7 +88,7 @@ const useBookApi = () => {
 
     const searchBook = async (search, page, page_size) => {
         try {
-            const res = await httpPrivate.get(`/book/search?page=${page}&page_size=${page_size}`, 
+            const res = await httpPrivate.post(`/book/search?page=${page}&page_size=${page_size}`, 
                 { ...search}
             );
             return res?.data;
