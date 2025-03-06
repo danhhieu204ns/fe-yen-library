@@ -62,9 +62,9 @@ function EditBorrow({ data, openModal, closeModal, handleReload }) {
 
     // Get available status options based on current status
     const getStatusOptions = () => {
-        if (currentStatus === "Đang chờ xác nhận") {
+        if (currentStatus === "Đang chờ") {
             return [
-                <Select.Option key="waiting" value="Đang chờ xác nhận">Đang chờ xác nhận</Select.Option>,
+                <Select.Option key="waiting" value="Đang chờ">Đang chờ xác nhận</Select.Option>,
                 <Select.Option key="borrowing" value="Đang mượn">Đang mượn</Select.Option>,
                 <Select.Option key="cancelled" value="Đã hủy">Đã hủy</Select.Option>
             ];

@@ -235,7 +235,7 @@ function ManageBorrow() {
 
     const getStatusClass = (status) => {
         switch (status) {
-            case 'Đang chờ xác nhận':
+            case 'Đang chờ':
                 return 'bg-yellow-400 text-white px-2 py-1 rounded';
             case 'Đang mượn':
                 return 'bg-blue-400 text-white px-2 py-1 rounded';
