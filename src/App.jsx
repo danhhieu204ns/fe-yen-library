@@ -32,9 +32,6 @@ import Reports from './components/stats/Reports';
 import UserStats from './components/stats/UserStats';
 import TopBooks from './components/stats/TopBooks';
 
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import SessionExpiryHandler from './components/SessionExpiryHandler';
 
 export default function App() {
     return (
@@ -51,10 +48,7 @@ export default function App() {
                 pauseOnHover={false}
             />
             <BrowserRouter>
-                {/* Component này giám sát phiên làm việc */}
-                <SessionExpiryHandler />
                 <Routes>
-                    {/* Route công khai */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route element={<DefaultLayout />}>
@@ -89,11 +83,7 @@ export default function App() {
                         <Route path="/mybookcart" element={<MyBookCart />} />
                         
                     </Route>
-                    {/* Route được bảo vệ yêu cầu đăng nhập */}
-                    <Route element={<ProtectedRoute />}>
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        {/* Thêm các protected routes khác ở đây */}
-                    </Route>
+  
                     <Route path="*" element={<h1 className="w-full h-screen d-flex-center text-6xl">Not Found</h1>} />
                 </Routes>
             </BrowserRouter>
