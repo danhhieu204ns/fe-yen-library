@@ -14,7 +14,7 @@ import BookSearch from './components/BookSearch/BookSearch';
 import Volunteer from './components/Volunteer/Volunteer'
 import Schedule from './components/Schedule/Schedule'
 import Event from './components/Event/Event'
-import MyBookCart from './components/MyBookCart/MyBookCart';
+import MyBookshelf from './components/MyBookshelf/MyBookshelf';
 
 import ManageAuthor from './components/InputAuthor/ManageAuthor';
 import ManagePublisher from './components/InputPublisher/ManagePublisher';
@@ -80,7 +80,7 @@ export default function App() {
 
                         {/* me */}
                         <Route path="/change-password" element={<ChangePassword />} />
-                        <Route path="/mybookcart" element={<MyBookCart />} />
+                        <Route path="/mybookshelf" element={<MyBookshelf />} />
                         
                     </Route>
   
