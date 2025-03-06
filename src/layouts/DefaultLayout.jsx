@@ -30,7 +30,7 @@ function DefaultLayout() {
         if (path.includes('schedule')) return 'schedule';
         if (path.includes('event')) return 'event';
         if (path.includes('manage')) return 'manage_library';
-        if (path.includes('mybookcart')) return 'my_book_cart';
+        if (path.includes('mybookshelf')) return 'mybookshelf';
         if (path.includes('stats')) return 'stats';
         return '';
     };

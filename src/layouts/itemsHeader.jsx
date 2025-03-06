@@ -133,18 +133,18 @@ const MenuItems = () => {
 
         ] : []), 
         
-        // // Cho user
-        // ...((role && role.includes('user')) ? [
-        //     {
-        //         key: 'my_book_cart',
-        //         label: (
-        //             <Link to={'/mybookcart'} className="flex items-center space-x-2">
-        //                 Giỏ sách của tôi
-        //             </Link>
-        //         ),
-        //     },
+        // Cho user
+        ...((role && role.includes('user')) ? [
+            {
+                key: 'mybookshelf',
+                label: (
+                    <Link to={'/mybookshelf'} className="flex items-center space-x-2">
+                        Giỏ sách của tôi
+                    </Link>
+                ),
+            },
     
-        // ] : []), // Nếu không phải user, trả về mảng rỗng
+        ] : []),
     ];
 
     return menuItems;
