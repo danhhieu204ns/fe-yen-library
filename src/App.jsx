@@ -10,7 +10,7 @@ import ChangePassword from './components/auth/ChangePassword';
 import ManageUser from './components/ManageUser/ManageUser';
 
 import HomeComponent from './components/Home';
-import SearchBook from './components/search/Search.jsx';
+import BookSearch from './components/BookSearch/BookSearch';
 import Volunteer from './components/Volunteer/Volunteer'
 import Schedule from './components/Schedule/Schedule'
 import Event from './components/Event/Event'
@@ -60,7 +60,7 @@ export default function App() {
                     <Route element={<DefaultLayout />}>
                         {/* Default */}
                         <Route path="/" element={<HomeComponent/>} />
-                        <Route path="/search" element={<SearchBook />} />
+                        <Route path="/search" element={<BookSearch />} />
                         <Route path="/volunteer" element={<Volunteer/>} />
                         <Route path="/schedule" element={<Schedule/>} />
                         <Route path="/event" element={<Event/>} />
@@ -97,6 +97,6 @@ export default function App() {
                     <Route path="*" element={<h1 className="w-full h-screen d-flex-center text-6xl">Not Found</h1>} />
                 </Routes>
             </BrowserRouter>
-        </AuthProvider>
+        </>
     );
 }

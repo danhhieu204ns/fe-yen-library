@@ -9,14 +9,14 @@ const MenuItems = () => {
 
     // Định nghĩa các mục menu
     const menuItems = [
-        // {
-        //     key: 'search',
-        //     label: (
-        //         <Link to={'/search'} className="flex items-center space-x-2">
-        //             Tra cứu sách
-        //         </Link>
-        //     ),
-        // },
+        {
+            key: 'search',
+            label: (
+                <Link to={'/search'} className="flex items-center space-x-2">
+                    Tra cứu sách
+                </Link>
+            ),
+        },
         // {
         //     key: 'volunteer',
         //     label: (
@@ -100,26 +100,26 @@ const MenuItems = () => {
                     key: 'books',
                     label: <Link to="/stats/books">Thống kê Sách</Link>,
                 },
-                // {
-                //     key: 'borrowing',
-                //     label: <Link to="/stats/borrowing">Thống kê Mượn trả</Link>,
-                // },
-                // {
-                //     key: 'monthly',
-                //     label: <Link to="/stats/monthly">Thống kê</Link>,
-                // },
-                // {
-                //     key: 'reports',
-                //     label: <Link to="/stats/reports">Báo cáo</Link>,
-                // },
-                // {
-                //     key: 'users',
-                //     label: <Link to="/stats/users">Thống kê Người dùng</Link>,
-                // },
-                // {
-                //     key: 'top_books',
-                //     label: <Link to="/stats/top-books">Thống kê</Link>,
-                // },
+                {
+                    key: 'borrowing',
+                    label: <Link to="/stats/borrowing">Thống kê Mượn trả</Link>,
+                },
+                {
+                    key: 'monthly',
+                    label: <Link to="/stats/monthly">Thống kê Hàng tháng</Link>,
+                },
+                {
+                    key: 'reports',
+                    label: <Link to="/stats/reports">Báo cáo</Link>,
+                },
+                {
+                    key: 'users',
+                    label: <Link to="/stats/users">Thống kê Người dùng</Link>,
+                },
+                {
+                    key: 'top_books',
+                    label: <Link to="/stats/top-books">Thống kê Top Book</Link>,
+                },
             ],
         },
         {

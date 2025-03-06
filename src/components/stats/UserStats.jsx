@@ -1,151 +1,156 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
+import { 
+  userActivity, 
+  ageDistribution, 
+  genderDistribution
+} from "@/data/userStatsMockData";
 
 const UserStats = () => {
-  const [userActivity, setUserActivity] = useState([]);
-  const [ageDistribution, setAgeDistribution] = useState([]);
-  const [registrationTrend, setRegistrationTrend] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeUsers, setActiveUsers] = useState([]);
+  const [ageDistributionData, setAgeDistributionData] = useState([]);
+  const [genderData, setGenderData] = useState([]);
+  const [selectedTimeframe, setSelectedTimeframe] = useState("monthly");
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // API calls would go here
-        const mockUserActivity = [
-          { name: "Nguyễn Văn A", borrowCount: 15 },
-          { name: "Trần Thị B", borrowCount: 12 },
-          { name: "Lê Văn C", borrowCount: 10 },
-          { name: "Phạm Thị D", borrowCount: 9 },
-          { name: "Hoàng Văn E", borrowCount: 8 }
-        ];
-        
-        const mockAgeDistribution = [
-          { age: "10-18", value: 120 },
-          { age: "19-24", value: 250 },
-          { age: "25-34", value: 180 },
-          { age: "35-50", value: 90 },
-          { age: "50+", value: 60 }
-        ];
-        
-        const mockRegistrationTrend = [
-          { month: "01/2023", count: 20 },
-          { month: "02/2023", count: 25 },
-          { month: "03/2023", count: 18 },
-          { month: "04/2023", count: 32 },
-          { month: "05/2023", count: 28 }
-        ];
-        
-        setUserActivity(mockUserActivity);
-        setAgeDistribution(mockAgeDistribution);
-        setRegistrationTrend(mockRegistrationTrend);
-      } catch (error) {
-        console.error("Failed to fetch user stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Simulate API loading delay
+    const timer = setTimeout(() => {
+      setActiveUsers(userActivity.slice(0, 5)); // Top 5 users
+      setAgeDistributionData(ageDistribution);
+      setGenderData(genderDistribution);
+      setLoading(false);
+    }, 800);
     
-    fetchData();
+    return () => clearTimeout(timer);
   }, []);
 
-  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088fe"];
-
+  // Simplified chart rendering, removing the ResponsiveContainer
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pt-24">
       <h1 className="text-2xl font-bold mb-6">Thống Kê Độc Giả</h1>
       
+      <div className="mb-6">
+        <div className="flex space-x-4">
+          <button 
+            className={`px-4 py-2 rounded-md ${selectedTimeframe === "weekly" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+            onClick={() => setSelectedTimeframe("weekly")}
+          >
+            Tuần này
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-md ${selectedTimeframe === "monthly" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+            onClick={() => setSelectedTimeframe("monthly")}
+          >
+            Tháng này
+          </button>
+          <button 
+            className={`px-4 py-2 rounded-md ${selectedTimeframe === "yearly" ? "bg-blue-600 text-white" : "bg-gray-200"}`}
+            onClick={() => setSelectedTimeframe("yearly")}
+          >
+            Năm nay
+          </button>
+        </div>
+      </div>
+      
       {loading ? (
-        <div className="text-center">Đang tải dữ liệu...</div>
+        <div className="text-center py-20">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p>Đang tải dữ liệu...</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Bar Chart */}
           <Card>
             <CardHeader>
               <CardTitle>Top 5 độc giả mượn nhiều nhất</CardTitle>
             </CardHeader>
             <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={userActivity}>
+              <div style={{ width: '100%', height: 300 }}>
+                <BarChart 
+                  width={500} 
+                  height={300} 
+                  data={activeUsers}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="borrowCount" fill="#8884d8" />
+                  <Legend />
+                  <Bar dataKey="borrowCount" name="Đã mượn" fill="#8884d8" />
+                  <Bar dataKey="returnCount" name="Đã trả" fill="#82ca9d" />
                 </BarChart>
-              </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
           
+          {/* Pie Chart - Age Distribution */}
           <Card>
             <CardHeader>
               <CardTitle>Phân bố độc giả theo độ tuổi</CardTitle>
             </CardHeader>
             <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+              <div style={{ width: '100%', height: 300 }}>
+                <PieChart 
+                  width={500} 
+                  height={300}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
                   <Pie
-                    data={ageDistribution}
+                    data={ageDistributionData}
                     dataKey="value"
                     nameKey="age"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
+                    outerRadius={80}
+                    fill="#8884d8"
                     label
                   >
-                    {ageDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {ageDistributionData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a177ff'][index % 5]} 
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend />
                 </PieChart>
-              </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
           
+          {/* Pie Chart - Gender Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle>Xu hướng đăng ký tài khoản</CardTitle>
+              <CardTitle>Phân bố theo giới tính</CardTitle>
             </CardHeader>
             <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={registrationTrend}>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#8884d8" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Tỷ lệ độc giả theo trạng thái</CardTitle>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+              <div style={{ width: '100%', height: 300 }}>
+                <PieChart 
+                  width={500} 
+                  height={300}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
                   <Pie
-                    data={[
-                      { status: "Hoạt động", value: 350 },
-                      { status: "Không hoạt động", value: 120 },
-                      { status: "Mới", value: 80 },
-                      { status: "Bị khóa", value: 15 }
-                    ]}
+                    data={genderData}
                     dataKey="value"
-                    nameKey="status"
+                    nameKey="gender"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
+                    outerRadius={80}
+                    fill="#8884d8"
                     label
                   >
-                    <Cell fill="#82ca9d" />
-                    <Cell fill="#8884d8" />
-                    <Cell fill="#ffc658" />
-                    <Cell fill="#ff8042" />
+                    <Cell fill="#0088FE" /> {/* Nam */}
+                    <Cell fill="#FF8042" /> {/* Nữ */}
+                    <Cell fill="#FFBB28" /> {/* Khác */}
                   </Pie>
                   <Tooltip />
+                  <Legend />
                 </PieChart>
-              </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </div>
