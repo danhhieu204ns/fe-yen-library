@@ -38,7 +38,7 @@ import SessionExpiryHandler from './components/SessionExpiryHandler';
 
 export default function App() {
     return (
-        <AuthProvider>
+        <>
             <ToastContainer
                 position="top-center"
                 autoClose={1500}
