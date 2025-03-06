@@ -8,43 +8,15 @@ const TopBooks = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const { getTopBorrowedBooks } = useStatsApi();
-
     useEffect(() => {
-        console.log("TopBooks component mounted");
-        
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                console.log("Fetching top books data...");
-                
-                // Use mock data initially for debugging
-                // Comment this section back in when API is working
-                /*
-                const res = await getTopBorrowedBooks();
-                console.log("API response:", res);
-                
-                if (Array.isArray(res.data)) {
-                    console.log("Setting books from API response array");
-                    setBooks(res.data);
-                } else if (res.data && typeof res.data === 'object') {
-                    console.log("API returned object, extracting array");
-                    const booksArray = res.data.books || res.data.results || [];
-                    setBooks(booksArray);
-                } else {
-                    console.log("Invalid API response format, using mock data");
-                    setBooks(topBorrowedBooks);
-                }
-                */
-                
-                // Force using mock data for now
-                console.log("Using mock data:", topBorrowedBooks);
                 setBooks(topBorrowedBooks);
                 
             } catch (error) {
                 console.error("Error fetching data:", error);
                 setError("Failed to load data");
-                console.log("Setting mock data after error");
                 setBooks(topBorrowedBooks);
             } finally {
                 setIsLoading(false);
@@ -52,15 +24,7 @@ const TopBooks = () => {
         };
         
         fetchData();
-        
-        // Debug what's in state after component mounts
-        console.log("Initial books state:", books);
     }, []);
-
-    // Debug state changes
-    useEffect(() => {
-        console.log("Books state updated:", books);
-    }, [books]);
 
     // Create a default container style to ensure visibility
     const containerStyle = {
@@ -71,8 +35,6 @@ const TopBooks = () => {
         backgroundColor: '#f9f9f9',
         minHeight: '200px'
     };
-
-    console.log("Rendering TopBooks, loading:", isLoading, "error:", error, "books:", books);
 
     return (
         <div style={containerStyle}>

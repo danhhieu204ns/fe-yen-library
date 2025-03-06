@@ -101,9 +101,6 @@ const BookSearch = () => {
         searchParams.category_id = Number(advancedFilters.categoryId);
       }
       
-      // Log the formatted parameters
-      console.log('Search params:', searchParams);
-      
       // Check if we have at least one search parameter
       const hasParams = Object.keys(searchParams).length > 0;
       
@@ -125,7 +122,6 @@ const BookSearch = () => {
       
       if (response?.books) {
         setBooks(response.books);
-        console.log('Search response:', response);
         setPagination({
           ...pagination,
           total: response.total_data || 0

@@ -79,7 +79,6 @@ const BookStats = () => {
     if (!loading) {
       const timer = setTimeout(() => {
         setChartKey(prev => prev + 1);
-        console.log("Chart key updated to force re-render:", chartKey + 1);
       }, 300);
       
       return () => clearTimeout(timer);

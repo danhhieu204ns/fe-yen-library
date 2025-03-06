@@ -1,50 +1,6 @@
 import httpRequest from 'src/utils/httpRequest';
 import useHttpPrivate from 'src/hooks/useHttpPrivate';
 
-// Service xử lý authentication
-
-// Lưu token vào sessionStorage (sẽ bị xóa khi đóng tab/trình duyệt)
-export const setAuthToken = (token) => {
-  sessionStorage.setItem('auth_token', token);
-};
-
-// Lấy token từ sessionStorage
-export const getAuthToken = () => {
-  return sessionStorage.getItem('auth_token');
-};
-
-// Xóa token
-export const removeAuthToken = () => {
-  sessionStorage.removeItem('auth_token');
-};
-
-// Lưu user info
-export const setUserInfo = (user) => {
-  sessionStorage.setItem('user_info', JSON.stringify(user));
-};
-
-// Lấy user info
-export const getUserInfo = () => {
-  const userInfo = sessionStorage.getItem('user_info');
-  return userInfo ? JSON.parse(userInfo) : null;
-};
-
-// Xóa user info
-export const removeUserInfo = () => {
-  sessionStorage.removeItem('user_info');
-};
-
-// Kiểm tra trạng thái đăng nhập
-export const isAuthenticated = () => {
-  return !!getAuthToken();
-};
-
-// Logout - xóa toàn bộ thông tin session
-export const logout = () => {
-  removeAuthToken();
-  removeUserInfo();
-};
-
 export const login = async ({ username, password }) => {
     try {
         const formData = new URLSearchParams();  // Tạo đối tượng URLSearchParams để gửi dưới dạng form data
